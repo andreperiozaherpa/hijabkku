@@ -87,8 +87,15 @@ class StockInOutController extends Controller
      */
     public function show(Request $request)
     {
-        //
-        $data = StockInOut::orderByDesc('id')->get();
+        // Default start to 0 and length to 20 if they are not provided, ensuring pagination is always enforced
+        if (!$request->has('start')) {
+            $request->merge(['start' => 0]);
+        }
+        if (!$request->has('length')) {
+            $request->merge(['length' => 20]);
+        }
+
+        $data = StockInOut::query()->orderByDesc('id');
         return DataTables()->of($data)
             ->addColumn('aksi', function ($data) {
                 $group = '<button data-kode="' . $data->id . '" type="button" class="edit btn btn-quaternary"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">

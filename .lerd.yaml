@@ -1,0 +1,10 @@
+domains:
+    - hijabkku
+php_version: "8.3"
+framework: laravel
+framework_version: "10"
+secured: true
+services:
+    - mysql
+    - mailpit
+    - redis

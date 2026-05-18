@@ -96,8 +96,15 @@ class DataBarangController extends Controller
      */
     public function show(Request $request)
     {
-        //
-        $data = DataBarang::orderByDesc('id')->get();
+        // Default start to 0 and length to 20 if they are not provided, ensuring pagination is always enforced
+        if (!$request->has('start')) {
+            $request->merge(['start' => 0]);
+        }
+        if (!$request->has('length')) {
+            $request->merge(['length' => 20]);
+        }
+
+        $data = DataBarang::query()->orderByDesc('id');
         return DataTables()->of($data)
             ->addColumn('aksi', function ($data) {
                 $group = '<button data-kode="' . $data->kode . '" data-nama="' . $data->nama_barang . '" type="button" class="edit btn btn-quaternary">
