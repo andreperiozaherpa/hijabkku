@@ -30,8 +30,10 @@
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-12 col-sm-5 col-lg-3 col-xxl-2 mb-1">
-                                        <div class="d-inline-block float-md-start me-1 mb-1 search-input-container w-100 border border-separator bg-foreground search-sm">
-                                            <input class="form-control form-control-sm datatable-search" placeholder="Search" data-datatable="#tbStockInOut">
+                                        <div
+                                            class="d-inline-block float-md-start me-1 mb-1 search-input-container w-100 border border-separator bg-foreground search-sm">
+                                            <input class="form-control form-control-sm datatable-search"
+                                                placeholder="Search" data-datatable="#tbStockInOut">
                                             <span class="search-magnifier-icon">
                                                 <i data-acorn-icon="search"></i>
                                             </span>
@@ -42,21 +44,28 @@
                                     </div>
                                     <div class="col-12 col-sm-2 col-lg-1 col-xxl-1 mb-1">
                                         <div class="d-inline-block">
-                                            <button data-bs-toggle="modal" data-bs-target="#detailModal" class="btn btn-icon btn-icon-only btn-outline-primary btn-sm" type="button">
+                                            <button data-bs-toggle="modal" data-bs-target="#detailModal"
+                                                class="btn btn-icon btn-icon-only btn-outline-primary btn-sm"
+                                                type="button">
                                                 <i data-acorn-icon="eye"></i>
                                             </button>
                                         </div>
                                     </div>
                                     <div class="col-12 col-sm-5 col-lg-8 col-xxl-9 text-end mb-1">
                                         <div class="d-inline-block">
-                                            <button class="btn btn-icon btn-icon-only btn-outline-muted btn-sm datatable-add" type="button" data-datatable="#tbStockInOut">
+                                            <button
+                                                class="btn btn-icon btn-icon-only btn-outline-muted btn-sm datatable-add"
+                                                type="button" data-datatable="#tbStockInOut">
                                                 <i data-acorn-icon="plus"></i>
                                             </button>
-                                            <button class="btn btn-icon btn-icon-only btn-outline-muted btn-sm datatable-print" type="button" data-datatable="#tbStockInOut">
+                                            <button
+                                                class="btn btn-icon btn-icon-only btn-outline-muted btn-sm datatable-print"
+                                                type="button" data-datatable="#tbStockInOut">
                                                 <i data-acorn-icon="print"></i>
                                             </button>
                                             <div class="d-inline-block datatable-export" data-datatable="#tbStockInOut">
-                                                <button class="btn btn-icon btn-icon-only btn-outline-muted btn-sm dropdown" data-bs-toggle="dropdown" type="button" data-bs-offset="0,3">
+                                                <button class="btn btn-icon btn-icon-only btn-outline-muted btn-sm dropdown"
+                                                    data-bs-toggle="dropdown" type="button" data-bs-offset="0,3">
                                                     <i data-acorn-icon="download"></i>
                                                 </button>
                                                 <div class="dropdown-menu dropdown-menu-sm dropdown-menu-end">
@@ -65,9 +74,12 @@
                                                     <button class="dropdown-item export-cvs" type="button">Cvs</button>
                                                 </div>
                                             </div>
-                                            <div class="dropdown-as-select d-inline-block datatable-length" data-datatable="#tbStockInOut">
-                                                <button class="btn btn-outline-muted btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bs-offset="0,3">
-                                                    10 Items
+                                            <div class="dropdown-as-select d-inline-block datatable-length"
+                                                data-datatable="#tbStockInOut">
+                                                <button class="btn btn-outline-muted btn-sm dropdown-toggle" type="button"
+                                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                                    data-bs-offset="0,3">
+                                                    20 Items
                                                 </button>
                                                 <div class="dropdown-menu dropdown-menu-sm dropdown-menu-end">
                                                     <a class="dropdown-item" href="#">10 Items</a>
@@ -121,7 +133,8 @@
         </div>
     </div>
 
-    <div class="modal fade indexModal" id="stockInOutModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal fade indexModal" id="stockInOutModal" data-bs-backdrop="static" data-bs-keyboard="false"
+        tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -132,12 +145,14 @@
                     <form id="formValid" class="tooltip-label-end" novalidate>
                         <div class="mb-3 filled position-relative form-group">
                             <i data-acorn-icon="chart-3"></i>
-                            <input type="text" class="form-control" placeholder="Kode Barang" id="kode_barang" name="kode_barang" required readonly hidden>
+                            <input type="text" class="form-control" placeholder="Kode Barang" id="kode_barang"
+                                name="kode_barang" required readonly hidden>
                         </div>
 
                         <div class="filled mb-3 w-100 position-relative form-group">
                             <i data-acorn-icon="boxes"></i>
-                            <select class="form-control" id="namaBarang" name="namaBarang" data-placeholder="Nama Barang" required>
+                            <select class="form-control" id="namaBarang" name="namaBarang"
+                                data-placeholder="Nama Barang" required>
                                 <option label="&nbsp;"></option>
                                 <option value=""></option>
                                 {{-- @foreach ($barang as $b)
@@ -150,12 +165,14 @@
 
                         <div class="mb-3 filled position-relative form-group">
                             <i data-acorn-icon="chart-3"></i>
-                            <input type="number" class="form-control" placeholder="Sisa Stock" id="sisaStock" name="sisaStock" required readonly>
+                            <input type="number" class="form-control" placeholder="Sisa Stock" id="sisaStock"
+                                name="sisaStock" required readonly>
                         </div>
 
                         <div class="mb-3 filled position-relative form-group input-group">
                             <i data-acorn-icon="chart-3"></i>
-                            <input type="number" class="form-control" placeholder="Jumlah" id="jumlah" name="jumlah" required>
+                            <input type="number" class="form-control" placeholder="Jumlah" id="jumlah"
+                                name="jumlah" required>
                             <button class="btn btn-secondary" type="button" id="getSemuaJumlah">Semua</button>
                         </div>
 
@@ -180,7 +197,8 @@
                     <form id="formValid" class="tooltip-label-end" novalidate>
                         <div class="mb-3 filled position-relative form-group">
                             <label class="mb-3 top-label">
-                                <input type="text" class="form-control" placeholder="Nama Barang" id="namaBarangExchange" name="namaBarangExchange" required readonly>
+                                <input type="text" class="form-control" placeholder="Nama Barang"
+                                    id="namaBarangExchange" name="namaBarangExchange" required readonly>
                                 <span class="bg-transparent">Nama Barang</span>
                             </label>
                             <input type="text" id="kodeBarang" name="kodeBarang" readonly hidden>
@@ -190,21 +208,24 @@
 
                         <div class="mb-3 position-relative form-group">
                             <label class="mb-3 top-label">
-                                <input type="text" class="form-control" placeholder="Sisa Exchange" id="sisaExchange" name="sisaExchange" required readonly>
+                                <input type="text" class="form-control" placeholder="Sisa Exchange" id="sisaExchange"
+                                    name="sisaExchange" required readonly>
                                 <span class="bg-transparent">Sisa Barang</span>
                             </label>
                         </div>
 
                         <div class="mb-3 filled position-relative form-group">
                             <label class="mb-3 top-label">
-                                <input type="text" class="form-control" placeholder="Nama Supplier" id="namaSupplierExchange" name="namaSupplierExchange" required readonly>
+                                <input type="text" class="form-control" placeholder="Nama Supplier"
+                                    id="namaSupplierExchange" name="namaSupplierExchange" required readonly>
                                 <span class="bg-transparent">Nama Supplier</span>
                             </label>
                         </div>
 
                         <div class="filled mb-3 w-100 position-relative form-group">
                             <i data-acorn-icon="delivery-truck"></i>
-                            <select class="form-control" id="namaToko" name="namaToko" data-placeholder="Kirim Ke Toko" required>
+                            <select class="form-control" id="namaToko" name="namaToko" data-placeholder="Kirim Ke Toko"
+                                required>
                                 <option label="&nbsp;"></option>
                                 @foreach ($toko as $t)
                                     <option value="{{ $t->kode }}">{{ $t->nama_toko }}</option>
@@ -214,7 +235,8 @@
 
                         <div class="mb-3 filled position-relative form-group">
                             <label class="mb-3 top-label">
-                                <input type="number" class="form-control" placeholder="Jumlah Kirim" id="jumlahKirim" name="jumlahKirim" required>
+                                <input type="number" class="form-control" placeholder="Jumlah Kirim" id="jumlahKirim"
+                                    name="jumlahKirim" required>
                                 <span class="bg-transparent">Jumlah Kirim</span>
                             </label>
                         </div>
@@ -343,7 +365,6 @@
                 serverSide: true,
                 destroy: true,
                 paging: true,
-                length: 10,
                 pageLength: 20,
                 buttons: ['copy', 'excel', 'csv', 'print'],
                 order: [
@@ -354,6 +375,7 @@
                 columns: [{
                         'data': null,
                         'sortable': false,
+                        'searchable': false,
                         render: function(data, type, row, meta) {
                             return meta.row + meta.settings._iDisplayStart + 1
                         },
@@ -376,15 +398,23 @@
                     },
                     {
                         data: 'sisa',
+                        searchable: false,
+                        orderable: false,
                     },
                     {
                         data: 'total_uang',
+                        searchable: false,
+                        orderable: false,
                     },
                     {
                         data: 'total_uang_grosir',
+                        searchable: false,
+                        orderable: false,
                     },
                     {
                         data: 'aksi',
+                        searchable: false,
+                        orderable: false,
                     },
                 ],
                 sDom: '<"row"<"col-sm-12"<"table-container"t>r>><"row"<"col-12"p>>',

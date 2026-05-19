@@ -22,34 +22,27 @@ class StockTokoController extends Controller
 
     public function index_detail(Request $request)
     {
-        //
         $kode = $request->segment(5);
         $nama_toko = Toko::where('kode', $kode)->first();
         $toko = Toko::where('kode', '!=', $kode)->get();
-        // $barang = StockInOut::whereColumn('jumlah_masuk', '!=', 'jumlah_keluar')->get();
-        $stocks = StockToko::where('kode_toko', $kode)->get();
-       
-        $total_uang[]='';
-        foreach ($stocks as  $stock) {
-            $total_aset = $stock['jumlah'] - $stock['terjual'];
-            $barang = DataBarang::where('kode', $stock->kode_barang)->first();
-            $total_uang = str_replace('.', '', $barang['harga_beli'] ?? 0) *  $total_aset;
-        }
-        // $total_aset = $stock['jumlah'] - $stock['terjual'];
-        // dd($total_uang);
         
-        if(is_array($total_uang)){
-            $total_nilai_uang=number_format(array_sum($total_uang), 0, ",", ".");
-        }else{
-             $total_nilai_uang=0;
+        // Eager load related DataBarang in a single query to eliminate N+1 queries
+        $stocks = StockToko::with('data_barang')->where('kode_toko', $kode)->get();
+       
+        $total_uang = [];
+        foreach ($stocks as $stock) {
+            $total_aset = $stock->jumlah - $stock->terjual;
+            $harga_beli = $stock->data_barang ? str_replace('.', '', $stock->data_barang->harga_beli ?? 0) : 0;
+            $total_uang[] = $harga_beli * $total_aset;
         }
+        
+        $total_nilai_uang = number_format(array_sum($total_uang), 0, ",", ".");
 
         return view('stock.stock_toko_detail', [
             'kode' => $kode,
             'toko' => $toko,
-            'nama_toko' => $nama_toko['nama_toko'],
-            'total_aset' =>$total_nilai_uang,
-            // 'barang' => $barang
+            'nama_toko' => $nama_toko['nama_toko'] ?? '',
+            'total_aset' => $total_nilai_uang,
         ]);
     }
 
@@ -175,8 +168,19 @@ class StockTokoController extends Controller
 
     public function show_detail(Request $request)
     {
+        // Default start to 0 and length to 20 if they are not provided, ensuring pagination is always enforced
+        if (!$request->has('start')) {
+            $request->merge(['start' => 0]);
+        }
+        if (!$request->has('length')) {
+            $request->merge(['length' => 20]);
+        }
+
         $kode_toko = $request->segment(5);
-        $data = StockToko::orderByDesc('updated_at')->where('kode_toko', $kode_toko)->get();
+        
+        // Eager load data_barang and return Query Builder (no ->get()!) to leverage database pagination
+        $data = StockToko::with('data_barang')->orderByDesc('updated_at')->where('kode_toko', $kode_toko);
+        
         return DataTables()->of($data)
             ->addColumn('aksi', function ($data) {
                 $group = '<button data-kode="' . $data->id . '" type="button" class="exchange btn btn-success"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left-right" viewBox="0 0 16 16">
@@ -185,26 +189,18 @@ class StockTokoController extends Controller
                 return '<div class="btn-group" role="group" aria-label="Basic example">' . $group . ' </div>';
             })
             ->addColumn('sisa', function ($data) {
-                $stock = StockToko::where('id', $data->id)->first();
-                $total = $stock['jumlah'] - $stock['terjual'];
-                return $total;
+                return $data->jumlah - $data->terjual;
             })
             ->addColumn('total_uang', function ($data) {
-                $stock = StockToko::where('id', $data->id)->first();
-                $total = $stock['jumlah'] - $stock['terjual'];
-
-                $barang = DataBarang::where('kode', $stock->kode_barang)->first();
-                $total_uang = str_replace('.', '', $barang['harga_jual'] ?? 0) *  $total;
-                // dd($total_uang);
+                $total = $data->jumlah - $data->terjual;
+                $harga_jual = $data->data_barang ? str_replace('.', '', $data->data_barang->harga_jual ?? 0) : 0;
+                $total_uang = $harga_jual * $total;
                 return number_format($total_uang, 0, ",", ".");
             })
             ->addColumn('total_uang_grosir', function ($data) {
-                $stock = StockToko::where('id', $data->id)->first();
-                $total = $stock['jumlah'] - $stock['terjual'];
-
-                $barang = DataBarang::where('kode', $stock->kode_barang)->first();
-                $total_uang = str_replace('.', '', $barang['harga_grosir'] ?? 0) *  $total;
-                // dd($total_uang);
+                $total = $data->jumlah - $data->terjual;
+                $harga_grosir = $data->data_barang ? str_replace('.', '', $data->data_barang->harga_grosir ?? 0) : 0;
+                $total_uang = $harga_grosir * $total;
                 return number_format($total_uang, 0, ",", ".");
             })
             ->rawColumns(['aksi', 'sisa', 'total_uang', 'total_uang_grosir'])
