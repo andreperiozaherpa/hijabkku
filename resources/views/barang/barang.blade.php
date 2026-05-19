@@ -339,6 +339,7 @@
                 columns: [{
                         'data': null,
                         'sortable': false,
+                        'searchable': false,
                         render: function(data, type, row, meta) {
                             return meta.row + meta.settings._iDisplayStart + 1
                         },
@@ -377,6 +378,8 @@
                     },
                     {
                         data: 'aksi',
+                        searchable: false,
+                        orderable: false,
                     },
                 ],
                 sDom: '<"row"<"col-sm-12"<"table-container"t>r>><"row"<"col-12"p>>',

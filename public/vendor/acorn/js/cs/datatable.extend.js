@@ -220,18 +220,23 @@ class DatatableExtend {
     }
 
     _onSearchKeyup(event) {
-        this._getDatatable(event.currentTarget).search(event.currentTarget.value).draw();
+        const value = event.currentTarget.value;
         const searchIcon = event.currentTarget.closest('div').querySelector('.search-magnifier-icon');
         const deleteIcon = event.currentTarget.closest('div').querySelector('.search-delete-icon');
-        if (event.currentTarget.value !== '') {
+        if (value !== '') {
             deleteIcon.classList.remove('d-none');
             searchIcon.classList.add('d-none');
         } else {
             deleteIcon.classList.add('d-none');
             searchIcon.classList.remove('d-none');
         }
-        this.unCheckAllRows();
-        this.controlCheckAll();
+
+        // Only trigger search and redraw when Enter is pressed
+        if (event.key === 'Enter' || event.keyCode === 13) {
+            this._getDatatable(event.currentTarget).search(value).draw();
+            this.unCheckAllRows();
+            this.controlCheckAll();
+        }
     }
 
     _onSearchDelete(event) {
