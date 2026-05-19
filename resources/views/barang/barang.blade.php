@@ -352,40 +352,27 @@
                         data: 'jenis_barang',
                     },
                     {
-                        // data: 'jenis_barang',
-                        data: null,
+                        data: 'nama_barang',
                         render: function(data, type, row) {
-                            return '<div style="white-space:normal; word-wrap:break-word;">' + row.nama_barang + '</div>';
+                            return '<div style="white-space:normal; word-wrap:break-word;">' + data + '</div>';
                         }
                     },
                     {
-                        data: null,
+                        data: "{{ Auth::user()->role == 'admin' ? 'harga_beli' : 'harga_grosir' }}",
                         render: function(data, type, row) {
-                            if ("{{ Auth::user()->role == 'admin' }}") {
-                                return '<div style="white-space:normal; word-wrap:break-word;">' + row.harga_beli + '</div>';
-                            } else {
-                                return '<div style="white-space:normal; word-wrap:break-word;">' + row.harga_grosir + '</div>';
-                            }
+                            return '<div style="white-space:normal; word-wrap:break-word;">' + data + '</div>';
                         }
                     },
                     {
-                        data: null,
+                        data: 'harga_jual',
                         render: function(data, type, row) {
-                            if ("{{ Auth::user()->role == 'admin' }}") {
-                                return '<div style="white-space:normal; word-wrap:break-word;">' + row.harga_jual + '</div>';
-                            } else {
-                                return '<div style="white-space:normal; word-wrap:break-word;">' + row.harga_jual + '</div>';
-                            }
+                            return '<div style="white-space:normal; word-wrap:break-word;">' + data + '</div>';
                         }
                     },
                     {
-                        data: null,
+                        data: 'harga_grosir',
                         render: function(data, type, row) {
-                            if ("{{ Auth::user()->role == 'admin' }}") {
-                                return '<div style="white-space:normal; word-wrap:break-word;">' + row.harga_grosir + '</div>';
-                            } else {
-                                return '<div style="white-space:normal; word-wrap:break-word;">' + row.harga_grosir + '</div>';
-                            }
+                            return '<div style="white-space:normal; word-wrap:break-word;">' + data + '</div>';
                         }
                     },
                     {

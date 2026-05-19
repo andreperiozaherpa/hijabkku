@@ -58,7 +58,7 @@
                                             </div>
                                             <div class="dropdown-as-select d-inline-block datatable-length" data-datatable="#tbStockInOut">
                                                 <button class="btn btn-outline-muted btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bs-offset="0,3">
-                                                    10 Items
+                                                    20 Items
                                                 </button>
                                                 <div class="dropdown-menu dropdown-menu-sm dropdown-menu-end">
                                                     <a class="dropdown-item" href="#">10 Items</a>
@@ -215,7 +215,6 @@
                 serverSide: true,
                 destroy: true,
                 paging: true,
-                length: 10,
                 pageLength: 20,
                 buttons: ['copy', 'excel', 'csv', 'print'],
                 order: [
