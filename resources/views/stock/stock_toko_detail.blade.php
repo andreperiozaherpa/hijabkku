@@ -383,6 +383,7 @@
                     },
                     {
                         data: 'kode_barang',
+                        orderable: false,
                     },
                     {
                         data: 'supplier',
@@ -399,12 +400,12 @@
                     {
                         data: 'sisa',
                         searchable: false,
-                        orderable: false,
+                        orderable: true,
                     },
                     {
                         data: 'total_uang',
                         searchable: false,
-                        orderable: false,
+                        orderable: true,
                     },
                     {
                         data: 'total_uang_grosir',
