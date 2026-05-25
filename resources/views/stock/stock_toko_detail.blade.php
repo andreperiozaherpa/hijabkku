@@ -399,8 +399,6 @@
                     },
                     {
                         data: 'sisa',
-                        searchable: false,
-                        orderable: true,
                     },
                     {
                         data: 'total_uang',

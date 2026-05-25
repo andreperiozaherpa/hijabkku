@@ -25,17 +25,17 @@ class StockTokoController extends Controller
         $kode = $request->segment(5);
         $nama_toko = Toko::where('kode', $kode)->first();
         $toko = Toko::where('kode', '!=', $kode)->get();
-        
+
         // Eager load related DataBarang in a single query to eliminate N+1 queries
         $stocks = StockToko::with('data_barang')->where('kode_toko', $kode)->get();
-       
+
         $total_uang = [];
         foreach ($stocks as $stock) {
             $total_aset = $stock->jumlah - $stock->terjual;
             $harga_beli = $stock->data_barang ? str_replace('.', '', $stock->data_barang->harga_beli ?? 0) : 0;
             $total_uang[] = $harga_beli * $total_aset;
         }
-        
+
         $total_nilai_uang = number_format(array_sum($total_uang), 0, ",", ".");
 
         return view('stock.stock_toko_detail', [
@@ -177,10 +177,10 @@ class StockTokoController extends Controller
         }
 
         $kode_toko = $request->segment(5);
-        
+
         // Eager load data_barang and return Query Builder (no ->get()!) to leverage database pagination
-        $data = StockToko::with('data_barang')->orderByDesc('updated_at')->where('kode_toko', $kode_toko);
-        
+        $data = StockToko::with('data_barang')->where('kode_toko', $kode_toko);
+
         return DataTables()->of($data)
             ->addColumn('aksi', function ($data) {
                 $group = '<button data-kode="' . $data->id . '" type="button" class="exchange btn btn-success"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left-right" viewBox="0 0 16 16">
@@ -190,6 +190,9 @@ class StockTokoController extends Controller
             })
             ->addColumn('sisa', function ($data) {
                 return $data->jumlah - $data->terjual;
+            })
+            ->orderColumn('sisa', function ($query, $order) {
+                $query->orderByRaw('(jumlah - terjual) ' . $order);
             })
             ->addColumn('total_uang', function ($data) {
                 $total = $data->jumlah - $data->terjual;
