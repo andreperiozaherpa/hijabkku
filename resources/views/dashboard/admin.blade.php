@@ -56,28 +56,29 @@
         }
 
         .segmented-control {
-            background-color: #f1f5f9;
+            background-color: var(--background) !important;
             padding: 4px;
             border-radius: 12px;
             display: inline-flex;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border) !important;
         }
 
         .segmented-control .btn {
-            border: none;
-            border-radius: 8px;
-            padding: 6px 16px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: #64748b;
-            background: transparent;
-            transition: all 0.2s ease;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 6px 16px !important;
+            font-weight: 600 !important;
+            font-size: 0.85rem !important;
+            color: var(--alternate) !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            transition: all 0.2s ease !important;
         }
 
         .segmented-control .btn.active {
-            background: #fff;
-            color: #0284c7;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            background: var(--primary) !important;
+            color: #fff !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
         }
 
         .age-badge {
@@ -335,8 +336,24 @@
                                                 </td>
                                                 <td>{{ \Carbon\Carbon::parse($stock->created_at)->format('d M Y H:i') }}</td>
                                                 <td class="text-end">
+                                                    @php
+                                                        $createdAt = \Carbon\Carbon::parse($stock->created_at);
+                                                        $now = \Carbon\Carbon::now();
+                                                        
+                                                        $years = (int)$createdAt->diffInYears($now);
+                                                        $months = (int)$createdAt->diffInMonths($now);
+                                                        $days = (int)$createdAt->diffInDays($now);
+                                                        
+                                                        if ($years >= 1) {
+                                                            $ageString = $years . ' Tahun Lalu';
+                                                        } elseif ($months >= 1) {
+                                                            $ageString = $months . ' Bulan Lalu';
+                                                        } else {
+                                                            $ageString = $days . ' Hari Lalu';
+                                                        }
+                                                    @endphp
                                                     <span class="age-badge">
-                                                        {{ \Carbon\Carbon::parse($stock->created_at)->diffInDays() }} Hari Lalu
+                                                        {{ $ageString }}
                                                     </span>
                                                 </td>
                                             </tr>
@@ -463,32 +480,48 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.dataset.label}: ${formatRupiah(context.raw)}`;
-                                }
+                    hover: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                        xPadding: 12,
+                        yPadding: 12,
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleFontColor: '#fff',
+                        bodyFontColor: '#e2e8f0',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        cornerRadius: 10,
+                        callbacks: {
+                            label: function(tooltipItem, data) {
+                                const datasetLabel = data.datasets[tooltipItem.datasetIndex].label || '';
+                                return datasetLabel + ': ' + formatRupiah(tooltipItem.yLabel);
                             }
                         }
                     },
+                    plugins: {
+                        datalabels: { display: false }
+                    },
+                    legend: { display: false },
                     scales: {
-                        y: {
+                        yAxes: [{
                             ticks: {
                                 callback: function(value) {
                                     return formatRupiahShorthand(value);
                                 }
                             },
-                            grid: { color: 'rgba(0, 0, 0, 0.03)' }
-                        },
-                        x: {
-                            grid: { display: false },
+                            gridLines: { color: 'rgba(0, 0, 0, 0.03)', drawBorder: false }
+                        }],
+                        xAxes: [{
+                            gridLines: { display: false, drawBorder: false },
                             ticks: {
                                 autoSkip: true,
                                 maxTicksLimit: 10
                             }
-                        }
+                        }]
                     }
                 }
             });
@@ -539,11 +572,14 @@
                         data: dataset.data,
                         borderColor: color,
                         backgroundColor: 'transparent',
-                        borderWidth: 2.5,
+                        borderWidth: 3,
                         pointBackgroundColor: color,
                         pointBorderColor: '#fff',
-                        pointHoverRadius: 5,
-                        tension: 0.3
+                        pointHoverRadius: 7,
+                        pointHoverBorderWidth: 2,
+                        pointHoverBackgroundColor: color,
+                        pointHoverBorderColor: '#fff',
+                        tension: 0.35
                     };
                 });
             };
@@ -557,36 +593,52 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { 
-                            display: true,
-                            position: 'top',
-                            labels: { boxWidth: 12, usePointStyle: true }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.dataset.label}: ${formatRupiah(context.raw)}`;
-                                }
+                    hover: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                        xPadding: 12,
+                        yPadding: 12,
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleFontColor: '#fff',
+                        bodyFontColor: '#e2e8f0',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        cornerRadius: 10,
+                        callbacks: {
+                            label: function(tooltipItem, data) {
+                                const datasetLabel = data.datasets[tooltipItem.datasetIndex].label || '';
+                                return datasetLabel + ': ' + formatRupiah(tooltipItem.yLabel);
                             }
                         }
                     },
+                    plugins: {
+                        datalabels: { display: false }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: { boxWidth: 12, usePointStyle: true }
+                    },
                     scales: {
-                        y: {
+                        yAxes: [{
                             ticks: {
                                 callback: function(value) {
                                     return formatRupiahShorthand(value);
                                 }
                             },
-                            grid: { color: 'rgba(0, 0, 0, 0.03)' }
-                        },
-                        x: {
-                            grid: { display: false },
+                            gridLines: { color: 'rgba(0, 0, 0, 0.03)', drawBorder: false }
+                        }],
+                        xAxes: [{
+                            gridLines: { display: false, drawBorder: false },
                             ticks: {
                                 autoSkip: true,
                                 maxTicksLimit: 10
                             }
-                        }
+                        }]
                     }
                 }
             });
@@ -626,7 +678,7 @@
 
             const bestSellersCtx = document.getElementById('bestSellersChart').getContext('2d');
             new Chart(bestSellersCtx, {
-                type: 'bar',
+                type: 'horizontalBar',
                 data: {
                     labels: truncatedLabels,
                     datasets: [{
@@ -639,27 +691,35 @@
                     }]
                 },
                 options: {
-                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                title: function(tooltipItems) {
-                                    const index = tooltipItems[0].dataIndex;
-                                    return bestSellersLabels[index];
-                                }
+                    tooltips: {
+                        xPadding: 12,
+                        yPadding: 12,
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleFontColor: '#fff',
+                        bodyFontColor: '#e2e8f0',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        cornerRadius: 10,
+                        callbacks: {
+                            title: function(tooltipItems, data) {
+                                const index = tooltipItems[0].index;
+                                return bestSellersLabels[index];
                             }
                         }
                     },
+                    plugins: {
+                        datalabels: { display: false }
+                    },
+                    legend: { display: false },
                     scales: {
-                        x: {
-                            grid: { color: 'rgba(0, 0, 0, 0.03)' }
-                        },
-                        y: {
-                            grid: { display: false }
-                        }
+                        xAxes: [{
+                            gridLines: { color: 'rgba(0, 0, 0, 0.03)', drawBorder: false }
+                        }],
+                        yAxes: [{
+                            gridLines: { display: false, drawBorder: false }
+                        }]
                     }
                 }
             });

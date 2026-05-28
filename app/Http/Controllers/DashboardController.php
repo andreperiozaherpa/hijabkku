@@ -17,9 +17,11 @@ class DashboardController extends Controller
     //
     public function index()
     {
+        $tokos = Toko::whereNotIn('nama_toko', ['stock hilang', 'Online Shop'])->get();
+
         $metrics = [
             'total_users' => User::count(),
-            'total_tokos' => Toko::count(),
+            'total_tokos' => $tokos->count(),
             'total_barangs' => DataBarang::count(),
             'total_suppliers' => Supplier::count(),
         ];
@@ -47,7 +49,6 @@ class DashboardController extends Controller
             ->values();
 
         // 2. Sales per Store/Toko Data (Omzet per Toko)
-        $tokos = Toko::all();
 
         // Yearly Sales per Toko
         $storeYearlyRaw = Transaksi::select('kode_toko', DB::raw('YEAR(created_at) as year'), DB::raw('SUM(harga_total) as total'))
