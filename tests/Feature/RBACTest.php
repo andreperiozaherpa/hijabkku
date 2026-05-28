@@ -30,6 +30,7 @@ class RBACTest extends TestCase
             'status' => 'on',
             'role' => 'admin',
             'kode_toko' => 'TK_test',
+            'shift' => 0,
         ]);
 
         $response = $this->actingAs($admin)->get('/manajemen/supplier/index');
@@ -44,6 +45,7 @@ class RBACTest extends TestCase
             'status' => 'on',
             'role' => 'kasir',
             'kode_toko' => 'TK_test',
+            'shift' => 0,
         ]);
 
         $response = $this->actingAs($kasir)->get('/manajemen/supplier/index');
@@ -59,6 +61,7 @@ class RBACTest extends TestCase
             'status' => 'on',
             'role' => 'kasir',
             'kode_toko' => 'TK_test',
+            'shift' => 0,
         ]);
 
         $response = $this->actingAs($kasir)->get('/transaksi/penjualan');
@@ -73,6 +76,7 @@ class RBACTest extends TestCase
             'status' => 'on',
             'role' => 'gudang',
             'kode_toko' => 'TK_test',
+            'shift' => 0,
         ]);
 
         $response = $this->actingAs($gudang)->get('/transaksi/penjualan');

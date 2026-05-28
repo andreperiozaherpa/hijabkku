@@ -242,6 +242,11 @@
                                 </a>
                             </li>
                             <li>
+                                <a href="/user/rbac">
+                                    <span class="label">Hak Akses (RBAC)</span>
+                                </a>
+                            </li>
+                            <li>
                                 <a href="#">
                                     <span class="label">Data Log</span>
                                 </a>

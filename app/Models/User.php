@@ -42,6 +42,16 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    public function toko()
+    {
+        return $this->belongsTo(Toko::class, 'kode_toko', 'kode');
+    }
+
+    public function pembayarans()
+    {
+        return $this->hasMany(Pembayaran::class, 'user_id', 'id');
+    }
+
     /**
      * Check if the user has a specific permission.
      *

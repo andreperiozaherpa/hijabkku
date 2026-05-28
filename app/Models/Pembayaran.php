@@ -12,4 +12,14 @@ class Pembayaran extends Model
     protected $guarded = [
         'id'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    public function transaksis()
+    {
+        return $this->hasMany(Transaksi::class, 'kode_invoice', 'kode_invoice');
+    }
 }

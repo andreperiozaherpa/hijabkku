@@ -189,6 +189,8 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
         Route::get('/edit', [UserController::class, 'edit']);
         Route::post('/update', [UserController::class, 'update']);
         Route::post('/destroy', [UserController::class, 'destroy']);
+        Route::get('/rbac', [UserController::class, 'rbacIndex'])->name('user.rbac');
+        Route::post('/rbac/update', [UserController::class, 'rbacUpdate'])->name('user.rbac.update');
     });
 });
 

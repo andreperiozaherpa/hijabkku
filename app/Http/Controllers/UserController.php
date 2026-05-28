@@ -214,4 +214,57 @@ class UserController extends Controller
             'text' => $text
         ]);
     }
+
+    public function rbacIndex()
+    {
+        $roles = ['admin', 'kasir', 'gudang'];
+        $permissions = \DB::table('permissions')->get();
+        
+        // Fetch current role permissions mapping
+        $rolePermissions = \DB::table('role_permissions')
+            ->select('role', 'permission_id')
+            ->get()
+            ->groupBy('role')
+            ->map(function ($items) {
+                return $items->pluck('permission_id')->toArray();
+            })
+            ->toArray();
+
+        return view('manajemen_user.rbac', [
+            'roles' => $roles,
+            'permissions' => $permissions,
+            'rolePermissions' => $rolePermissions,
+        ]);
+    }
+
+    public function rbacUpdate(Request $request)
+    {
+        $role = $request->role;
+        $permissionId = $request->permission_id;
+        $checked = $request->checked; // boolean
+
+        if (!in_array($role, ['admin', 'kasir', 'gudang'])) {
+            return response()->json(['icon' => 'error', 'title' => 'Gagal', 'text' => 'Role tidak valid']);
+        }
+
+        if ($checked) {
+            \DB::table('role_permissions')->updateOrInsert([
+                'role' => $role,
+                'permission_id' => $permissionId
+            ]);
+            $text = 'Hak akses berhasil ditambahkan.';
+        } else {
+            \DB::table('role_permissions')
+                ->where('role', $role)
+                ->where('permission_id', $permissionId)
+                ->delete();
+            $text = 'Hak akses berhasil dicabut.';
+        }
+
+        return response()->json([
+            'icon' => 'success',
+            'title' => 'Sukses',
+            'text' => $text
+        ]);
+    }
 }

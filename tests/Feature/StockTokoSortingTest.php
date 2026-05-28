@@ -16,6 +16,7 @@ it('can sort stock toko detail by sisa', function () {
     $user = User::factory()->create([
         'status' => 'on',
         'role' => 'admin',
+        'shift' => 0,
     ]);
 
     // Create a Toko manually to bypass mass assignment guard
