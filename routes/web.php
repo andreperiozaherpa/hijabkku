@@ -19,6 +19,7 @@ use App\Http\Controllers\UkuranBarangController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VariasiBarangController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\landing\LandingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,21 +32,21 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return redirect('/login');
-});
+
+Route::get('/', [LandingController::class, 'index']);
+Route::get('/catalog', [LandingController::class, 'catalog'])->name('catalog');
 
 Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('permission:lihat_dashboard')->name('dashboard');
 
-    Route::prefix('/transaksi')->middleware('role:admin|kasir')->group(function () {
-        Route::prefix('/penjualan')->group(function () {
+    Route::prefix('/transaksi')->group(function () {
+        Route::prefix('/penjualan')->middleware('permission:proses_transaksi')->group(function () {
             Route::get('/', [TransaksiController::class, 'index'])->name('transaksi.penjualan');
             Route::get('/create', [TransaksiController::class, 'create']);
             Route::post('/store', [TransaksiController::class, 'store']);
         });
 
-        Route::prefix('/daftar')->group(function () {
+        Route::prefix('/daftar')->middleware('permission:lihat_daftar_penjualan')->group(function () {
             Route::get('/', [TransaksiController::class, 'index_daftar'])->name('transaksi.daftar');
             Route::get('/show', [TransaksiController::class, 'show']);
             Route::get('/show_detail', [TransaksiController::class, 'show_detail']);
@@ -54,8 +55,8 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
         });
     });
 
-    Route::prefix('/manajemen')->middleware('role:admin')->group(function () {
-        Route::prefix('/barang')->group(function () {
+    Route::prefix('/manajemen')->group(function () {
+        Route::prefix('/barang')->middleware('permission:kelola_barang')->group(function () {
             Route::prefix('/data')->group(function () {
                 Route::get('/', [DataBarangController::class, 'index']);
                 Route::get('/show', [DataBarangController::class, 'show']);
@@ -108,7 +109,7 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
             });
         });
 
-        Route::prefix('/supplier')->group(function () {
+        Route::prefix('/supplier')->middleware('permission:kelola_supplier')->group(function () {
             Route::get('/index', [SupplierController::class, 'index']);
             Route::get('/show', [SupplierController::class, 'show']);
             Route::post('/store', [SupplierController::class, 'store']);
@@ -118,7 +119,7 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
         });
 
         Route::prefix('/stock')->group(function () {
-            Route::prefix('/inout')->group(function () {
+            Route::prefix('/inout')->middleware('permission:kelola_stok_inout')->group(function () {
                 Route::get('/index', [StockInOutController::class, 'index']);
                 Route::get('/show', [StockInOutController::class, 'show']);
                 Route::post('/store', [StockInOutController::class, 'store']);
@@ -127,7 +128,7 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
                 Route::post('/destroy', [StockInOutController::class, 'destroy']);
             });
 
-            Route::prefix('/toko')->group(function () {
+            Route::prefix('/toko')->middleware('permission:kelola_stok_toko')->group(function () {
                 Route::get('/index', [StockTokoController::class, 'index']);
                 Route::get('/index/{kode}', [StockTokoController::class, 'index_detail']);
                 Route::get('/show', [StockTokoController::class, 'show']);
@@ -140,7 +141,7 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
             });
         });
 
-        Route::prefix('/warehouse')->group(function () {
+        Route::prefix('/warehouse')->middleware('permission:kelola_cabang')->group(function () {
             Route::get('/index', [TokoController::class, 'index']);
             Route::get('/show', [TokoController::class, 'show']);
             Route::post('/store', [TokoController::class, 'store']);
@@ -151,7 +152,7 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
     });
 
     Route::prefix('/buku')->group(function () {
-        Route::prefix('/panduan')->group(function () {
+        Route::prefix('/panduan')->middleware('permission:lihat_buku_panduan')->group(function () {
             Route::get('/', [BukuPanduanController::class, 'index']);
             Route::get('/show', [BukuPanduanController::class, 'show']);
             Route::post('/store', [BukuPanduanController::class, 'store']);
@@ -161,7 +162,7 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
         });
     });
     Route::prefix('/laporan')->group(function () {
-        Route::prefix('/barang')->group(function () {
+        Route::prefix('/barang')->middleware('permission:lihat_laporan_penjualan')->group(function () {
             Route::get('/', [BukuPanduanController::class, 'index']);
             Route::get('/show', [BukuPanduanController::class, 'show']);
             Route::post('/store', [BukuPanduanController::class, 'store']);
@@ -170,7 +171,7 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
             Route::post('/destroy', [BukuPanduanController::class, 'destroy']);
         });
 
-        Route::prefix('/penjualan')->group(function () {
+        Route::prefix('/penjualan')->middleware('permission:lihat_laporan_penjualan')->group(function () {
             Route::get('/', [LaporanPenjualanController::class, 'index']);
             Route::get('/show', [LaporanPenjualanController::class, 'show']);
             Route::get('/create', [LaporanPenjualanController::class, 'create']);
@@ -181,13 +182,16 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
         });
     });
 
-    Route::prefix('/user')->middleware('role:admin')->group(function () {
+    Route::prefix('/user')->middleware('permission:kelola_pengguna')->group(function () {
         Route::get('/index', [UserController::class, 'index']);
         Route::get('/show', [UserController::class, 'show']);
         Route::post('/store', [UserController::class, 'store']);
         Route::get('/edit', [UserController::class, 'edit']);
         Route::post('/update', [UserController::class, 'update']);
         Route::post('/destroy', [UserController::class, 'destroy']);
+        Route::post('/toggle-status', [UserController::class, 'toggleStatus']);
+        Route::get('/rbac', [UserController::class, 'rbacIndex'])->name('user.rbac');
+        Route::post('/rbac/update', [UserController::class, 'rbacUpdate'])->name('user.rbac.update');
     });
 });
 

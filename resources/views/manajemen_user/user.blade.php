@@ -1,19 +1,32 @@
 @extends('layouts.main')
 @section('main')
     <style>
-        .error {
-            color: #F00;
-            background-color: #FFF;
+        label.error {
+            color: var(--danger) !important;
+            font-size: 0.75rem !important;
+            font-weight: 500 !important;
+            margin-top: 4px !important;
+            display: block !important;
+            background: transparent !important;
+        }
+        .data-table-responsive-wrapper {
+            padding: 10px 0;
         }
     </style>
     <main>
         <div class="container">
             <!-- Title and Top Buttons Start -->
-            <div class="page-title-container">
+            <div class="page-title-container mb-4">
                 <div class="row">
                     <!-- Title Start -->
                     <div class="col-12 col-md-7">
-                        <h1 class="mb-0 pb-0 display-4" id="title">User Manager</h1>
+                        <h1 class="mb-0 pb-0 display-4" id="title">Manajemen User</h1>
+                        <nav class="breadcrumb-container d-inline-block" aria-label="breadcrumb">
+                            <ul class="breadcrumb pt-0">
+                                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">User Manager</li>
+                            </ul>
+                        </nav>
                     </div>
                     <!-- Title End -->
                 </div>
@@ -26,45 +39,43 @@
                     <section class="scroll-section" id="hover">
                         <div class="card mb-5">
                             <div class="card-body">
-                                <div class="row">
-                                    <div class="col-12 col-sm-5 col-lg-3 col-xxl-2 mb-1">
-                                        <div class="d-inline-block float-md-start me-1 mb-1 search-input-container w-100 border border-separator bg-foreground search-sm">
-                                            <input class="form-control form-control-sm datatable-search" placeholder="Search" data-datatable="#tbUser">
+                                <div class="row mb-3 align-items-center">
+                                    <div class="col-12 col-sm-5 col-lg-3 mb-2 mb-sm-0">
+                                        <div class="d-inline-block w-100 search-input-container border border-separator bg-foreground search-sm rounded-md">
+                                            <input class="form-control form-control-sm datatable-search" placeholder="Cari User..." data-datatable="#tbUser">
                                             <span class="search-magnifier-icon">
                                                 <i data-acorn-icon="search"></i>
                                             </span>
-                                            <span class="search-delete-icon d-none">
-                                                <i data-acorn-icon="close"></i>
-                                            </span>
                                         </div>
                                     </div>
-                                    <div class="col-12 col-sm-7 col-lg-9 col-xxl-10 text-end mb-1">
+                                    <div class="col-12 col-sm-7 col-lg-9 text-end">
                                         <div class="d-inline-block">
-                                            <button class="btn btn-icon btn-icon-only btn-outline-muted btn-sm datatable-add" type="button" data-datatable="#tbUser">
+                                            <button class="btn btn-icon btn-icon-start btn-primary btn-sm datatable-add shadow-sm me-1" type="button">
                                                 <i data-acorn-icon="plus"></i>
+                                                <span>Tambah User</span>
                                             </button>
-                                            <button class="btn btn-icon btn-icon-only btn-outline-muted btn-sm datatable-print" type="button" data-datatable="#tbUser">
+                                            <button class="btn btn-icon btn-icon-only btn-outline-muted btn-sm datatable-print me-1" type="button" title="Print Table">
                                                 <i data-acorn-icon="print"></i>
                                             </button>
-                                            <div class="d-inline-block datatable-export" data-datatable="#tbUser">
-                                                <button class="btn btn-icon btn-icon-only btn-outline-muted btn-sm dropdown" data-bs-toggle="dropdown" type="button" data-bs-offset="0,3">
+                                            <div class="d-inline-block datatable-export me-1">
+                                                <button class="btn btn-icon btn-icon-only btn-outline-muted btn-sm dropdown-toggle" data-bs-toggle="dropdown" type="button" data-bs-offset="0,3" title="Export">
                                                     <i data-acorn-icon="download"></i>
                                                 </button>
                                                 <div class="dropdown-menu dropdown-menu-sm dropdown-menu-end">
                                                     <button class="dropdown-item export-copy" type="button">Copy</button>
                                                     <button class="dropdown-item export-excel" type="button">Excel</button>
-                                                    <button class="dropdown-item export-cvs" type="button">Cvs</button>
+                                                    <button class="dropdown-item export-cvs" type="button">CSV</button>
                                                 </div>
                                             </div>
-                                            <div class="dropdown-as-select d-inline-block datatable-length" data-datatable="#tbUser">
+                                            <div class="dropdown-as-select d-inline-block datatable-length">
                                                 <button class="btn btn-outline-muted btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bs-offset="0,3">
-                                                    10 Items
+                                                    10 Baris
                                                 </button>
                                                 <div class="dropdown-menu dropdown-menu-sm dropdown-menu-end">
-                                                    <a class="dropdown-item" href="#">10 Items</a>
-                                                    <a class="dropdown-item active" href="#">20 Items</a>
-                                                    <a class="dropdown-item" href="#">50 Items</a>
-                                                    <a class="dropdown-item" href="#">100 Items</a>
+                                                    <a class="dropdown-item active" href="#">10 Baris</a>
+                                                    <a class="dropdown-item" href="#">20 Baris</a>
+                                                    <a class="dropdown-item" href="#">50 Baris</a>
+                                                    <a class="dropdown-item" href="#">100 Baris</a>
                                                 </div>
                                             </div>
                                         </div>
@@ -94,28 +105,29 @@
         </div>
     </main>
 
+    <!-- Modal Tambah/Edit User -->
     <div class="modal fade" id="userModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"></h5>
-                    <button type="button" class="closed btn-close"></button>
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-alternate"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formValid" class="tooltip-label-end" novalidate>
                         <div class="mb-3 filled position-relative form-group">
                             <i data-acorn-icon="user"></i>
-                            <input type="text" class="form-control" placeholder="Nama" id="nama" name="nama" required>
+                            <input type="text" class="form-control" placeholder="Nama Lengkap" id="nama" name="nama" required>
                         </div>
 
                         <div class="mb-3 filled position-relative form-group">
                             <i data-acorn-icon="email"></i>
-                            <input type="email" class="form-control" placeholder="Email" id="email" name="email" required>
+                            <input type="email" class="form-control" placeholder="Alamat Email" id="email" name="email" required>
                         </div>
 
                         <div class="filled mb-3 w-100 position-relative form-group">
                             <i data-acorn-icon="lock-on"></i>
-                            <select class="form-control" id="role" name="role" data-placeholder="Role" required>
+                            <select class="form-control" id="role" name="role" data-placeholder="Pilih Role" required>
                                 <option label="&nbsp;"></option>
                                 <option value="admin">admin</option>
                                 <option value="gudang">gudang</option>
@@ -125,7 +137,7 @@
 
                         <div class="filled mb-3 w-100 position-relative form-group">
                             <i data-acorn-icon="home-garage"></i>
-                            <select class="form-control" id="namaToko" name="namaToko" data-placeholder="Nama Toko" required>
+                            <select class="form-control" id="namaToko" name="namaToko" data-placeholder="Pilih Cabang Toko" required>
                                 <option label="&nbsp;"></option>
                                 @foreach ($toko as $t)
                                     <option value="{{ $t->kode }}">{{ $t->nama_toko }}</option>
@@ -135,36 +147,36 @@
 
                         <div class="filled mb-3 w-100 position-relative form-group">
                             <i data-acorn-icon="activity"></i>
-                            <select class="form-control" id="status" name="status" data-placeholder="Status" required>
+                            <select class="form-control" id="status" name="status" data-placeholder="Status Akun" required>
                                 <option label="&nbsp;"></option>
-                                <option value="on">on</option>
-                                <option value="off">off</option>
+                                <option value="on">Aktif (On)</option>
+                                <option value="off">Nonaktif (Off)</option>
                             </select>
                         </div>
 
                         <div class="filled mb-3 w-100 position-relative form-group">
                             <i data-acorn-icon="clock"></i>
-                            <select class="form-control" id="shift" name="shift" data-placeholder="shift" required>
+                            <select class="form-control" id="shift" name="shift" data-placeholder="Shift Kerja" required>
                                 <option label="&nbsp;"></option>
-                                <option value="0">Semua</option>
+                                <option value="0">Semua Shift</option>
                                 <option value="1">Pagi</option>
                                 <option value="2">Sore</option>
                             </select>
                         </div>
 
                         <div class="mb-3 filled position-relative form-group">
-                            <i data-acorn-icon="barcode"></i>
-                            <input type="password" class="form-control" placeholder="Password" id="password" name="password" required>
+                            <i data-acorn-icon="lock-off"></i>
+                            <input type="password" class="form-control" placeholder="Kata Sandi" id="password" name="password" required>
                         </div>
 
                         <div class="mb-3 filled position-relative form-group">
-                            <i data-acorn-icon="barcode"></i>
-                            <input type="password" class="form-control" placeholder="Password" id="confirm_password" name="confirm_password" required>
+                            <i data-acorn-icon="lock-off"></i>
+                            <input type="password" class="form-control" placeholder="Konfirmasi Kata Sandi" id="confirm_password" name="confirm_password" required>
                         </div>
 
-                        <div class="mt-3 float-end">
-                            <button type="button" class="closed btn btn-muted">Close</button>
-                            <button type="button" class="simpan btn btn-primary"></button>
+                        <div class="mt-4 pt-2 border-top text-end">
+                            <button type="button" class="btn btn-outline-muted btn-sm me-1" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="simpan btn btn-primary btn-sm"></button>
                         </div>
                     </form>
                 </div>
@@ -172,33 +184,34 @@
         </div>
     </div>
 
+    <!-- Modal Ubah Password -->
     <div class="modal fade" id="userPasswordModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"></h5>
-                    <button type="button" class="closed btn-close"></button>
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-alternate"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formValids" class="tooltip-label-end" novalidate>
                         <div class="mb-3 filled position-relative form-group">
-                            <i data-acorn-icon="barcode"></i>
+                            <i data-acorn-icon="email"></i>
                             <input type="email" class="form-control" placeholder="Email" id="changeEmail" name="changeEmail" readonly required>
                         </div>
 
                         <div class="mb-3 filled position-relative form-group">
-                            <i data-acorn-icon="barcode"></i>
-                            <input type="password" class="form-control" placeholder="Password" id="changePassword" name="changePassword" required>
+                            <i data-acorn-icon="lock-off"></i>
+                            <input type="password" class="form-control" placeholder="Kata Sandi Baru" id="changePassword" name="changePassword" required>
                         </div>
 
                         <div class="mb-3 filled position-relative form-group">
-                            <i data-acorn-icon="barcode"></i>
-                            <input type="password" class="form-control" placeholder="Password Konfirmasi" id="changeConfirmPassword" name="changeConfirmPassword" required>
+                            <i data-acorn-icon="lock-off"></i>
+                            <input type="password" class="form-control" placeholder="Konfirmasi Kata Sandi Baru" id="changeConfirmPassword" name="changeConfirmPassword" required>
                         </div>
 
-                        <div class="mt-3 float-end">
-                            <button type="button" class="closed btn btn-muted">Close</button>
-                            <button type="button" class="simpan btn btn-primary"></button>
+                        <div class="mt-4 pt-2 border-top text-end">
+                            <button type="button" class="btn btn-outline-muted btn-sm me-1" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="simpan btn btn-primary btn-sm"></button>
                         </div>
                     </form>
                 </div>
@@ -226,7 +239,7 @@
         });
 
         $(document).ready(function() {
-            function ajaxData(method, url, data, params) {
+            function ajaxData(method, url, data) {
                 $.ajax({
                     type: method,
                     url: url,
@@ -234,45 +247,35 @@
                     success: function(response) {
                         if (method == 'post') {
                             Swal.fire({
-                                icon: 'warning',
-                                title: 'Data Akan Diproses',
-                                text: 'Anda Yakin Akan Melanjutkan Proses?',
-                                showCancelButton: true,
-                                confirmButtonText: 'Simpan',
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    Swal.fire({
-                                        icon: response.icon,
-                                        title: response.title,
-                                        text: response.text,
-                                    })
-                                    if (response.icon == 'success') {
-                                        $('.closed').click();
-                                    }
-                                    $('#tbUser').DataTable().ajax.reload(null, false);
-                                } else {
-                                    $('#tbUser').DataTable().ajax.reload(null, false);
-                                }
-                            })
+                                icon: response.icon,
+                                title: response.title,
+                                text: response.text,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            if (response.icon == 'success') {
+                                $('#userModal').modal('hide');
+                                $('#userPasswordModal').modal('hide');
+                                $('#formValid')[0].reset();
+                                $('#formValids')[0].reset();
+                            }
+                            $('#tbUser').DataTable().ajax.reload(null, false);
                         } else if (method == 'get') {
-                            getData(response)
-                            return response
+                            getData(response);
                         }
                     }
                 });
             }
 
             function getData(params) {
-                var nama = $('#nama').val(params.data.name);
-                var email = $('#email').val(params.data.email).prop('disabled', true);
-                var role = $('#role').val(['val', params.data.role]).trigger('change');
-                var namaToko = $('#namaToko').val(['val', params.data.kode_toko]).trigger('change');
-                var status = $('#status').val(['val', params.data.status]).trigger('change');
-                var shift = $('#shift').val(['val', params.data.shift]).trigger('change');
-                var password = $('#password').prop('disabled', true);
-                var confirm_password = $('#confirm_password').prop('disabled', true);
+                $('#nama').val(params.data.name);
+                $('#email').val(params.data.email).prop('disabled', true);
+                $('#role').val(params.data.role).trigger('change');
+                $('#namaToko').val(params.data.kode_toko).trigger('change');
+                $('#status').val(params.data.status).trigger('change');
+                $('#shift').val(params.data.shift).trigger('change');
 
-                var email = $('#changeEmail').val(params.data.email).prop('disabled', true);
+                $('#changeEmail').val(params.data.email);
             }
 
             $('#tbUser').DataTable({
@@ -281,7 +284,7 @@
                 destroy: true,
                 paging: true,
                 length: 10,
-                pageLength: 20,
+                pageLength: 10,
                 buttons: ['copy', 'excel', 'csv', 'print'],
                 order: [
                     [0, "asc"]
@@ -325,93 +328,186 @@
                 },
             });
 
-            $("#formValid").validate();
+            // Bind Custom Datatable Search
+            $('.datatable-search').on('keyup', function() {
+                $('#tbUser').DataTable().search($(this).val()).draw();
+            });
 
+            // Bind Custom Datatable Length Dropdown
+            $('.datatable-length .dropdown-item').on('click', function(e) {
+                e.preventDefault();
+                $('.datatable-length .dropdown-item').removeClass('active');
+                $(this).addClass('active');
+                const text = $(this).text();
+                const length = parseInt(text);
+                $('.datatable-length button').text(text);
+                $('#tbUser').DataTable().page.len(length).draw();
+            });
+
+            // Bind Custom Datatable Exports
+            $('.export-copy').on('click', function() {
+                $('#tbUser').DataTable().button('.buttons-copy').trigger();
+            });
+            $('.export-excel').on('click', function() {
+                $('#tbUser').DataTable().button('.buttons-excel').trigger();
+            });
+            $('.export-cvs').on('click', function() {
+                $('#tbUser').DataTable().button('.buttons-csv').trigger();
+            });
+            $('.datatable-print').on('click', function() {
+                $('#tbUser').DataTable().button('.buttons-print').trigger();
+            });
+
+            $("#formValid").validate();
+            $("#formValids").validate();
+
+            // Tambah Data Action
             $(document).on('click', '.datatable-add', function() {
+                $('#formValid')[0].reset();
+                $('#email').prop('disabled', false);
+                $('#password').prop('disabled', false).parent().show();
+                $('#confirm_password').prop('disabled', false).parent().show();
+                $('#password').prop('required', true);
+                $('#confirm_password').prop('required', true);
+                $('#role').val(null).trigger('change');
+                $('#namaToko').val(null).trigger('change');
+                $('#status').val(null).trigger('change');
+                $('#shift').val(null).trigger('change');
+
                 $('#userModal').modal('show');
-                $('.modal-title').html('Add Data');
+                $('.modal-title').html('Tambah User Baru');
                 $('.simpan').html('Simpan');
             });
 
+            // Ubah Password Action
             $(document).on('click', '.password', function() {
+                $('#formValids')[0].reset();
                 $('#userPasswordModal').modal('show');
-                $('.modal-title').html('Ubah Password');
+                $('.modal-title').html('Ubah Password User');
                 $('.simpan').html('Ubah');
                 var kode = $(this).attr('data-kode');
-                var data = {
-                    kode: kode
-                };
-                ajaxData('get', '/user/edit', data);
+                ajaxData('get', '/user/edit', { kode: kode });
             });
 
+            // Edit Data Action
             $(document).on('click', '.edit', function() {
-                $('#userModal').modal('show');
-                $('.modal-title').html('Edit Data');
-                $('.simpan').html('Edit');
+                $('#formValid')[0].reset();
+                $('#email').prop('disabled', true);
+                $('#password').prop('disabled', true).parent().hide();
+                $('#confirm_password').prop('disabled', true).parent().hide();
+                $('#password').prop('required', false);
+                $('#confirm_password').prop('required', false);
+
                 var kode = $(this).attr('data-kode');
-                var data = {
-                    kode: kode
-                };
-                ajaxData('get', '/user/edit', data);
+                $('#userModal').modal('show');
+                $('.modal-title').html('Edit Data User');
+                $('.simpan').html('Edit');
+                
+                ajaxData('get', '/user/edit', { kode: kode });
             });
 
-            $(document).on('click', '.closed', function() {
-                $('#userModal').modal('hide');
-                $('#userPasswordModal').modal('hide');
-                $('#changePassword').val('');
-                $('#changeConfirmPassword').val('');
-            });
+            // Form Submit Event Handlers
+            $('#formValid').on('submit', function(e) {
+                e.preventDefault();
+                if ($(this).valid()) {
+                    var cekButton = $('.simpan').html();
+                    var nama = $('#nama').val();
+                    var email = $('#email').val();
+                    var role = $('#role').val();
+                    var namaToko = $('#namaToko').val();
+                    var status = $('#status').val();
+                    var shift = $('#shift').val();
+                    var password = $('#password').val();
+                    var confirm_password = $('#confirm_password').val();
 
-            $(document).on('click', '.simpan', function() {
-                var cekButton = $('.simpan').html();
-                var nama = $('#nama').val();
-                var email = $('#email').val();
-                var role = $('#role').val();
-                var namaToko = $('#namaToko').val();
-                var status = $('#status').val();
-                var shift = $('#shift').val();
-                var password = $('#password').val();
-                var confirm_password = $('#confirm_password').val();
-                var valid = $("#formValid").valid();
+                    var data = {
+                        nama: nama,
+                        email: email,
+                        role: role,
+                        namaToko: namaToko,
+                        status: status,
+                        shift: shift,
+                        password: password,
+                        confirm_password: confirm_password,
+                    };
 
-                var data = {
-                    nama: nama,
-                    email: email,
-                    role: role,
-                    namaToko: namaToko,
-                    status: status,
-                    shift: shift,
-                    password: password,
-                    confirm_password: confirm_password,
-                };
-
-                if (valid == true) {
                     if (cekButton == 'Simpan') {
                         ajaxData('post', '/user/store', data);
                     } else if (cekButton == 'Edit') {
                         ajaxData('post', '/user/update', data);
-                    } else if (cekButton == 'Ubah') {
-                        var changePassword = $('#changePassword').val();
-                        var changeConfirmPassword = $('#changeConfirmPassword').val();
-                        var changeEmail = $('#changeEmail').val();
-                        var datas = {
-                            params: 'password',
-                            changeEmail: changeEmail,
-                            changePassword: changePassword,
-                            changeConfirmPassword: changeConfirmPassword,
-                        };
-                        ajaxData('post', '/user/update', datas);
                     }
                 }
             });
 
-            $(document).on('click', '.destroy', function() {
-                var data = {
-                    kode: $(this).attr('data-kode')
+            $('#formValids').on('submit', function(e) {
+                e.preventDefault();
+                if ($(this).valid()) {
+                    var changePassword = $('#changePassword').val();
+                    var changeConfirmPassword = $('#changeConfirmPassword').val();
+                    var changeEmail = $('#changeEmail').val();
+                    var datas = {
+                        params: 'password',
+                        changeEmail: changeEmail,
+                        changePassword: changePassword,
+                        changeConfirmPassword: changeConfirmPassword,
+                    };
+                    ajaxData('post', '/user/update', datas);
                 }
-                ajaxData('post', '/user/destroy', data);
+            });
+
+            // Delete Action with native Pre-Confirmation
+            $(document).on('click', '.destroy', function() {
+                var kode = $(this).attr('data-kode');
+                Swal.fire({
+                    title: 'Hapus User?',
+                    text: 'Tindakan ini akan menghapus akun user secara permanen!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        ajaxData('post', '/user/destroy', { kode: kode });
+                    }
+                });
+            });
+
+            // Status Toggle Switch Handler
+            $(document).on('change', '.status-toggle', function() {
+                var toggle = $(this);
+                var kode = toggle.attr('data-kode');
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/user/toggle-status',
+                    data: { kode: kode, _token: '{{ csrf_token() }}' },
+                    success: function(response) {
+                        var toastIcon = response.icon === 'success' ? '✅' : '❌';
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: response.icon,
+                            title: response.text,
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true,
+                        });
+
+                        if (response.icon !== 'success') {
+                            // Revert the toggle if failed (e.g., self-deactivation blocked)
+                            toggle.prop('checked', !toggle.prop('checked'));
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Terjadi kesalahan', timer: 2000, showConfirmButton: false });
+                        toggle.prop('checked', !toggle.prop('checked'));
+                    }
+                });
             });
 
         });
     </script>
 @endpush
+

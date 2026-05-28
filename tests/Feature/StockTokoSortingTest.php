@@ -9,10 +9,14 @@ use Illuminate\Support\Facades\DB;
 uses(RefreshDatabase::class);
 
 it('can sort stock toko detail by sisa', function () {
+    // Run the RBAC seeder to populate roles and permissions
+    $this->seed(\Database\Seeders\RBACSeeder::class);
+
     // Create a user with admin role and status on
     $user = User::factory()->create([
         'status' => 'on',
         'role' => 'admin',
+        'shift' => 0,
     ]);
 
     // Create a Toko manually to bypass mass assignment guard

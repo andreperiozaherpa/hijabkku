@@ -13,4 +13,9 @@ class StockToko extends Model
     {
         return $this->belongsTo(DataBarang::class, 'kode_barang', 'kode');
     }
+
+    public function toko()
+    {
+        return $this->belongsTo(Toko::class, 'kode_toko', 'kode');
+    }
 }

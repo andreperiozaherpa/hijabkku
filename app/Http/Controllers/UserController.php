@@ -90,14 +90,11 @@ class UserController extends Controller
         }
         return DataTables()->of($data)
             ->addColumn('status', function ($data) {
-                if ($data->status == 'on') {
-                    # code...
-                    $group = '<span class="badge bg-success text-uppercase">' . $data->status . '</span>';
-                } else {
-                    $group = '<span class="badge bg-danger text-uppercase">' . $data->status . '</span>';
-                }
-
-                return $group;
+                $checked = $data->status == 'on' ? 'checked' : '';
+                $disabled = Auth::user()->id == $data->id ? 'disabled' : '';
+                return '<div class="form-check form-switch mb-0">
+                            <input class="form-check-input status-toggle" type="checkbox" data-kode="' . $data->id . '" ' . $checked . ' ' . $disabled . ' style="cursor: pointer; width: 2.5rem; height: 1.25rem;">
+                        </div>';
             })
             ->addColumn('shift', function ($data) {
                 $shift = $data->shift;
@@ -211,6 +208,89 @@ class UserController extends Controller
         return response()->json([
             'icon' => $icon,
             'title' => $title,
+            'text' => $text
+        ]);
+    }
+
+    /**
+     * Toggle the active/inactive status of a user.
+     */
+    public function toggleStatus(Request $request)
+    {
+        $id = $request->kode;
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['icon' => 'error', 'title' => 'Gagal', 'text' => 'User tidak ditemukan']);
+        }
+
+        // Prevent self-deactivation
+        if (Auth::user()->id == $user->id) {
+            return response()->json(['icon' => 'error', 'title' => 'Tidak Diizinkan', 'text' => 'Anda tidak dapat mengubah status akun Anda sendiri.']);
+        }
+
+        $user->status = $user->status === 'on' ? 'off' : 'on';
+        $user->save();
+
+        $label = $user->status === 'on' ? 'Aktif' : 'Nonaktif';
+
+        return response()->json([
+            'icon'   => 'success',
+            'title'  => 'Status Diperbarui',
+            'text'   => "Akun {$user->name} sekarang {$label}.",
+            'status' => $user->status,
+        ]);
+    }
+
+    public function rbacIndex()
+    {
+        $roles = ['admin', 'kasir', 'gudang'];
+        $permissions = \DB::table('permissions')->get();
+        
+        // Fetch current role permissions mapping
+        $rolePermissions = \DB::table('role_permissions')
+            ->select('role', 'permission_id')
+            ->get()
+            ->groupBy('role')
+            ->map(function ($items) {
+                return $items->pluck('permission_id')->toArray();
+            })
+            ->toArray();
+
+        return view('manajemen_user.rbac', [
+            'roles' => $roles,
+            'permissions' => $permissions,
+            'rolePermissions' => $rolePermissions,
+        ]);
+    }
+
+    public function rbacUpdate(Request $request)
+    {
+        $role = $request->role;
+        $permissionId = $request->permission_id;
+        $checked = $request->checked; // boolean
+
+        if (!in_array($role, ['admin', 'kasir', 'gudang'])) {
+            return response()->json(['icon' => 'error', 'title' => 'Gagal', 'text' => 'Role tidak valid']);
+        }
+
+        if ($checked) {
+            \DB::table('role_permissions')->updateOrInsert([
+                'role' => $role,
+                'permission_id' => $permissionId
+            ]);
+            $text = 'Hak akses berhasil ditambahkan.';
+        } else {
+            \DB::table('role_permissions')
+                ->where('role', $role)
+                ->where('permission_id', $permissionId)
+                ->delete();
+            $text = 'Hak akses berhasil dicabut.';
+        }
+
+        return response()->json([
+            'icon' => 'success',
+            'title' => 'Sukses',
             'text' => $text
         ]);
     }

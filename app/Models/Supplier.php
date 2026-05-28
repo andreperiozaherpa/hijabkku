@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Supplier extends Model
 {
     use HasFactory;
+
+    public function stockInOuts()
+    {
+        return $this->hasMany(StockInOut::class, 'kode_supplier', 'kode');
+    }
 }
