@@ -356,13 +356,9 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Currency formatter
+            // Currency formatter (Format: Rp 1.000.000)
             const formatRupiah = (value) => {
-                return new Intl.NumberFormat('id-ID', {
-                    style: 'currency',
-                    currency: 'IDR',
-                    maximumFractionDigits: 0
-                }).format(value);
+                return 'Rp ' + Math.round(value).toLocaleString('id-ID');
             };
 
             // Shorthand Currency formatter for neat Y-axis
