@@ -572,11 +572,27 @@ class StockOpnameController extends Controller
             $session->supervisor_id = Auth::user()->id;
             $session->save();
 
-            // Mathematically sync and calculate final quantities for all items before review
+            // Bulk prefetch sales during opname for this shop
+            $salesData = DB::table('transaksis')
+                ->where('kode_toko', $session->kode_toko)
+                ->where('created_at', '>=', $session->created_at)
+                ->groupBy('kode_barang')
+                ->select('kode_barang', DB::raw('SUM(jumlah) as total_sales'))
+                ->pluck('total_sales', 'kode_barang')
+                ->toArray();
+
+            // Fetch all items to optimize price fetching in bulk
             $items = StockOpnameItem::where('stock_opname_id', $session->id)->get();
+            $itemCodes = $items->pluck('kode_barang')->toArray();
+
+            // Bulk prefetch purchase prices (harga_beli) from master products
+            $prices = DataBarang::whereIn('kode', $itemCodes)
+                ->pluck('harga_beli', 'kode')
+                ->toArray();
+
             foreach ($items as $item) {
-                $barang = DataBarang::where('kode', $item->kode_barang)->first();
-                $harga_beli = $barang ? floatval(str_replace('.', '', $barang->harga_beli)) : 0;
+                $rawPrice = $prices[$item->kode_barang] ?? '0';
+                $harga_beli = floatval(str_replace('.', '', $rawPrice));
 
                 // Sync latest counted quantity across rounds
                 if ($item->round_3_qty !== null) {
@@ -587,12 +603,7 @@ class StockOpnameController extends Controller
                     $item->final_qty = $item->round_1_qty ?? 0;
                 }
 
-                $sales = DB::table('transaksis')
-                    ->where('kode_toko', $session->kode_toko)
-                    ->where('kode_barang', $item->kode_barang)
-                    ->where('created_at', '>=', $session->created_at)
-                    ->sum('jumlah');
-
+                $sales = $salesData[$item->kode_barang] ?? 0;
                 $adjustedSnapshot = max(0, $item->snapshot_qty - $sales);
 
                 $item->difference = $item->final_qty - $adjustedSnapshot;
@@ -626,23 +637,33 @@ class StockOpnameController extends Controller
             $session->save();
 
             $items = StockOpnameItem::where('stock_opname_id', $session->id)->get();
+            $itemCodes = $items->pluck('kode_barang')->toArray();
+
+            // Bulk prefetch stock_tokos for this shop and these codes
+            $stocksMap = StockToko::where('kode_toko', $session->kode_toko)
+                ->whereIn('kode_barang', $itemCodes)
+                ->get()
+                ->keyBy('kode_barang');
+
+            // Bulk prefetch product names from master data in case we need to create new stock
+            $barangsMap = DataBarang::whereIn('kode', $itemCodes)
+                ->get()
+                ->keyBy('kode');
 
             foreach ($items as $item) {
                 if ($item->difference == 0) {
                     continue;
                 }
 
-                // Update stock_tokos table directly
-                $stock = StockToko::where('kode_toko', $session->kode_toko)
-                    ->where('kode_barang', $item->kode_barang)
-                    ->first();
+                // Retrieve stock from pre-fetched map
+                $stock = $stocksMap->get($item->kode_barang);
 
                 if ($stock) {
                     $stock->jumlah = $stock->jumlah + $item->difference;
                     $stock->save();
                 } else {
                     // Create new stock if not existed
-                    $barang = DataBarang::where('kode', $item->kode_barang)->first();
+                    $barang = $barangsMap->get($item->kode_barang);
                     StockToko::create([
                         'kode_input' => 'SO-ADJ-' . $session->nomor_so,
                         'kode_toko' => $session->kode_toko,
