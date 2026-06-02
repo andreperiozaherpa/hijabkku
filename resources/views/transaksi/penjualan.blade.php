@@ -676,7 +676,7 @@
                         var originalStock = parseInt(el.attr('data-jumlah')) || 0;
                         var newSisa = originalStock - qty;
                         
-                        el.attr('data-jumlah', newSisa).text(newSisa <= 0 ? 'Habis' : 'Stok: ' + newSisa);
+                        el.attr('data-jumlah', newSisa).text(getStockText(newSisa));
                         productBtn.closest('.product-card').removeClass('stock-ok stock-low stock-empty').addClass(stockClass(newSisa));
                         if (newSisa <= 0) {
                             productBtn.prop('disabled', true).css({
@@ -738,13 +738,25 @@
                 recalculatePosTotal();
             }
 
+            var globHideStock = false;
+
+            function getStockText(sisa) {
+                if (sisa <= 0) return 'Habis';
+                return globHideStock ? 'Tersedia' : 'Stok: ' + sisa;
+            }
+
             function stockClass(jumlah) {
+                if (globHideStock) {
+                    if (jumlah <= 0) return 'stock-empty';
+                    return 'stock-ok';
+                }
                 if (jumlah <= 0) return 'stock-empty';
                 return jumlah <= 3 ? 'stock-low' : 'stock-ok';
             }
 
             function dataStock(params) {
                 $('.stock').html('');
+                globHideStock = params.hide_stock || false;
                 $.each(params.stock, function(index, value) {
                     var sisa = value.jumlah - value.terjual;
                     var cls = stockClass(sisa);
@@ -766,7 +778,7 @@
                                 </div>
                                 <div class="stock-bar ${cls}">
                                     <div class="sisaStock" data-jumlah="${sisa}">
-                                        ${sisa <= 0 ? 'Habis' : 'Stok: ' + sisa}
+                                        ${getStockText(sisa)}
                                     </div>
                                     <span class="stock-indicator"></span>
                                 </div>
@@ -861,7 +873,7 @@
                     var newSisa = sisaStock - 1;
                     $(this).find('.sisaStock')
                         .attr('data-jumlah', newSisa)
-                        .text(newSisa <= 0 ? 'Habis' : 'Stok: ' + newSisa);
+                        .text(getStockText(newSisa));
 
                     $(this).closest('.product-card').removeClass('stock-ok stock-low stock-empty').addClass(
                         stockClass(newSisa));
@@ -999,7 +1011,7 @@
                         $('button.selected[data-kode_barang="' + barang + '"]').each(function() {
                             var el = $(this).find('.sisaStock');
                             var cur = parseInt(el.attr('data-jumlah')) + jumlahLama;
-                            el.attr('data-jumlah', cur).text('Stok: ' + cur);
+                            el.attr('data-jumlah', cur).text(getStockText(cur));
                             $(this).prop('disabled', false).css({
                                 'opacity': '',
                                 'pointer-events': ''
@@ -1172,7 +1184,7 @@
                 $('button.selected[data-kode_barang="' + barang + '"]').each(function() {
                     var el = $(this).find('.sisaStock');
                     var cur = parseInt(el.attr('data-jumlah')) + 1;
-                    el.attr('data-jumlah', cur).text('Stok: ' + cur);
+                    el.attr('data-jumlah', cur).text(getStockText(cur));
                     $(this).prop('disabled', false).css({
                         'opacity': '',
                         'pointer-events': ''

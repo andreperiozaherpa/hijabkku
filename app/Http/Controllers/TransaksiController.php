@@ -97,8 +97,17 @@ class TransaksiController extends Controller
                 ->orderByDesc('kode_toko')
                 ->get();
         }
+
+        $hideStock = false;
+        if ($user->role !== 'admin') {
+            $hideStock = \App\Models\StockOpname::where('kode_toko', $user->kode_toko)
+                ->whereIn('status', ['Draft', 'Counting', 'Recount', 'Review'])
+                ->exists();
+        }
+
         return response()->json([
-            'stock' => $stock_toko
+            'stock' => $stock_toko,
+            'hide_stock' => $hideStock
         ]);
     }
 

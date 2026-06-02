@@ -7,6 +7,7 @@
             background-color: rgba(220, 53, 69, 0.02) !important;
             border-left: 4px solid #dc3545 !important;
         }
+
         .sticky-action-bar {
             position: sticky;
             bottom: 20px;
@@ -20,59 +21,108 @@
             margin: 20px 0;
             transition: all 0.3s ease;
         }
+
         html[data-theme="dark"] .sticky-action-bar {
             background: rgba(30, 30, 36, 0.9);
             border: 1px solid rgba(255, 255, 255, 0.05);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
+
         .audit-log-item {
             font-size: 0.82rem;
             padding: 14px 18px;
             border-bottom: 1px solid rgba(0, 0, 0, 0.04);
             transition: background 0.2s ease;
         }
+
         html[data-theme="dark"] .audit-log-item {
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
+
         .audit-log-item:hover {
             background-color: rgba(0, 0, 0, 0.015);
         }
+
         html[data-theme="dark"] .audit-log-item:hover {
             background-color: rgba(255, 255, 255, 0.015);
         }
+
         .cursor-pointer {
             cursor: pointer;
         }
+
         .border-dashed {
             border: 1px dashed currentColor;
         }
+
         .card-stat {
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         .card-stat:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04) !important;
         }
+
         .scanner-glow {
             animation: pulse-glow 2s infinite alternate;
         }
+
         @keyframes pulse-glow {
-            0% { box-shadow: 0 0 5px rgba(13, 202, 240, 0.2); }
-            100% { box-shadow: 0 0 15px rgba(13, 202, 240, 0.6); }
+            0% {
+                box-shadow: 0 0 5px rgba(13, 202, 240, 0.2);
+            }
+
+            100% {
+                box-shadow: 0 0 15px rgba(13, 202, 240, 0.6);
+            }
         }
+
         /* High-ergonomics editable cell styling */
         .editable-cell {
             cursor: pointer !important;
             transition: all 0.2s ease-in-out;
         }
+
         .editable-cell:hover {
-            background-color: rgba(13, 110, 253, 0.08) !important; /* Premium soft blue glow */
+            background-color: rgba(13, 110, 253, 0.08) !important;
+            /* Premium soft blue glow */
         }
+
         .editable-cell:hover .edit-qty-trigger {
-            background-color: #0d6efd !important; /* Solid blue badge on cell hover */
+            background-color: #0d6efd !important;
+            /* Solid blue badge on cell hover */
             color: #ffffff !important;
             box-shadow: 0 4px 10px rgba(13, 110, 253, 0.25);
             transform: scale(1.05);
+        }
+
+        @media (max-width: 767.98px) {
+            #roundTabs {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                width: 100% !important;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 5px;
+                border-radius: 8px;
+                box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+                background: rgba(0, 0, 0, 0.02);
+                padding: 4px;
+            }
+            #roundTabs button {
+                flex: 1 0 auto !important;
+                white-space: nowrap !important;
+                font-size: 0.78rem !important;
+                padding: 6px 12px !important;
+                border: none !important;
+                border-radius: 6px !important;
+            }
+            #roundTabs button.active {
+                background-color: #0d6efd !important;
+                color: #ffffff !important;
+                box-shadow: 0 2px 6px rgba(13, 110, 253, 0.3);
+            }
         }
     </style>
 
@@ -87,7 +137,8 @@
                             <ul class="breadcrumb pt-0">
                                 <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
                                 <li class="breadcrumb-item"><a href="{{ route('stock.opname') }}">Opname</a></li>
-                                <li class="breadcrumb-item active text-muted" aria-current="page">{{ $session->nomor_so }}</li>
+                                <li class="breadcrumb-item active text-muted" aria-current="page">{{ $session->nomor_so }}
+                                </li>
                             </ul>
                         </nav>
                     </div>
@@ -100,18 +151,19 @@
                                 'Recount' => 'bg-warning text-dark',
                                 'Review' => 'bg-primary text-white',
                                 'Approved' => 'bg-success text-white',
-                                'Posted' => 'bg-dark text-white'
+                                'Posted' => 'bg-dark text-white',
                             ];
                             $badge = $badges[$session->status] ?? 'bg-secondary';
                         @endphp
-                        <span class="badge {{ $badge }} fs-6 px-3 py-2" id="sessionStatusLabel">{{ $session->status }}</span>
+                        <span class="badge {{ $badge }} fs-6 px-3 py-2"
+                            id="sessionStatusLabel">{{ $session->status }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Summary Cards Dashboard -->
             <div class="row g-3 mb-4">
-                <div class="col-6 @if(Auth::user()->role == 'admin') col-lg-2 @else col-lg-3 @endif">
+                <div class="col-6 @if (Auth::user()->role == 'admin') col-lg-2 @else col-lg-3 @endif">
                     <div class="card h-100 border-0 shadow-sm card-stat bg-light">
                         <div class="card-body py-3">
                             <div class="text-muted small text-uppercase font-weight-bold">Total SKU</div>
@@ -119,7 +171,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-6 @if(Auth::user()->role == 'admin') col-lg-2 @else col-lg-3 @endif">
+                <div class="col-6 @if (Auth::user()->role == 'admin') col-lg-2 @else col-lg-3 @endif">
                     <div class="card h-100 border-0 shadow-sm card-stat">
                         <div class="card-body py-3">
                             <div class="text-muted small text-uppercase font-weight-bold">Sudah Dihitung</div>
@@ -127,7 +179,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-6 @if(Auth::user()->role == 'admin') col-lg-2 @else col-lg-3 @endif">
+                <div class="col-6 @if (Auth::user()->role == 'admin') col-lg-2 @else col-lg-3 @endif">
                     <div class="card h-100 border-0 shadow-sm card-stat">
                         <div class="card-body py-3">
                             <div class="text-muted small text-uppercase font-weight-bold">Belum Dihitung</div>
@@ -135,25 +187,26 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-6 @if(Auth::user()->role == 'admin') col-lg-2 @else col-lg-3 @endif">
+                <div class="col-6 @if (Auth::user()->role == 'admin') col-lg-2 @else col-lg-3 @endif">
                     <div class="card h-100 border-0 shadow-sm card-stat">
                         <div class="card-body py-3">
                             <div class="text-muted small text-uppercase font-weight-bold">SKU Selisih</div>
-                            <div class="fs-3 font-weight-bold text-danger" id="cardVarianceItems">{{ $variance_items }}</div>
-                        </div>
-                    </div>
-                </div>
-                @if(Auth::user()->role == 'admin')
-                <div class="col-12 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm card-stat bg-outline-danger">
-                        <div class="card-body py-3">
-                            <div class="text-muted small text-uppercase font-weight-bold">Nilai Selisih Estimasi</div>
-                            <div class="fs-3 font-weight-bold text-danger" id="cardVarianceValue">
-                                Rp. {{ number_format($variance_value, 0, ',', '.') }}
+                            <div class="fs-3 font-weight-bold text-danger" id="cardVarianceItems">{{ $variance_items }}
                             </div>
                         </div>
                     </div>
                 </div>
+                @if (Auth::user()->role == 'admin')
+                    <div class="col-12 col-lg-4">
+                        <div class="card h-100 border-0 shadow-sm card-stat bg-outline-danger">
+                            <div class="card-body py-3">
+                                <div class="text-muted small text-uppercase font-weight-bold">Nilai Selisih Estimasi</div>
+                                <div class="fs-3 font-weight-bold text-danger" id="cardVarianceValue">
+                                    Rp. {{ number_format($variance_value, 0, ',', '.') }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 @endif
             </div>
 
@@ -166,21 +219,26 @@
                             <div class="row g-3">
                                 <div class="col-6 col-md-3">
                                     <div class="text-muted small">Toko / Cabang</div>
-                                    <div class="font-weight-bold text-dark">{{ $session->toko ? $session->toko->nama_toko : '-' }}</div>
+                                    <div class="font-weight-bold text-dark">
+                                        {{ $session->toko ? $session->toko->nama_toko : '-' }}</div>
                                 </div>
                                 <div class="col-6 col-md-3">
                                     <div class="text-muted small">Petugas Lapangan</div>
-                                    <div class="font-weight-bold text-dark">{{ $session->petugas ? $session->petugas->name : '-' }}</div>
+                                    <div class="font-weight-bold text-dark">
+                                        {{ $session->petugas ? $session->petugas->name : '-' }}</div>
                                 </div>
                                 <div class="col-6 col-md-3">
                                     <div class="text-muted small">Supervisor/Validator</div>
-                                    <div class="font-weight-bold text-dark" id="supervisorLabel">{{ $session->supervisor ? $session->supervisor->name : '-' }}</div>
+                                    <div class="font-weight-bold text-dark" id="supervisorLabel">
+                                        {{ $session->supervisor ? $session->supervisor->name : '-' }}</div>
                                 </div>
                                 <div class="col-6 col-md-3">
                                     <div class="text-muted small">Waktu Mulai</div>
-                                    <div class="font-weight-bold text-primary">{{ $session->tanggal_mulai ? \Carbon\Carbon::parse($session->tanggal_mulai)->format('d M Y H:i') : 'Belum Dimulai' }}</div>
+                                    <div class="font-weight-bold text-primary">
+                                        {{ $session->tanggal_mulai ? \Carbon\Carbon::parse($session->tanggal_mulai)->format('d M Y H:i') : 'Belum Dimulai' }}
+                                    </div>
                                 </div>
-                                @if($session->notes)
+                                @if ($session->notes)
                                     <div class="col-12 border-top pt-2">
                                         <div class="text-muted small">Catatan Sesi</div>
                                         <div class="text-secondary small">{{ $session->notes }}</div>
@@ -191,19 +249,23 @@
                     </div>
 
                     <!-- Barcode Scanner Flow Area -->
-                    @if(in_array($session->status, ['Counting', 'Recount']))
+                    @if (in_array($session->status, ['Counting', 'Recount']))
                         <div class="card mb-4 border border-info bg-gradient-info-light scanner-glow">
-                            <div class="card-body py-3 d-flex flex-column flex-md-row align-items-center justify-content-between">
+                            <div
+                                class="card-body py-3 d-flex flex-column flex-md-row align-items-center justify-content-between">
                                 <div class="mb-3 mb-md-0">
                                     <h5 class="mb-1 text-info font-weight-bold d-flex align-items-center">
                                         <i data-acorn-icon="scanner" class="me-2"></i> Area Barcode Scanner Aktif
                                     </h5>
-                                    <p class="mb-0 small text-muted">Letakkan kursor pada kolom input di samping, lalu mulailah men-scan barcode produk.</p>
+                                    <p class="mb-0 small text-muted">Letakkan kursor pada kolom input di samping, lalu
+                                        mulailah men-scan barcode produk.</p>
                                 </div>
                                 <div class="w-100 w-md-50">
                                     <div class="input-group">
-                                        <span class="input-group-text bg-white text-info border-end-0"><i data-acorn-icon="barcode"></i></span>
-                                        <input type="text" class="form-control form-control-lg border-start-0" id="scannerInput" placeholder="Arahkan scan barcode di sini..." autofocus>
+                                        <span class="input-group-text bg-white text-info border-end-0"><i
+                                                data-acorn-icon="barcode"></i></span>
+                                        <input type="text" class="form-control form-control-lg border-start-0"
+                                            id="scannerInput" placeholder="Arahkan scan barcode di sini..." autofocus>
                                     </div>
                                 </div>
                             </div>
@@ -220,10 +282,18 @@
                                 <div class="col-12 col-md-6 text-md-end mt-2 mt-md-0">
                                     <!-- Dynamic Round Selector Tabs -->
                                     <div class="btn-group" role="group" id="roundTabs">
-                                        <button type="button" class="btn btn-sm btn-outline-primary {{ $active_round == 1 ? 'active' : '' }}" data-round="1">Round 1</button>
-                                        <button type="button" class="btn btn-sm btn-outline-primary {{ $active_round == 2 ? 'active' : '' }}" data-round="2" id="tabRound2">Round 2</button>
-                                        <button type="button" class="btn btn-sm btn-outline-primary {{ $active_round == 3 ? 'active' : '' }}" data-round="3" id="tabRound3">Round 3</button>
-                                        <button type="button" class="btn btn-sm btn-outline-primary {{ $active_round === 'final' ? 'active' : '' }}" data-round="final">Final Count</button>
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-primary {{ $active_round == 1 ? 'active' : '' }}"
+                                            data-round="1">Round 1</button>
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-primary {{ $active_round == 2 ? 'active' : '' }}"
+                                            data-round="2" id="tabRound2">Round 2</button>
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-primary {{ $active_round == 3 ? 'active' : '' }}"
+                                            data-round="3" id="tabRound3">Round 3</button>
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-primary {{ $active_round === 'final' ? 'active' : '' }}"
+                                            data-round="final">Final Count</button>
                                     </div>
                                 </div>
                             </div>
@@ -233,11 +303,14 @@
                             <div class="row g-3 mb-4">
                                 <div class="col-12">
                                     <div class="input-group">
-                                        <input type="text" class="form-control form-control-sm" placeholder="Cari Nama Barang atau Barcode... (Tekan Enter atau klik tombol Cari)" id="tableSearchQuery">
+                                        <input type="text" class="form-control form-control-sm"
+                                            placeholder="Cari Nama Barang atau Barcode... (Tekan Enter atau klik tombol Cari)"
+                                            id="tableSearchQuery">
                                         <button class="btn btn-sm btn-primary" type="button" id="btnTableSearch">
                                             Cari
                                         </button>
-                                        <button class="btn btn-sm btn-outline-secondary" type="button" id="btnResetTableSearch">
+                                        <button class="btn btn-sm btn-outline-secondary" type="button"
+                                            id="btnResetTableSearch">
                                             Reset
                                         </button>
                                     </div>
@@ -250,7 +323,7 @@
                                     <label class="form-label small font-weight-bold text-muted">Kategori Barang</label>
                                     <select class="form-select form-select-sm" id="tableFilterCategory">
                                         <option value="">Semua Kategori</option>
-                                        @foreach($categories as $cat)
+                                        @foreach ($categories as $cat)
                                             <option value="{{ $cat }}">{{ $cat }}</option>
                                         @endforeach
                                     </select>
@@ -259,19 +332,23 @@
                                     <label class="form-label small font-weight-bold text-muted">Rak / Lokasi</label>
                                     <select class="form-select form-select-sm" id="tableFilterRack">
                                         <option value="">Semua Lokasi</option>
-                                        @foreach($racks as $rack)
+                                        @foreach ($racks as $rack)
                                             <option value="{{ $rack }}">{{ $rack }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="col-12 col-md-6 d-flex gap-3">
                                     <div class="form-check form-switch mt-2">
-                                        <input class="form-check-input" type="checkbox" id="tableFilterVariance" value="true">
-                                        <label class="form-check-label small font-weight-bold text-dark cursor-pointer" for="tableFilterVariance">Tampilkan Selisih Saja</label>
+                                        <input class="form-check-input" type="checkbox" id="tableFilterVariance"
+                                            value="true">
+                                        <label class="form-check-label small font-weight-bold text-dark cursor-pointer"
+                                            for="tableFilterVariance">Tampilkan Selisih Saja</label>
                                     </div>
                                     <div class="form-check form-switch mt-2">
-                                        <input class="form-check-input" type="checkbox" id="tableFilterUncounted" value="true">
-                                        <label class="form-check-label small font-weight-bold text-dark cursor-pointer" for="tableFilterUncounted">Belum Dihitung Saja</label>
+                                        <input class="form-check-input" type="checkbox" id="tableFilterUncounted"
+                                            value="true">
+                                        <label class="form-check-label small font-weight-bold text-dark cursor-pointer"
+                                            for="tableFilterUncounted">Belum Dihitung Saja</label>
                                     </div>
                                 </div>
                             </div>
@@ -282,20 +359,22 @@
                                     <thead>
                                         <tr class="table-light">
                                             <th class="border-0 text-center" style="width: 50px;">No</th>
-                                            <th class="border-0 text-end" id="thRoundQty" style="min-width: 120px;">{{ $active_round === 'final' ? 'Final Qty' : 'Round ' . $active_round . ' Qty' }}</th>
+                                            <th class="border-0 text-end" id="thRoundQty" style="width: 80px;">
+                                                {{ $active_round === 'final' ? 'Final Qty' : 'Round ' . $active_round . ' Qty' }}
+                                            </th>
                                             <th class="border-0">Nama Produk</th>
                                             <th class="border-0 text-end">Harga Ecer</th>
-                                            @if(Auth::user()->role == 'admin')
-                                            <th class="border-0 text-end">Snapshot Awal</th>
-                                            <th class="border-0 text-end text-danger">Penjualan (Sales)</th>
-                                            <th class="border-0 text-end text-success">Stok Ekspektasi</th>
+                                            @if (Auth::user()->role == 'admin')
+                                                <th class="border-0 text-end">Snapshot Awal</th>
+                                                <th class="border-0 text-end text-danger">Penjualan (Sales)</th>
+                                                <th class="border-0 text-end text-success">Stok Ekspektasi</th>
                                             @endif
                                             <th class="border-0 text-end">Hasil Akhir</th>
-                                            @if(Auth::user()->role == 'admin')
-                                            <th class="border-0 text-end">Selisih Fisik</th>
+                                            @if (Auth::user()->role == 'admin')
+                                                <th class="border-0 text-end">Selisih Fisik</th>
                                             @endif
-                                            @if(Auth::user()->role == 'admin')
-                                            <th class="border-0 text-end">Nilai Selisih</th>
+                                            @if (Auth::user()->role == 'admin')
+                                                <th class="border-0 text-end">Nilai Selisih</th>
                                             @endif
                                             <th class="border-0 text-center">Status</th>
                                         </tr>
@@ -312,22 +391,28 @@
         <div class="sticky-action-bar">
             <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-outline-info text-info p-2"><i data-acorn-icon="info" style="width: 14px; height: 14px;"></i></span>
+                    <span class="badge bg-outline-info text-info p-2"><i data-acorn-icon="info"
+                            style="width: 14px; height: 14px;"></i></span>
                     <span class="text-muted small font-weight-bold">Pengendali Sesi Stock Opname</span>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     <!-- Trigger button for beautiful Offcanvas drawer -->
-                    <button type="button" class="btn btn-outline-info font-weight-bold d-flex align-items-center" data-bs-toggle="offcanvas" data-bs-target="#auditTrailOffcanvas">
-                        <i data-acorn-icon="history" class="me-2" style="width:16px; height:16px;"></i> Audit History Logs
+                    <button type="button" class="btn btn-outline-info font-weight-bold d-flex align-items-center"
+                        data-bs-toggle="offcanvas" data-bs-target="#auditTrailOffcanvas">
+                        <i data-acorn-icon="history" class="me-2" style="width:16px; height:16px;"></i> Audit History
+                        Logs
                         <span class="badge bg-info text-white ms-2" id="auditCountBadge">0</span>
                     </button>
-                    @if(in_array($session->status, ['Counting', 'Recount']) && (Auth::user()->role === 'admin' || Auth::user()->id === $session->supervisor_id))
-                        <button type="button" class="btn btn-outline-primary font-weight-bold d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#addManualItemModal">
-                            <i data-acorn-icon="plus" class="me-2" style="width:16px; height:16px;"></i> Tambah Barang Manual
+                    @if (in_array($session->status, ['Counting', 'Recount']) &&
+                            (Auth::user()->role === 'admin' || Auth::user()->id === $session->supervisor_id))
+                        <button type="button" class="btn btn-outline-primary font-weight-bold d-flex align-items-center"
+                            data-bs-toggle="modal" data-bs-target="#addManualItemModal">
+                            <i data-acorn-icon="plus" class="me-2" style="width:16px; height:16px;"></i> Tambah Barang
+                            Manual
                         </button>
                     @endif
 
-                    @if($session->status == 'Draft')
+                    @if ($session->status == 'Draft')
                         <button type="button" class="btn btn-info text-white font-weight-bold" id="btnStartCounting">
                             <i data-acorn-icon="play" class="me-1"></i> Mulai Hitung Fisik
                         </button>
@@ -335,34 +420,39 @@
 
 
 
-                    @if(in_array($session->status, ['Counting', 'Recount']))
-                        @if(Auth::user()->role == 'admin')
-                            <button type="button" class="btn btn-success text-white font-weight-bold" id="btnApproveFinal">
+                    @if (in_array($session->status, ['Counting', 'Recount']))
+                        @if (Auth::user()->role == 'admin')
+                            <button type="button" class="btn btn-success text-white font-weight-bold"
+                                id="btnApproveFinal">
                                 <i data-acorn-icon="check" class="me-1"></i> Selesaikan Perhitungan (Review)
                             </button>
                         @else
-                            <button type="button" class="btn btn-success text-white font-weight-bold" disabled data-bs-toggle="tooltip" title="Hanya Admin yang dapat memfinalkan">
+                            <button type="button" class="btn btn-success text-white font-weight-bold" disabled
+                                data-bs-toggle="tooltip" title="Hanya Admin yang dapat memfinalkan">
                                 <i data-acorn-icon="lock" class="me-1"></i> Selesaikan Perhitungan (Admin Only)
                             </button>
                         @endif
                     @endif
 
-                    @if($session->status == 'Review')
-                        @if(Auth::user()->role == 'admin')
-                            <button type="button" class="btn btn-dark text-white font-weight-bold" id="btnPostAdjustment">
+                    @if ($session->status == 'Review')
+                        @if (Auth::user()->role == 'admin')
+                            <button type="button" class="btn btn-dark text-white font-weight-bold"
+                                id="btnPostAdjustment">
                                 <i data-acorn-icon="database" class="me-1"></i> Post Koreksi Stok Ke Sistem
                             </button>
                         @else
-                            <button type="button" class="btn btn-dark text-white font-weight-bold" disabled data-bs-toggle="tooltip" title="Hanya Admin yang dapat memposting koreksi stok">
+                            <button type="button" class="btn btn-dark text-white font-weight-bold" disabled
+                                data-bs-toggle="tooltip" title="Hanya Admin yang dapat memposting koreksi stok">
                                 <i data-acorn-icon="lock" class="me-1"></i> Post Koreksi Stok (Admin Only)
                             </button>
                         @endif
                     @endif
 
-                    @if(Auth::user()->role == 'admin')
-                    <a href="/laporan/opname/export/{{ $session->id }}" class="btn btn-outline-secondary font-weight-bold">
-                        <i data-acorn-icon="download" class="me-1"></i> Export Data CSV
-                    </a>
+                    @if (Auth::user()->role == 'admin')
+                        <a href="/laporan/opname/export/{{ $session->id }}"
+                            class="btn btn-outline-secondary font-weight-bold">
+                            <i data-acorn-icon="download" class="me-1"></i> Export Data CSV
+                        </a>
                     @endif
                 </div>
             </div>
@@ -370,9 +460,11 @@
     </main>
 
     <!-- Beautiful Offcanvas Drawer for Audit Trail (Keeps Main Table Spacious) -->
-    <div class="offcanvas offcanvas-end border-0 shadow-lg" tabindex="-1" id="auditTrailOffcanvas" aria-labelledby="auditTrailOffcanvasLabel" style="width: 420px;">
+    <div class="offcanvas offcanvas-end border-0 shadow-lg" tabindex="-1" id="auditTrailOffcanvas"
+        aria-labelledby="auditTrailOffcanvasLabel" style="width: 420px;">
         <div class="offcanvas-header border-bottom py-3">
-            <h5 class="offcanvas-title font-weight-bold text-dark d-flex align-items-center" id="auditTrailOffcanvasLabel">
+            <h5 class="offcanvas-title font-weight-bold text-dark d-flex align-items-center"
+                id="auditTrailOffcanvasLabel">
                 <i data-acorn-icon="history" class="me-2 text-info"></i> Aktivitas Audit Trail
             </h5>
             <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -392,41 +484,50 @@
     </div>
 
     <!-- Elegant Bootstrap Modal for Manual Product Insertion -->
-    <div class="modal fade" id="addManualItemModal" tabindex="-1" aria-labelledby="addManualItemModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addManualItemModal" tabindex="-1" aria-labelledby="addManualItemModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
-                <div class="modal-header bg-primary text-white py-3" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <div class="modal-header bg-primary text-white py-3"
+                    style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
                     <h5 class="modal-title font-weight-bold d-flex align-items-center" id="addManualItemModalLabel">
                         <i data-acorn-icon="plus" class="me-2"></i> Tambah Barang Manual
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <p class="small text-muted mb-3">Cari produk dari database master yang ingin Anda tambahkan ke dalam daftar stock opname ini.</p>
-                    
+                    <p class="small text-muted mb-3">Cari produk dari database master yang ingin Anda tambahkan ke dalam
+                        daftar stock opname ini.</p>
+
                     <div class="input-group mb-3 shadow-sm rounded">
-                        <input type="text" id="manualProductSearch" class="form-control border-end-0" placeholder="Ketik barcode atau nama barang...">
+                        <input type="text" id="manualProductSearch" class="form-control border-end-0"
+                            placeholder="Ketik barcode atau nama barang...">
                         <button class="btn btn-primary font-weight-bold" type="button" id="btnSearchManualProduct">
                             <i data-acorn-icon="search" class="me-1"></i> Cari
                         </button>
                     </div>
-                    
-                    <div id="manualProductResults" class="list-group rounded overflow-auto shadow-sm" style="max-height: 280px; display: none;">
+
+                    <div id="manualProductResults" class="list-group rounded overflow-auto shadow-sm"
+                        style="max-height: 280px; display: none;">
                         <!-- Results injected dynamically -->
                     </div>
 
-                    <div id="manualProductInstructions" class="text-center text-muted py-5 border border-dashed rounded bg-light">
+                    <div id="manualProductInstructions"
+                        class="text-center text-muted py-5 border border-dashed rounded bg-light">
                         <i data-acorn-icon="search" class="fs-1 text-muted opacity-30 mb-2 d-block"></i>
                         <span class="small font-weight-bold">Masukkan kata kunci pencarian lalu klik Cari.</span>
                     </div>
 
-                    <div id="manualProductEmpty" class="text-center text-muted py-5 border border-dashed rounded bg-light" style="display: none;">
+                    <div id="manualProductEmpty" class="text-center text-muted py-5 border border-dashed rounded bg-light"
+                        style="display: none;">
                         <i data-acorn-icon="info" class="fs-1 text-warning opacity-50 mb-2 d-block"></i>
                         <span class="small font-weight-bold">Produk tidak ditemukan atau sudah ada di list.</span>
                     </div>
                 </div>
                 <div class="modal-footer bg-light py-2">
-                    <button type="button" class="btn btn-secondary font-weight-bold btn-sm" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-secondary font-weight-bold btn-sm"
+                        data-bs-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
@@ -459,19 +560,20 @@
                         d.search_query = $('#tableSearchQuery').val();
                     }
                 },
-                columns: [
-                    { 
-                        data: null, 
+                 columns: [{
+                        data: null,
                         className: 'text-center text-muted font-weight-bold',
                         orderable: false,
                         searchable: false,
-                        render: function (data, type, row, meta) {
+                        responsivePriority: 1,
+                        render: function(data, type, row, meta) {
                             return meta.row + meta.settings._iDisplayStart + 1;
                         }
                     },
-                    { 
-                        data: null, 
+                    {
+                        data: null,
                         className: 'text-end text-primary font-weight-bold editable-cell',
+                        responsivePriority: 1,
                         render: function(data, type, row) {
                             let qty = 0;
                             if (activeRound === 1) qty = row.round_1_qty;
@@ -481,54 +583,75 @@
 
                             // Allow editing inline only if counting/recount is active
                             const sessionStatus = $('#sessionStatusLabel').text().trim();
-                            const isCounting = (sessionStatus === 'Counting' || sessionStatus === 'Recount');
+                            const isCounting = (sessionStatus === 'Counting' || sessionStatus ===
+                                'Recount');
 
-                             if (isCounting && activeRound !== 'final') {
-                                 if (activeRound === serverRound) {
-                                     return `<span class="badge bg-outline-primary py-1 px-2 border-dashed cursor-pointer edit-qty-trigger font-weight-bold" data-id="${row.id}">${qty !== null ? qty : '-'}</span>`;
-                                 }
-                             }
+                            if (isCounting && activeRound !== 'final') {
+                                if (activeRound === serverRound) {
+                                    return `<span class="badge bg-outline-primary py-1 px-2 border-dashed cursor-pointer edit-qty-trigger font-weight-bold" data-id="${row.id}">${qty !== null ? qty : '-'}</span>`;
+                                }
+                            }
                             return qty !== null ? qty : '-';
                         }
                     },
-                    { 
+                    {
                         data: 'product_name',
+                        responsivePriority: 1,
                         render: function(data, type, row) {
                             return `<div class="text-wrap text-alternate" style="min-width: 150px; max-width: 300px; white-space: normal !important; word-wrap: break-word;">${data}</div>`;
                         }
                     },
-                    { data: 'harga_jual', className: 'text-end font-weight-bold text-dark' },
-                    @if(Auth::user()->role == 'admin')
-                    { data: 'snapshot_qty', className: 'text-end font-weight-bold text-muted' },
-                    { data: 'sales_during_opname', className: 'text-end font-weight-bold text-danger' },
-                    { data: 'adjusted_snapshot', className: 'text-end font-weight-bold text-success' },
-                    @endif
-                    { data: 'final_qty', className: 'text-end font-weight-bold text-dark' },
-                    @if(Auth::user()->role == 'admin')
-                    { 
-                        data: 'difference', 
-                        className: 'text-end font-weight-bold',
-                        render: function(data, type, row) {
-                            if (data > 0) return `<span class="text-success font-weight-bold">+${data}</span>`;
-                            if (data < 0) return `<span class="text-danger font-weight-bold">${data}</span>`;
-                            return `<span class="text-muted">0</span>`;
-                        }
+                    {
+                        data: 'harga_jual',
+                        className: 'text-end font-weight-bold text-dark'
                     },
-                    @endif
-                    @if(Auth::user()->role == 'admin')
-                    { 
-                        data: 'difference_value', 
-                        className: 'text-end font-weight-bold',
-                        render: function(data, type, row) {
-                            let val = parseInt(data);
-                            let formatted = 'Rp. ' + Math.abs(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-                            if (val > 0) return `<span class="text-success font-weight-bold">+${formatted}</span>`;
-                            if (val < 0) return `<span class="text-danger font-weight-bold">-${formatted}</span>`;
-                            return `<span class="text-muted font-weight-bold">Rp. 0</span>`;
-                        }
+                    @if (Auth::user()->role == 'admin')
+                        {
+                            data: 'snapshot_qty',
+                            className: 'text-end font-weight-bold text-muted'
+                        }, {
+                            data: 'sales_during_opname',
+                            className: 'text-end font-weight-bold text-danger'
+                        }, {
+                            data: 'adjusted_snapshot',
+                            className: 'text-end font-weight-bold text-success'
+                        },
+                    @endif {
+                        data: 'final_qty',
+                        className: 'text-end font-weight-bold text-dark'
                     },
+                    @if (Auth::user()->role == 'admin')
+                        {
+                            data: 'difference',
+                            className: 'text-end font-weight-bold',
+                            render: function(data, type, row) {
+                                if (data > 0)
+                                    return `<span class="text-success font-weight-bold">+${data}</span>`;
+                                if (data < 0)
+                                    return `<span class="text-danger font-weight-bold">${data}</span>`;
+                                return `<span class="text-muted">0</span>`;
+                            }
+                        },
                     @endif
-                    { data: 'status_badge', className: 'text-center' }
+                    @if (Auth::user()->role == 'admin')
+                        {
+                            data: 'difference_value',
+                            className: 'text-end font-weight-bold',
+                            render: function(data, type, row) {
+                                let val = parseInt(data);
+                                let formatted = 'Rp. ' + Math.abs(val).toString().replace(
+                                    /\B(?=(\d{3})+(?!\d))/g, ".");
+                                if (val > 0)
+                                    return `<span class="text-success font-weight-bold">+${formatted}</span>`;
+                                if (val < 0)
+                                    return `<span class="text-danger font-weight-bold">-${formatted}</span>`;
+                                return `<span class="text-muted font-weight-bold">Rp. 0</span>`;
+                            }
+                        },
+                    @endif {
+                        data: 'status_badge',
+                        className: 'text-center'
+                    }
                 ],
                 sDom: '<"row"<"col-sm-12"<"table-container"t>r>><"row"<"col-12"p>>',
                 language: {
@@ -546,9 +669,10 @@
             });
 
             // Reload table on filter changes
-            $('#tableFilterCategory, #tableFilterRack, #tableFilterVariance, #tableFilterUncounted').on('change', function() {
-                itemsTable.ajax.reload();
-            });
+            $('#tableFilterCategory, #tableFilterRack, #tableFilterVariance, #tableFilterUncounted').on('change',
+                function() {
+                    itemsTable.ajax.reload();
+                });
 
             // Trigger search on click
             $('#btnTableSearch').on('click', function() {
@@ -571,25 +695,31 @@
 
             const serverRound = @json($active_round);
             const sessionStatus = @json($session->status);
- 
+
             // Dynamically disable previous round tabs to make it super clear in UI
             function updateTabsUI() {
                 if (sessionStatus === 'Draft') {
-                    $('#roundTabs button').prop('disabled', true).addClass('opacity-50 cursor-not-allowed').css('pointer-events', 'none');
+                    $('#roundTabs button').prop('disabled', true).addClass('opacity-50 cursor-not-allowed').css(
+                        'pointer-events', 'none');
                 } else if (serverRound === 2) {
-                    $('#roundTabs button[data-round="1"]').prop('disabled', true).addClass('opacity-50 cursor-not-allowed').css('pointer-events', 'none');
+                    $('#roundTabs button[data-round="1"]').prop('disabled', true).addClass(
+                        'opacity-50 cursor-not-allowed').css('pointer-events', 'none');
                 } else if (serverRound === 3) {
-                    $('#roundTabs button[data-round="1"]').prop('disabled', true).addClass('opacity-50 cursor-not-allowed').css('pointer-events', 'none');
-                    $('#roundTabs button[data-round="2"]').prop('disabled', true).addClass('opacity-50 cursor-not-allowed').css('pointer-events', 'none');
+                    $('#roundTabs button[data-round="1"]').prop('disabled', true).addClass(
+                        'opacity-50 cursor-not-allowed').css('pointer-events', 'none');
+                    $('#roundTabs button[data-round="2"]').prop('disabled', true).addClass(
+                        'opacity-50 cursor-not-allowed').css('pointer-events', 'none');
                 }
             }
             updateTabsUI();
- 
+
             // Handle Round Tabs selection
             $('#roundTabs button').on('click', function(e) {
                 if (sessionStatus === 'Draft') {
                     e.preventDefault();
-                    Swal.fire('Perhitungan Belum Dimulai', 'Mulai perhitungan fisik terlebih dahulu sebelum mengakses putaran (Round)!', 'warning');
+                    Swal.fire('Perhitungan Belum Dimulai',
+                        'Mulai perhitungan fisik terlebih dahulu sebelum mengakses putaran (Round)!',
+                        'warning');
                     return;
                 }
 
@@ -597,33 +727,42 @@
                 const isAdmin = @json(Auth::user()->role == 'admin');
                 const isSupervisor = @json(Auth::user()->id == $session->supervisor_id);
                 const isAuthorized = isAdmin || isSupervisor;
- 
+
                 if (serverRound !== 'final') {
                     // Check if they are authorized to trigger rounding (generate next rounds)
                     if (roundVal === '2' && serverRound === 1 && !isAuthorized) {
                         e.preventDefault();
-                        Swal.fire('Akses Ditolak', 'Hanya Admin atau Supervisor yang ditunjuk yang berhak memicu transisi ke Round 2 (Recount)!', 'error');
+                        Swal.fire('Akses Ditolak',
+                            'Hanya Admin atau Supervisor yang ditunjuk yang berhak memicu transisi ke Round 2 (Recount)!',
+                            'error');
                         return;
                     }
                     if (roundVal === '3' && serverRound === 2 && !isAuthorized) {
                         e.preventDefault();
-                        Swal.fire('Akses Ditolak', 'Hanya Admin atau Supervisor yang ditunjuk yang berhak memicu transisi ke Round 3 (Tie-Breaker)!', 'error');
+                        Swal.fire('Akses Ditolak',
+                            'Hanya Admin atau Supervisor yang ditunjuk yang berhak memicu transisi ke Round 3 (Tie-Breaker)!',
+                            'error');
                         return;
                     }
                     if (roundVal === 'final' && !isAdmin) {
                         e.preventDefault();
-                        Swal.fire('Akses Ditolak', 'Hanya Admin yang berhak melihat hasil finalisasi!', 'error');
+                        Swal.fire('Akses Ditolak', 'Hanya Admin yang berhak melihat hasil finalisasi!',
+                            'error');
                         return;
                     }
                     // Block going backward
                     if (serverRound === 2 && roundVal === '1') {
                         e.preventDefault();
-                        Swal.fire('Akses Ditolak', 'Anda tidak dapat kembali ke Round 1 setelah Round 2 (Recount) aktif!', 'warning');
+                        Swal.fire('Akses Ditolak',
+                            'Anda tidak dapat kembali ke Round 1 setelah Round 2 (Recount) aktif!',
+                            'warning');
                         return;
                     }
                     if (serverRound === 3 && (roundVal === '1' || roundVal === '2')) {
                         e.preventDefault();
-                        Swal.fire('Akses Ditolak', 'Anda tidak dapat kembali ke Round sebelumnya setelah Round 3 aktif!', 'warning');
+                        Swal.fire('Akses Ditolak',
+                            'Anda tidak dapat kembali ke Round sebelumnya setelah Round 3 aktif!',
+                            'warning');
                         return;
                     }
 
@@ -644,9 +783,10 @@
                                     stock_opname_id: sessionId
                                 }, function(res) {
                                     if (res.success) {
-                                        Swal.fire('Sukses!', res.message, 'success').then(() => {
-                                            window.location.reload();
-                                        });
+                                        Swal.fire('Sukses!', res.message, 'success').then(
+                                            () => {
+                                                window.location.reload();
+                                            });
                                     } else {
                                         Swal.fire('Gagal!', res.message, 'error');
                                     }
@@ -673,9 +813,10 @@
                                     stock_opname_id: sessionId
                                 }, function(res) {
                                     if (res.success) {
-                                        Swal.fire('Sukses!', res.message, 'success').then(() => {
-                                            window.location.reload();
-                                        });
+                                        Swal.fire('Sukses!', res.message, 'success').then(
+                                            () => {
+                                                window.location.reload();
+                                            });
                                     } else {
                                         Swal.fire('Gagal!', res.message, 'error');
                                     }
@@ -688,12 +829,14 @@
                     // Block hopping ahead skipping steps
                     if (serverRound === 1 && (roundVal === '3' || roundVal === 'final')) {
                         e.preventDefault();
-                        Swal.fire('Akses Ditolak', 'Silakan jalankan Round 1 dan Round 2 terlebih dahulu!', 'warning');
+                        Swal.fire('Akses Ditolak', 'Silakan jalankan Round 1 dan Round 2 terlebih dahulu!',
+                            'warning');
                         return;
                     }
                     if (serverRound === 2 && roundVal === 'final') {
                         e.preventDefault();
-                        Swal.fire('Akses Ditolak', 'Silakan jalankan Round 2 dan Round 3 terlebih dahulu!', 'warning');
+                        Swal.fire('Akses Ditolak', 'Silakan jalankan Round 2 dan Round 3 terlebih dahulu!',
+                            'warning');
                         return;
                     }
                 }
@@ -758,11 +901,14 @@
                         round: activeRound
                     }, function(res) {
                         if (res.success) {
-                            $('#scannerInput').val('').attr('placeholder', res.message).addClass('is-valid');
+                            $('#scannerInput').val('').attr('placeholder', res.message).addClass(
+                                'is-valid');
                             setTimeout(() => {
-                                $('#scannerInput').attr('placeholder', 'Arahkan scan barcode di sini...').removeClass('is-valid');
+                                $('#scannerInput').attr('placeholder',
+                                    'Arahkan scan barcode di sini...').removeClass(
+                                    'is-valid');
                             }, 1000);
-                            
+
                             itemsTable.ajax.reload(null, false); // reload table inline
                             loadAuditTrail();
                             updateSummaryCards();
@@ -777,11 +923,12 @@
             // Handle manual inline qty edit click (extremely ergonomic cell-wide trigger)
             $(document).on('click', '.editable-cell', function() {
                 const trigger = $(this).find('.edit-qty-trigger');
-                if (trigger.length === 0) return; // If no edit trigger is present (e.g. read-only final/other state), do nothing
+                if (trigger.length === 0)
+                    return; // If no edit trigger is present (e.g. read-only final/other state), do nothing
 
                 const itemId = trigger.attr('data-id');
                 const currentVal = trigger.text() === '-' ? 0 : parseInt(trigger.text());
- 
+
                 Swal.fire({
                     title: 'Edit Qty Manual',
                     input: 'number',
@@ -909,7 +1056,8 @@
                             $('#emptyAuditLabel').addClass('d-none');
                             $('#auditLogList').empty();
                             res.logs.forEach(log => {
-                                let badgeClass = log.action === 'Scan Barcode' ? 'bg-info' : 'bg-warning';
+                                let badgeClass = log.action === 'Scan Barcode' ? 'bg-info' :
+                                    'bg-warning';
                                 let logHtml = `
                                     <div class="audit-log-item">
                                         <div class="d-flex justify-content-between align-items-center mb-1">
@@ -930,7 +1078,7 @@
                             });
                             $('#auditCount').text(res.logs.length);
                             $('#auditCountBadge').text(res.logs.length);
-                            
+
                             // Reinitialize icons if AcornIcons is loaded
                             if (typeof AcornIcons !== 'undefined') {
                                 new AcornIcons().replace();
@@ -967,9 +1115,13 @@
 
                 $('#manualProductInstructions').hide();
                 $('#manualProductEmpty').hide();
-                $('#manualProductResults').show().html('<div class="p-4 text-center text-muted small"><div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>Mencari produk...</div>');
+                $('#manualProductResults').show().html(
+                    '<div class="p-4 text-center text-muted small"><div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>Mencari produk...</div>'
+                );
 
-                $.get('/laporan/opname/search-master-products/' + sessionId, { search_query: query }, function(res) {
+                $.get('/laporan/opname/search-master-products/' + sessionId, {
+                    search_query: query
+                }, function(res) {
                     if (res.length === 0) {
                         $('#manualProductResults').hide().html('');
                         $('#manualProductEmpty').show();
@@ -985,8 +1137,8 @@
                                         <div class="small text-muted mt-1">Barcode: <strong>${item.kode}</strong></div>
                                     </div>
                                     <div>
-                                        ${item.is_added ? 
-                                            `<button class="btn btn-outline-secondary btn-sm font-weight-bold" disabled><i data-acorn-icon="check" class="me-1"></i> Sudah Ada</button>` : 
+                                        ${item.is_added ?
+                                            `<button class="btn btn-outline-secondary btn-sm font-weight-bold" disabled><i data-acorn-icon="check" class="me-1"></i> Sudah Ada</button>` :
                                             `<button class="btn btn-primary btn-sm font-weight-bold btn-add-manual-prod" data-code="${item.kode}"><i data-acorn-icon="plus" class="me-1"></i> Tambah</button>`
                                         }
                                     </div>
@@ -1012,7 +1164,8 @@
             $(document).on('click', '.btn-add-manual-prod', function() {
                 const button = $(this);
                 const code = button.attr('data-code');
-                button.prop('disabled', true).html('<div class="spinner-border spinner-border-sm text-white" role="status"></div>');
+                button.prop('disabled', true).html(
+                    '<div class="spinner-border spinner-border-sm text-white" role="status"></div>');
 
                 $.post('/laporan/opname/add-master-product/' + sessionId, {
                     _token: "{{ csrf_token() }}",
@@ -1030,7 +1183,9 @@
                             timerProgressBar: true
                         });
                         // Update the button state
-                        button.removeClass('btn-primary').addClass('btn-outline-secondary').html('<i data-acorn-icon="check" class="me-1"></i> Sudah Ada').prop('disabled', true);
+                        button.removeClass('btn-primary').addClass('btn-outline-secondary').html(
+                            '<i data-acorn-icon="check" class="me-1"></i> Sudah Ada').prop(
+                            'disabled', true);
                         if (typeof AcornIcons !== 'undefined') {
                             new AcornIcons().replace();
                         }
@@ -1040,13 +1195,14 @@
                         updateSummaryCards();
                     } else {
                         Swal.fire('Gagal!', res.message, 'error');
-                        button.prop('disabled', false).html('<i data-acorn-icon="plus" class="me-1"></i> Tambah');
+                        button.prop('disabled', false).html(
+                            '<i data-acorn-icon="plus" class="me-1"></i> Tambah');
                     }
                 });
             });
 
             // Clean modal state when closed
-            $('#addManualItemModal').on('hidden.bs.modal', function () {
+            $('#addManualItemModal').on('hidden.bs.modal', function() {
                 $('#manualProductSearch').val('');
                 $('#manualProductResults').hide().html('');
                 $('#manualProductEmpty').hide();
@@ -1061,8 +1217,14 @@
     </script>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import {
+            initializeApp
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import {
+            getDatabase,
+            ref,
+            onValue
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "{{ env('FIREBASE_API_KEY') }}",
