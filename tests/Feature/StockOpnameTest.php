@@ -689,4 +689,44 @@ class StockOpnameTest extends TestCase
         $response = $this->actingAs($this->admin)->get("/laporan/opname/items-data/{$so->id}?search_query=Voal");
         $response->assertJsonPath('data.0.kode_barang', '88888888');
     }
+
+    public function test_can_search_master_products()
+    {
+        $so = StockOpname::create([
+            'nomor_so' => 'SO-SEARCH-MASTER',
+            'kode_toko' => 'TK_001',
+            'status' => 'Counting',
+            'petugas_id' => $this->admin->id,
+        ]);
+
+        $response = $this->actingAs($this->admin)->get("/laporan/opname/search-master-products/{$so->id}?search_query=88888888");
+        $response->assertStatus(200);
+        $response->assertJsonFragment(['kode' => '88888888']);
+    }
+
+    public function test_can_add_master_product_manually()
+    {
+        $so = StockOpname::create([
+            'nomor_so' => 'SO-ADD-MASTER-MANUAL',
+            'kode_toko' => 'TK_001',
+            'status' => 'Counting',
+            'petugas_id' => $this->admin->id,
+        ]);
+
+        // Add '99999999' which is in master data but NOT in this session's items
+        $response = $this->actingAs($this->admin)->post("/laporan/opname/add-master-product/{$so->id}", [
+            'kode_barang' => '99999999'
+        ]);
+
+        $response->assertJson([
+            'success' => true,
+            'message' => 'Barang berhasil ditambahkan ke list stock opname!'
+        ]);
+
+        $this->assertDatabaseHas('stock_opname_items', [
+            'stock_opname_id' => $so->id,
+            'kode_barang' => '99999999',
+            'snapshot_qty' => 0 // '99999999' has 5 - 5 = 0 available stock
+        ]);
+    }
 }

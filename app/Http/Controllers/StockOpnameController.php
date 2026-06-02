@@ -248,6 +248,11 @@ class StockOpnameController extends Controller
             ->addColumn('category', function ($row) {
                 return $row->barang ? $row->barang->jenis_barang : '-';
             })
+            ->addColumn('harga_jual', function ($row) {
+                if (!$row->barang) return '-';
+                $harga = floatval(str_replace('.', '', $row->barang->harga_jual));
+                return 'Rp. ' . number_format($harga, 0, ',', '.');
+            })
             ->addColumn('sales_during_opname', function ($row) {
                 return $row->sales_during_opname ?? 0;
             })
@@ -460,34 +465,45 @@ class StockOpnameController extends Controller
         }
 
         $result = DB::transaction(function () use ($session) {
-            // Determine what round we are generating
+            // Bulk prefetch sales during opname for this shop
+            $salesData = DB::table('transaksis')
+                ->where('kode_toko', $session->kode_toko)
+                ->where('created_at', '>=', $session->created_at)
+                ->groupBy('kode_barang')
+                ->select('kode_barang', DB::raw('SUM(jumlah) as total_sales'))
+                ->pluck('total_sales', 'kode_barang')
+                ->toArray();
+
+            // Fetch all items to optimize price fetching in bulk
+            $allItems = StockOpnameItem::where('stock_opname_id', $session->id)->get();
+            $itemCodes = $allItems->pluck('kode_barang')->toArray();
+
+            // Bulk prefetch purchase prices (harga_beli) from master products
+            $prices = DataBarang::whereIn('kode', $itemCodes)
+                ->pluck('harga_beli', 'kode')
+                ->toArray();
+
             // If the session status is Counting, we are transitioning Round 1 -> Round 2
             if ($session->status === 'Counting') {
                 $session->status = 'Recount';
                 $session->save();
 
-                $allItems = StockOpnameItem::where('stock_opname_id', $session->id)->get();
                 foreach ($allItems as $item) {
-                    $sales = DB::table('transaksis')
-                        ->where('kode_toko', $session->kode_toko)
-                        ->where('kode_barang', $item->kode_barang)
-                        ->where('created_at', '>=', $session->created_at)
-                        ->sum('jumlah');
-
+                    $sales = $salesData[$item->kode_barang] ?? 0;
                     $adjustedSnapshot = max(0, $item->snapshot_qty - $sales);
 
                     // Update dynamic fields
                     $item->difference = ($item->round_1_qty ?? 0) - $adjustedSnapshot;
-                    $barang = DataBarang::where('kode', $item->kode_barang)->first();
-                    $harga_beli = $barang ? floatval(str_replace('.', '', $barang->harga_beli)) : 0;
+                    $rawPrice = $prices[$item->kode_barang] ?? '0';
+                    $harga_beli = floatval(str_replace('.', '', $rawPrice));
                     $item->difference_value = $item->difference * $harga_beli;
 
                     if ($adjustedSnapshot == ($item->round_1_qty ?? 0)) {
                         $item->status = 'Match';
                     } else {
                         $item->status = 'Need Recount';
-                        $item->round_2_qty = 0; // initialize Round 2
                     }
+                    $item->round_2_qty = $item->round_1_qty ?? 0; // Carry over Round 1 count so it is not reset!
                     $item->save();
                 }
                 return 'Round 2';
@@ -496,33 +512,26 @@ class StockOpnameController extends Controller
             // If the session status is already Recount, we are transitioning Round 2 -> Round 3
             if ($session->status === 'Recount') {
                 // Find all items that needed recount in Round 2
-                $recountItems = StockOpnameItem::where('stock_opname_id', $session->id)
-                    ->where('status', 'Need Recount')
-                    ->get();
+                $recountItems = $allItems->where('status', 'Need Recount');
 
                 $hasStillVariance = false;
                 foreach ($recountItems as $item) {
-                    $sales = DB::table('transaksis')
-                        ->where('kode_toko', $session->kode_toko)
-                        ->where('kode_barang', $item->kode_barang)
-                        ->where('created_at', '>=', $session->created_at)
-                        ->sum('jumlah');
-
+                    $sales = $salesData[$item->kode_barang] ?? 0;
                     $adjustedSnapshot = max(0, $item->snapshot_qty - $sales);
 
                     // Update dynamic fields
                     $item->difference = ($item->round_2_qty ?? 0) - $adjustedSnapshot;
-                    $barang = DataBarang::where('kode', $item->kode_barang)->first();
-                    $harga_beli = $barang ? floatval(str_replace('.', '', $barang->harga_beli)) : 0;
+                    $rawPrice = $prices[$item->kode_barang] ?? '0';
+                    $harga_beli = floatval(str_replace('.', '', $rawPrice));
                     $item->difference_value = $item->difference * $harga_beli;
 
                     if ($adjustedSnapshot == ($item->round_2_qty ?? 0)) {
                         $item->status = 'Match';
                     } else {
                         $item->status = 'Need Recount';
-                        $item->round_3_qty = 0; // initialize Round 3
                         $hasStillVariance = true;
                     }
+                    $item->round_3_qty = $item->round_2_qty ?? 0; // Carry over Round 2 count so it is not reset!
                     $item->save();
                 }
 
@@ -727,5 +736,88 @@ class StockOpnameController extends Controller
                 ];
             })
         ]);
+    }
+
+    public function searchMasterProducts(Request $request, $id)
+    {
+        $session = StockOpname::findOrFail($id);
+        $search = trim($request->query('search_query'));
+
+        if (empty($search)) {
+            return response()->json([]);
+        }
+
+        // Fetch matching master products
+        $products = DataBarang::where('kode', 'like', "%{$search}%")
+            ->orWhere('nama_barang', 'like', "%{$search}%")
+            ->limit(20)
+            ->get();
+
+        // Check which products are already added to this session
+        $addedCodes = StockOpnameItem::where('stock_opname_id', $id)
+            ->pluck('kode_barang')
+            ->toArray();
+
+        $results = [];
+        foreach ($products as $p) {
+            $results[] = [
+                'kode' => $p->kode,
+                'nama_barang' => $p->nama_barang,
+                'jenis_barang' => $p->jenis_barang,
+                'harga_jual' => 'Rp. ' . number_format(floatval(str_replace('.', '', $p->harga_jual)), 0, ',', '.'),
+                'is_added' => in_array($p->kode, $addedCodes),
+            ];
+        }
+
+        return response()->json($results);
+    }
+
+    public function addMasterProduct(Request $request, $id)
+    {
+        $session = StockOpname::findOrFail($id);
+
+        if (!in_array($session->status, ['Counting', 'Recount'])) {
+            return response()->json(['success' => false, 'message' => 'Proses tambah barang tidak diizinkan pada status sesi ini!']);
+        }
+
+        $kode_barang = trim($request->kode_barang);
+        $barang = DataBarang::where('kode', $kode_barang)->first();
+
+        if (!$barang) {
+            return response()->json(['success' => false, 'message' => 'Barang tidak ditemukan di data master!']);
+        }
+
+        // Check if already exists in this session
+        $existing = StockOpnameItem::where('stock_opname_id', $id)
+            ->where('kode_barang', $kode_barang)
+            ->exists();
+
+        if ($existing) {
+            return response()->json(['success' => false, 'message' => 'Barang sudah ada di dalam list stock opname!']);
+        }
+
+        // Determine snapshot quantity from stock_tokos table
+        $stockToko = StockToko::where('kode_toko', $session->kode_toko)
+            ->where('kode_barang', $kode_barang)
+            ->first();
+
+        $snapshotQty = 0;
+        if ($stockToko) {
+            $snapshotQty = max(0, $stockToko->jumlah - $stockToko->terjual);
+        }
+
+        $harga_beli = floatval(str_replace('.', '', $barang->harga_beli));
+
+        StockOpnameItem::create([
+            'stock_opname_id' => $session->id,
+            'kode_barang' => $kode_barang,
+            'snapshot_qty' => $snapshotQty,
+            'final_qty' => 0,
+            'difference' => -$snapshotQty,
+            'difference_value' => -$snapshotQty * $harga_beli,
+            'status' => 'Match',
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Barang berhasil ditambahkan ke list stock opname!']);
     }
 }

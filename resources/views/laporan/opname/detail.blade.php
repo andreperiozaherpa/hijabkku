@@ -60,6 +60,20 @@
             0% { box-shadow: 0 0 5px rgba(13, 202, 240, 0.2); }
             100% { box-shadow: 0 0 15px rgba(13, 202, 240, 0.6); }
         }
+        /* High-ergonomics editable cell styling */
+        .editable-cell {
+            cursor: pointer !important;
+            transition: all 0.2s ease-in-out;
+        }
+        .editable-cell:hover {
+            background-color: rgba(13, 110, 253, 0.08) !important; /* Premium soft blue glow */
+        }
+        .editable-cell:hover .edit-qty-trigger {
+            background-color: #0d6efd !important; /* Solid blue badge on cell hover */
+            color: #ffffff !important;
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.25);
+            transform: scale(1.05);
+        }
     </style>
 
     <main>
@@ -268,15 +282,14 @@
                                     <thead>
                                         <tr class="table-light">
                                             <th class="border-0 text-center" style="width: 50px;">No</th>
-                                            <th class="border-0">Barcode</th>
+                                            <th class="border-0 text-end" id="thRoundQty" style="min-width: 120px;">{{ $active_round === 'final' ? 'Final Qty' : 'Round ' . $active_round . ' Qty' }}</th>
                                             <th class="border-0">Nama Produk</th>
-                                            <th class="border-0">Kategori</th>
+                                            <th class="border-0 text-end">Harga Ecer</th>
                                             @if(Auth::user()->role == 'admin')
                                             <th class="border-0 text-end">Snapshot Awal</th>
                                             <th class="border-0 text-end text-danger">Penjualan (Sales)</th>
                                             <th class="border-0 text-end text-success">Stok Ekspektasi</th>
                                             @endif
-                                            <th class="border-0 text-end" id="thRoundQty" style="min-width: 120px;">{{ $active_round === 'final' ? 'Final Qty' : 'Round ' . $active_round . ' Qty' }}</th>
                                             <th class="border-0 text-end">Hasil Akhir</th>
                                             @if(Auth::user()->role == 'admin')
                                             <th class="border-0 text-end">Selisih Fisik</th>
@@ -308,6 +321,12 @@
                         <i data-acorn-icon="history" class="me-2" style="width:16px; height:16px;"></i> Audit History Logs
                         <span class="badge bg-info text-white ms-2" id="auditCountBadge">0</span>
                     </button>
+ 
+                    @if(in_array($session->status, ['Counting', 'Recount']))
+                        <button type="button" class="btn btn-outline-primary font-weight-bold d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#addManualItemModal">
+                            <i data-acorn-icon="plus" class="me-2" style="width:16px; height:16px;"></i> Tambah Barang Manual
+                        </button>
+                    @endif
 
                     @if($session->status == 'Draft')
                         <button type="button" class="btn btn-info text-white font-weight-bold" id="btnStartCounting">
@@ -372,6 +391,47 @@
             </div>
         </div>
     </div>
+
+    <!-- Elegant Bootstrap Modal for Manual Product Insertion -->
+    <div class="modal fade" id="addManualItemModal" tabindex="-1" aria-labelledby="addManualItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                <div class="modal-header bg-primary text-white py-3" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title font-weight-bold d-flex align-items-center" id="addManualItemModalLabel">
+                        <i data-acorn-icon="plus" class="me-2"></i> Tambah Barang Manual
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-3">Cari produk dari database master yang ingin Anda tambahkan ke dalam daftar stock opname ini.</p>
+                    
+                    <div class="input-group mb-3 shadow-sm rounded">
+                        <input type="text" id="manualProductSearch" class="form-control border-end-0" placeholder="Ketik barcode atau nama barang...">
+                        <button class="btn btn-primary font-weight-bold" type="button" id="btnSearchManualProduct">
+                            <i data-acorn-icon="search" class="me-1"></i> Cari
+                        </button>
+                    </div>
+                    
+                    <div id="manualProductResults" class="list-group rounded overflow-auto shadow-sm" style="max-height: 280px; display: none;">
+                        <!-- Results injected dynamically -->
+                    </div>
+
+                    <div id="manualProductInstructions" class="text-center text-muted py-5 border border-dashed rounded bg-light">
+                        <i data-acorn-icon="search" class="fs-1 text-muted opacity-30 mb-2 d-block"></i>
+                        <span class="small font-weight-bold">Masukkan kata kunci pencarian lalu klik Cari.</span>
+                    </div>
+
+                    <div id="manualProductEmpty" class="text-center text-muted py-5 border border-dashed rounded bg-light" style="display: none;">
+                        <i data-acorn-icon="info" class="fs-1 text-warning opacity-50 mb-2 d-block"></i>
+                        <span class="small font-weight-bold">Produk tidak ditemukan atau sudah ada di list.</span>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2">
+                    <button type="button" class="btn btn-secondary font-weight-bold btn-sm" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('script')
@@ -410,14 +470,6 @@
                             return meta.row + meta.settings._iDisplayStart + 1;
                         }
                     },
-                    { data: 'kode_barang', className: 'font-weight-bold text-dark' },
-                    { data: 'product_name' },
-                    { data: 'category' },
-                    @if(Auth::user()->role == 'admin')
-                    { data: 'snapshot_qty', className: 'text-end font-weight-bold text-muted' },
-                    { data: 'sales_during_opname', className: 'text-end font-weight-bold text-danger' },
-                    { data: 'adjusted_snapshot', className: 'text-end font-weight-bold text-success' },
-                    @endif
                     { 
                         data: null, 
                         className: 'text-end text-primary font-weight-bold editable-cell',
@@ -440,6 +492,13 @@
                             return qty !== null ? qty : '-';
                         }
                     },
+                    { data: 'product_name' },
+                    { data: 'harga_jual', className: 'text-end font-weight-bold text-dark' },
+                    @if(Auth::user()->role == 'admin')
+                    { data: 'snapshot_qty', className: 'text-end font-weight-bold text-muted' },
+                    { data: 'sales_during_opname', className: 'text-end font-weight-bold text-danger' },
+                    { data: 'adjusted_snapshot', className: 'text-end font-weight-bold text-success' },
+                    @endif
                     { data: 'final_qty', className: 'text-end font-weight-bold text-dark' },
                     @if(Auth::user()->role == 'admin')
                     { 
@@ -711,11 +770,14 @@
                 }
             });
 
-            // Handle manual inline qty edit click
-            $(document).on('click', '.edit-qty-trigger', function() {
-                const itemId = $(this).attr('data-id');
-                const currentVal = $(this).text() === '-' ? 0 : parseInt($(this).text());
+            // Handle manual inline qty edit click (extremely ergonomic cell-wide trigger)
+            $(document).on('click', '.editable-cell', function() {
+                const trigger = $(this).find('.edit-qty-trigger');
+                if (trigger.length === 0) return; // If no edit trigger is present (e.g. read-only final/other state), do nothing
 
+                const itemId = trigger.attr('data-id');
+                const currentVal = trigger.text() === '-' ? 0 : parseInt(trigger.text());
+ 
                 Swal.fire({
                     title: 'Edit Qty Manual',
                     input: 'number',
@@ -888,6 +950,104 @@
                     $('#cardVarianceValue').html(parsed.find('#cardVarianceValue').html().trim());
                 });
             }
+
+            // Manual Product Search inside Modal
+            function performManualProductSearch() {
+                const query = $('#manualProductSearch').val().trim();
+                if (query === '') {
+                    $('#manualProductResults').hide().html('');
+                    $('#manualProductEmpty').hide();
+                    $('#manualProductInstructions').show();
+                    return;
+                }
+
+                $('#manualProductInstructions').hide();
+                $('#manualProductEmpty').hide();
+                $('#manualProductResults').show().html('<div class="p-4 text-center text-muted small"><div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>Mencari produk...</div>');
+
+                $.get('/laporan/opname/search-master-products/' + sessionId, { search_query: query }, function(res) {
+                    if (res.length === 0) {
+                        $('#manualProductResults').hide().html('');
+                        $('#manualProductEmpty').show();
+                    } else {
+                        let html = '';
+                        res.forEach(function(item) {
+                            html += `
+                                <div class="list-group-item d-flex align-items-center justify-content-between py-3 border-start-0 border-end-0 border-top-0">
+                                    <div>
+                                        <h6 class="font-weight-bold text-dark mb-1">${item.nama_barang}</h6>
+                                        <span class="badge bg-light text-muted small px-2 py-0.5">${item.jenis_barang}</span>
+                                        <span class="text-muted small ms-2">Ecer: <strong>${item.harga_jual}</strong></span>
+                                        <div class="small text-muted mt-1">Barcode: <strong>${item.kode}</strong></div>
+                                    </div>
+                                    <div>
+                                        ${item.is_added ? 
+                                            `<button class="btn btn-outline-secondary btn-sm font-weight-bold" disabled><i data-acorn-icon="check" class="me-1"></i> Sudah Ada</button>` : 
+                                            `<button class="btn btn-primary btn-sm font-weight-bold btn-add-manual-prod" data-code="${item.kode}"><i data-acorn-icon="plus" class="me-1"></i> Tambah</button>`
+                                        }
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        $('#manualProductResults').html(html).show();
+                        if (typeof acorn !== 'undefined' && acorn.initIcons) {
+                            acorn.initIcons();
+                        }
+                    }
+                });
+            }
+
+            $('#btnSearchManualProduct').on('click', performManualProductSearch);
+            $('#manualProductSearch').on('keypress', function(e) {
+                if (e.which === 13) {
+                    performManualProductSearch();
+                }
+            });
+
+            // Action when adding manual product
+            $(document).on('click', '.btn-add-manual-prod', function() {
+                const button = $(this);
+                const code = button.attr('data-code');
+                button.prop('disabled', true).html('<div class="spinner-border spinner-border-sm text-white" role="status"></div>');
+
+                $.post('/laporan/opname/add-master-product/' + sessionId, {
+                    _token: "{{ csrf_token() }}",
+                    kode_barang: code
+                }, function(res) {
+                    if (res.success) {
+                        Swal.fire({
+                            title: 'Berhasil!',
+                            text: res.message,
+                            icon: 'success',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                        // Update the button state
+                        button.removeClass('btn-primary').addClass('btn-outline-secondary').html('<i data-acorn-icon="check" class="me-1"></i> Sudah Ada').prop('disabled', true);
+                        if (typeof acorn !== 'undefined' && acorn.initIcons) {
+                            acorn.initIcons();
+                        }
+                        // Reload main table & dashboard cards
+                        itemsTable.ajax.reload(null, false);
+                        loadAuditTrail();
+                        updateSummaryCards();
+                    } else {
+                        Swal.fire('Gagal!', res.message, 'error');
+                        button.prop('disabled', false).html('<i data-acorn-icon="plus" class="me-1"></i> Tambah');
+                    }
+                });
+            });
+
+            // Clean modal state when closed
+            $('#addManualItemModal').on('hidden.bs.modal', function () {
+                $('#manualProductSearch').val('');
+                $('#manualProductResults').hide().html('');
+                $('#manualProductEmpty').hide();
+                $('#manualProductInstructions').show();
+            });
 
         });
     </script>

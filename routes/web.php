@@ -187,6 +187,8 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
             Route::get('/detail/{id}', [StockOpnameController::class, 'detail'])->name('stock.opname.detail');
             Route::get('/items-data/{id}', [StockOpnameController::class, 'itemsData']);
             Route::post('/start-counting', [StockOpnameController::class, 'startCounting']);
+            Route::get('/search-master-products/{id}', [StockOpnameController::class, 'searchMasterProducts']);
+            Route::post('/add-master-product/{id}', [StockOpnameController::class, 'addMasterProduct']);
             Route::post('/scan-barcode', [StockOpnameController::class, 'scanBarcode']);
             Route::post('/update-qty-manual', [StockOpnameController::class, 'updateQtyManual']);
             Route::post('/generate-recount', [StockOpnameController::class, 'generateRecount']);
