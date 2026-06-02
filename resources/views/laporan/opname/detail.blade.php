@@ -491,7 +491,12 @@
                             return qty !== null ? qty : '-';
                         }
                     },
-                    { data: 'product_name' },
+                    { 
+                        data: 'product_name',
+                        render: function(data, type, row) {
+                            return `<div class="text-wrap text-alternate" style="min-width: 150px; max-width: 300px; white-space: normal !important; word-wrap: break-word;">${data}</div>`;
+                        }
+                    },
                     { data: 'harga_jual', className: 'text-end font-weight-bold text-dark' },
                     @if(Auth::user()->role == 'admin')
                     { data: 'snapshot_qty', className: 'text-end font-weight-bold text-muted' },
