@@ -200,12 +200,75 @@ class TransaksiController extends Controller
                 // Trigger real-time updates via Firebase
                 FirebaseService::triggerUpdate('updates/sales', ['toko' => $user->kode_toko]);
 
-                // Also trigger updates for any active stock opname session in this shop
+                // Also trigger updates and auto-adjust counted quantities for any active stock opname session in this shop
                 $activeSessions = \App\Models\StockOpname::where('kode_toko', $user->kode_toko)
                     ->whereIn('status', ['Counting', 'Recount'])
-                    ->pluck('id');
-                foreach ($activeSessions as $sessionId) {
-                    FirebaseService::triggerUpdate('updates/opname_session_' . $sessionId);
+                    ->get();
+
+                foreach ($activeSessions as $session) {
+                    // Update Firebase trigger for real-time UI refresh
+                    FirebaseService::triggerUpdate('updates/opname_session_' . $session->id);
+
+                    // Real-Time Adjusting Physical Count by Sales
+                    foreach ($data as $d) {
+                        $soItem = \App\Models\StockOpnameItem::where('stock_opname_id', $session->id)
+                            ->where('kode_barang', $d['nomor_paket'])
+                            ->first();
+
+                        if ($soItem) {
+                            $soldQty = intval($d['jumlah_barang']);
+
+                            // Determine the current active round
+                            $activeRound = 1;
+                            if ($session->status === 'Recount') {
+                                $hasRound3 = \App\Models\StockOpnameItem::where('stock_opname_id', $session->id)
+                                    ->whereNotNull('round_3_qty')
+                                    ->exists();
+                                $activeRound = $hasRound3 ? 3 : 2;
+                            }
+
+                            // Check if the current round has been counted (is not null)
+                            $qtyCol = 'round_' . $activeRound . '_qty';
+                            if ($soItem->$qtyCol !== null) {
+                                $qtyBefore = $soItem->$qtyCol;
+                                // Deduct sold quantity, ensuring it doesn't go below 0
+                                $soItem->$qtyCol = max(0, $soItem->$qtyCol - $soldQty);
+
+                                // Also update final_qty if it's currently populated
+                                if ($soItem->final_qty !== null) {
+                                    $soItem->final_qty = max(0, $soItem->final_qty - $soldQty);
+                                }
+
+                                // Fetch product purchase price to recalculate difference_value
+                                $barang = \App\Models\DataBarang::where('kode', $soItem->kode_barang)->first();
+                                $harga_beli = $barang ? floatval(str_replace('.', '', $barang->harga_beli)) : 0;
+
+                                // Recalculate difference and difference_value
+                                $sales = DB::table('transaksis')
+                                    ->where('kode_toko', $session->kode_toko)
+                                    ->where('kode_barang', $soItem->kode_barang)
+                                    ->where('created_at', '>=', $session->created_at)
+                                    ->sum('jumlah');
+
+                                $adjustedSnapshot = max(0, $soItem->snapshot_qty - $sales);
+                                $soItem->difference = $soItem->final_qty - $adjustedSnapshot;
+                                $soItem->difference_value = $soItem->difference * $harga_beli;
+
+                                $soItem->save();
+
+                                // Record in audit logs so there is a clear trail of this automated adjustment!
+                                \App\Models\StockOpnameAudit::create([
+                                    'stock_opname_id' => $session->id,
+                                    'stock_opname_item_id' => $soItem->id,
+                                    'user_id' => $user->id, // The cashier who did the POS transaction
+                                    'round' => $activeRound,
+                                    'qty_before' => $qtyBefore,
+                                    'qty_after' => $soItem->$qtyCol,
+                                    'action' => 'POS Sale Auto-Deduct',
+                                ]);
+                            }
+                        }
+                    }
                 }
 
                 $icon = 'success';

@@ -767,4 +767,88 @@ class StockOpnameTest extends TestCase
             'message' => 'Barang berhasil ditambahkan ke list stock opname!'
         ]);
     }
+
+    public function test_pos_sale_auto_deducts_counted_opname_item()
+    {
+        // Fake Firebase service
+        \Illuminate\Support\Facades\Http::fake();
+
+        $user = User::factory()->create([
+            'role' => 'kasir',
+            'kode_toko' => 'TK_001',
+            'shift' => 0,
+        ]);
+
+        $barang = DataBarang::create([
+            'kode' => 'BRG_DEDUCT_TEST',
+            'nama_barang' => 'Test Deduct Product',
+            'harga_beli' => '10000',
+            'harga_jual' => '15000',
+            'harga_grosir' => '12000',
+            'jenis_barang' => 'Hijab',
+        ]);
+
+        $stock = StockToko::create([
+            'kode_input' => 'IN-DEDUCT',
+            'kode_toko' => 'TK_001',
+            'kode_barang' => 'BRG_DEDUCT_TEST',
+            'nama_barang' => 'Test Deduct Product',
+            'jumlah' => 10,
+            'terjual' => 0,
+            'supplier' => 'Test Supplier',
+        ]);
+
+        // Start active opname session
+        $so = StockOpname::create([
+            'nomor_so' => 'SO-DEDUCT-TEST',
+            'kode_toko' => 'TK_001',
+            'status' => 'Counting',
+            'petugas_id' => $user->id,
+        ]);
+
+        // The staff has already counted this item and recorded 5 pcs
+        $item = StockOpnameItem::create([
+            'stock_opname_id' => $so->id,
+            'kode_barang' => 'BRG_DEDUCT_TEST',
+            'snapshot_qty' => 10,
+            'round_1_qty' => 5,
+            'final_qty' => 5,
+        ]);
+
+        // A POS sale of 2 items occurs
+        $response = $this->actingAs($user)->post('/transaksi/penjualan/store', [
+            'invoice' => 'INV-DEDUCT-TEST',
+            'total_harga' => 30000,
+            'pembayaran' => 50000,
+            'kembali' => 20000,
+            'data' => [
+                [
+                    'nomor_paket' => 'BRG_DEDUCT_TEST',
+                    'nama_barang' => 'Test Deduct Product',
+                    'method' => 'umum',
+                    'jumlah_barang' => 2,
+                    'harga_item' => 15000,
+                    'harga_jual' => 30000,
+                ]
+            ]
+        ]);
+
+        $response->assertJson([
+            'icon' => 'success',
+        ]);
+
+        // Verify that the counted physical quantities are automatically reduced by 2
+        $item->refresh();
+        $this->assertEquals(3, $item->round_1_qty); // 5 - 2 = 3
+        $this->assertEquals(3, $item->final_qty);   // 5 - 2 = 3
+
+        // Verify an audit trail log is created for this auto-deduction
+        $this->assertDatabaseHas('stock_opname_audits', [
+            'stock_opname_id' => $so->id,
+            'stock_opname_item_id' => $item->id,
+            'action' => 'POS Sale Auto-Deduct',
+            'qty_before' => 5,
+            'qty_after' => 3,
+        ]);
+    }
 }

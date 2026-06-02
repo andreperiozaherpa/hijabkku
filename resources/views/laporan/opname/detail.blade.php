@@ -3,9 +3,16 @@
 @section('main')
     <style>
         /* Modern Sleek Visual Layout Styles */
-        .highlight-variance {
-            background-color: rgba(220, 53, 69, 0.02) !important;
+        .highlight-variance td {
+            background-color: rgba(220, 53, 69, 0.07) !important;
+        }
+
+        .highlight-variance td:first-child {
             border-left: 4px solid #dc3545 !important;
+        }
+
+        html[data-theme="dark"] .highlight-variance td {
+            background-color: rgba(220, 53, 69, 0.15) !important;
         }
 
         .sticky-action-bar {
@@ -661,9 +668,19 @@
                     },
                 },
                 createdRow: function(row, data, dataIndex) {
-                    // Only apply elegant red/orange outline border for items with difference
-                    if (data.difference !== 0) {
-                        $(row).addClass('highlight-variance');
+                    // Get the session status from the label
+                    const sessionStatus = $('#sessionStatusLabel').text().trim();
+
+                    // If actively in Counting or Recount phases, highlight ONLY if officially marked as 'Need Recount' from previous round validation
+                    if (sessionStatus === 'Counting' || sessionStatus === 'Recount') {
+                        if (data.status === 'Need Recount') {
+                            $(row).addClass('highlight-variance');
+                        }
+                    } else {
+                        // In Review, Finalized, or other post-counting states, highlight all remaining differences
+                        if (data.difference !== 0) {
+                            $(row).addClass('highlight-variance');
+                        }
                     }
                 }
             });
