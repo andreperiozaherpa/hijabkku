@@ -190,8 +190,8 @@
                     },
                 },
                 drawCallback: function() {
-                    if (typeof acorn !== 'undefined' && acorn.initIcons) {
-                        acorn.initIcons();
+                    if (typeof AcornIcons !== 'undefined') {
+                        new AcornIcons().replace();
                     }
                 },
             });

@@ -931,9 +931,9 @@
                             $('#auditCount').text(res.logs.length);
                             $('#auditCountBadge').text(res.logs.length);
                             
-                            // Reinitialize icons if acorn is loaded
-                            if (typeof acorn !== 'undefined' && acorn.initIcons) {
-                                acorn.initIcons();
+                            // Reinitialize icons if AcornIcons is loaded
+                            if (typeof AcornIcons !== 'undefined') {
+                                new AcornIcons().replace();
                             }
                         } else {
                             $('#emptyAuditLabel').removeClass('d-none');
@@ -994,8 +994,8 @@
                             `;
                         });
                         $('#manualProductResults').html(html).show();
-                        if (typeof acorn !== 'undefined' && acorn.initIcons) {
-                            acorn.initIcons();
+                        if (typeof AcornIcons !== 'undefined') {
+                            new AcornIcons().replace();
                         }
                     }
                 });
@@ -1031,8 +1031,8 @@
                         });
                         // Update the button state
                         button.removeClass('btn-primary').addClass('btn-outline-secondary').html('<i data-acorn-icon="check" class="me-1"></i> Sudah Ada').prop('disabled', true);
-                        if (typeof acorn !== 'undefined' && acorn.initIcons) {
-                            acorn.initIcons();
+                        if (typeof AcornIcons !== 'undefined') {
+                            new AcornIcons().replace();
                         }
                         // Reload main table & dashboard cards
                         itemsTable.ajax.reload(null, false);
