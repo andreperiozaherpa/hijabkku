@@ -108,9 +108,7 @@ class StockInOutController extends Controller
                 return '<div class="btn-group" role="group" aria-label="Basic example">' . $group . ' </div>';
             })
             ->addColumn('tanggal', function ($data) {
-                setlocale(LC_ALL, 'IND');
-                $tanggal =  Carbon::parse($data->created_at)->formatLocalized('%A %d %B %Y');;
-                return $tanggal;
+                return Carbon::parse($data->created_at)->locale('id')->isoFormat('dddd, D MMMM YYYY');
             })
             ->rawColumns(['aksi', 'tanggal'])
             ->make(true);

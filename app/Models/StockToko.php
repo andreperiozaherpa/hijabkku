@@ -9,6 +9,8 @@ class StockToko extends Model
 {
     use HasFactory;
 
+    protected $guarded = ['id'];
+
     public function data_barang()
     {
         return $this->belongsTo(DataBarang::class, 'kode_barang', 'kode');

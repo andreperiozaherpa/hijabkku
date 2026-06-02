@@ -84,4 +84,30 @@ class RBACTest extends TestCase
         // Warehouse staff does not have 'proses_transaksi' permission, so they should get 403 Forbidden
         $response->assertStatus(403);
     }
+
+    public function test_kasir_with_kelola_stock_opname_permission_can_access_opname()
+    {
+        // 1. Create kasir user
+        $kasir = User::factory()->create([
+            'status' => 'on',
+            'role' => 'kasir',
+            'kode_toko' => 'TK_test',
+            'shift' => 0,
+        ]);
+
+        // 2. Access /laporan/opname before permission (should be 403)
+        $response = $this->actingAs($kasir)->get('/laporan/opname');
+        $response->assertStatus(403);
+
+        // 3. Grant permission to kasir role dynamically
+        $permission = \DB::table('permissions')->where('name', 'kelola_stock_opname')->first();
+        \DB::table('role_permissions')->insert([
+            'role' => 'kasir',
+            'permission_id' => $permission->id,
+        ]);
+
+        // 4. Access /laporan/opname after permission (should be 200)
+        $response2 = $this->actingAs($kasir)->get('/laporan/opname');
+        $response2->assertStatus(200);
+    }
 }

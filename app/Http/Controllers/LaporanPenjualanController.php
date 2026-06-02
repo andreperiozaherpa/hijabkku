@@ -17,8 +17,7 @@ class LaporanPenjualanController extends Controller
      */
     public function index()
     {
-        //
-        $toko = Toko::get();
+        $toko = Toko::whereNotIn('nama_toko', ['stock hilang', 'Online Shop'])->get();
         return view('laporan.penjualan.index', [
             'toko' => $toko,
         ]);
@@ -119,24 +118,41 @@ class LaporanPenjualanController extends Controller
         $toko = $request->toko;
         $karyawan = $request->karyawan;
 
-        function data_toko($toko, $date, $karyawan)
-        {
+        // 1. DataTables Server-Side Pagination
+        if ($request->has('draw')) {
+            $metode = $request->input('metode', 'umum');
+
             $query = DB::table('transaksis')
                 ->join('pembayarans', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice')
                 ->join('users', 'pembayarans.user_id', '=', 'users.id')
-                ->select(
-                    'transaksis.*',
-                    'pembayarans.user_id',
-                    'users.name as user_name',
-                    'transaksis.created_at as tanggal_data'
-                );
+                ->where('transaksis.metode', $metode);
 
             // Filter tanggal
-            $query->whereDate('transaksis.created_at', 'like', '%' . $date . '%');
+            if ($param === 'hari') {
+                $query->whereDate('transaksis.created_at', $date);
+            } elseif ($param === 'bulan') {
+                $parts = explode('-', $date);
+                if (count($parts) === 2) {
+                    $query->whereYear('transaksis.created_at', $parts[0])
+                          ->whereMonth('transaksis.created_at', $parts[1]);
+                } else {
+                    $query->whereDate('transaksis.created_at', 'like', '%' . $date . '%');
+                }
+            } elseif ($param === 'tahun') {
+                $query->whereYear('transaksis.created_at', $date);
+            }
 
             // Filter toko
             if ($toko !== 'semua' && !empty($toko)) {
                 $query->where('transaksis.kode_toko', $toko);
+            } else {
+                $excludedTokoCodes = DB::table('tokos')
+                    ->whereIn('nama_toko', ['stock hilang', 'Online Shop'])
+                    ->pluck('kode')
+                    ->toArray();
+                if (!empty($excludedTokoCodes)) {
+                    $query->whereNotIn('transaksis.kode_toko', $excludedTokoCodes);
+                }
             }
 
             // Filter karyawan
@@ -149,29 +165,148 @@ class LaporanPenjualanController extends Controller
                 $query->where('pembayarans.user_id', Auth::id());
             }
 
-            $laporan = $query->get();
+            $totalRecords = $query->count();
 
-            // Total umum & grosir
+            // Search filter
+            $searchValue = $request->input('search.value');
+            if (!empty($searchValue)) {
+                $query->where(function($q) use ($searchValue) {
+                    $q->where('transaksis.kode_invoice', 'like', '%' . $searchValue . '%')
+                      ->orWhere('users.name', 'like', '%' . $searchValue . '%')
+                      ->orWhere('transaksis.nama_barang', 'like', '%' . $searchValue . '%');
+                });
+            }
+
+            $totalFiltered = $query->count();
+
+            // Ordering
+            $orderColumnIdx = $request->input('order.0.column', 0);
+            $orderDir = $request->input('order.0.dir', 'desc');
+            $columns = ['transaksis.created_at', 'transaksis.kode_invoice', 'users.name', 'transaksis.nama_barang', 'transaksis.metode', 'transaksis.jumlah', 'transaksis.harga', 'transaksis.harga_total'];
+            $orderColumn = isset($columns[$orderColumnIdx]) ? $columns[$orderColumnIdx] : 'transaksis.created_at';
+            
+            $query->orderBy($orderColumn, $orderDir);
+
+            // Pagination
+            $start = $request->input('start', 0);
+            $length = $request->input('length', 25);
+            
+            if ($length != -1) {
+                $query->skip($start)->take($length);
+            }
+
+            $items = $query->select(
+                'transaksis.created_at as tanggal_data',
+                'transaksis.kode_invoice',
+                'users.name as user_name',
+                'transaksis.nama_barang',
+                'transaksis.metode',
+                'transaksis.jumlah',
+                'transaksis.harga',
+                'transaksis.harga_total'
+            )->get();
+
+            $data = $items->map(function($item) {
+                return [
+                    'tanggal' => $item->tanggal_data,
+                    'kode_invoice' => $item->kode_invoice,
+                    'user_name' => $item->user_name,
+                    'nama_barang' => $item->nama_barang,
+                    'metode' => $item->metode,
+                    'jumlah' => $item->jumlah,
+                    'harga' => $item->harga,
+                    'total' => (float)$item->harga_total
+                ];
+            });
+
+            return response()->json([
+                'draw' => intval($request->input('draw')),
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $totalFiltered,
+                'data' => $data
+            ]);
+        }
+
+        // 2. Summary Request (KPI & Chart) - Highly Optimized using aggregates!
+        if (in_array($param, ['hari', 'bulan', 'tahun'])) {
+            
+            // Build base totals query
+            $totalsQuery = DB::table('transaksis')
+                ->join('pembayarans', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice');
+
+            // Apply date filters
+            if ($param === 'hari') {
+                $totalsQuery->whereDate('transaksis.created_at', $date);
+            } elseif ($param === 'bulan') {
+                $parts = explode('-', $date);
+                if (count($parts) === 2) {
+                    $totalsQuery->whereYear('transaksis.created_at', $parts[0])
+                                 ->whereMonth('transaksis.created_at', $parts[1]);
+                } else {
+                    $totalsQuery->whereDate('transaksis.created_at', 'like', '%' . $date . '%');
+                }
+            } elseif ($param === 'tahun') {
+                $totalsQuery->whereYear('transaksis.created_at', $date);
+            }
+
+            // Apply toko filters
+            if ($toko !== 'semua' && !empty($toko)) {
+                $totalsQuery->where('transaksis.kode_toko', $toko);
+            } else {
+                $excludedTokoCodes = DB::table('tokos')
+                    ->whereIn('nama_toko', ['stock hilang', 'Online Shop'])
+                    ->pluck('kode')
+                    ->toArray();
+                if (!empty($excludedTokoCodes)) {
+                    $totalsQuery->whereNotIn('transaksis.kode_toko', $excludedTokoCodes);
+                }
+            }
+
+            // Apply karyawan filters
+            if ($karyawan !== 'semua' && !empty($karyawan)) {
+                $totalsQuery->where('pembayarans.user_id', $karyawan);
+            }
+
+            // Batasi berdasarkan user login jika bukan admin
+            if (Auth::user()->role != 'admin') {
+                $totalsQuery->where('pembayarans.user_id', Auth::id());
+            }
+
+            // Aggregate totals directly in DB!
+            $aggregated = (clone $totalsQuery)
+                ->select(
+                    'transaksis.metode',
+                    DB::raw('SUM(transaksis.harga_total) as total_omzet'),
+                    DB::raw('SUM(transaksis.jumlah * transaksis.harga_beli) as total_modal')
+                )
+                ->groupBy('transaksis.metode')
+                ->get();
+
             $totalUmum = 0;
             $modalUmum = 0;
             $totalGrosir = 0;
             $modalGrosir = 0;
 
-            foreach ($laporan as $item) {
-                $total = $item->jumlah * $item->harga;
-                $modal = $item->jumlah * $item->harga_beli;
-
-                if ($item->metode === 'umum') {
-                    $totalUmum += $total;
-                    $modalUmum += $modal;
-                } elseif ($item->metode === 'grosir') {
-                    $totalGrosir += $total;
-                    $modalGrosir += $modal;
+            foreach ($aggregated as $row) {
+                if ($row->metode === 'umum') {
+                    $totalUmum = (float)$row->total_omzet;
+                    $modalUmum = (float)$row->total_modal;
+                } elseif ($row->metode === 'grosir') {
+                    $totalGrosir = (float)$row->total_omzet;
+                    $modalGrosir = (float)$row->total_modal;
                 }
             }
 
-            return [
-                'laporan' => $laporan,
+            // Fetch lightweight chart data only (omit details to reduce size by 95%!)
+            $chartItems = $totalsQuery
+                ->select(
+                    'transaksis.created_at as tanggal_data',
+                    'transaksis.metode',
+                    'transaksis.harga_total'
+                )->get();
+
+            $data = [
+                'laporan' => $chartItems, // Kept key name as 'laporan' for frontend chart parser compatibility
                 'total' => [
                     'umum' => $totalUmum,
                     'modal_umum' => $modalUmum,
@@ -179,12 +314,7 @@ class LaporanPenjualanController extends Controller
                     'modal_grosir' => $modalGrosir,
                 ]
             ];
-        }
-
-        if (in_array($param, ['hari', 'bulan', 'tahun'])) {
-            $data = data_toko($toko, $date, $karyawan);
             $parameter = $param;
-            $icon = 'success';
         } else {
             return response()->json([
                 'message' => 'Parameter tidak valid',

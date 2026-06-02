@@ -6,11 +6,13 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataBarangController;
 use App\Http\Controllers\JenisBarangController;
 use App\Http\Controllers\LaporanPenjualanController;
+use App\Http\Controllers\LaporanBarangController;
 use App\Http\Controllers\MerekBarangController;
 use App\Http\Controllers\ModelBarangController;
 use App\Http\Controllers\PackagingBarangController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StockInOutController;
+use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\StockTokoController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TokoController;
@@ -137,7 +139,6 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
                 Route::post('/store', [StockTokoController::class, 'store']);
                 Route::get('/edit', [StockTokoController::class, 'edit']);
                 Route::post('/update', [StockTokoController::class, 'update']);
-                // Route::post('/destroy', [StockTokoController::class, 'destroy']);
             });
         });
 
@@ -163,12 +164,9 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
     });
     Route::prefix('/laporan')->group(function () {
         Route::prefix('/barang')->middleware('permission:lihat_laporan_penjualan')->group(function () {
-            Route::get('/', [BukuPanduanController::class, 'index']);
-            Route::get('/show', [BukuPanduanController::class, 'show']);
-            Route::post('/store', [BukuPanduanController::class, 'store']);
-            Route::get('/edit', [BukuPanduanController::class, 'edit']);
-            Route::post('/update', [BukuPanduanController::class, 'update']);
-            Route::post('/destroy', [BukuPanduanController::class, 'destroy']);
+            Route::get('/', [LaporanBarangController::class, 'index']);
+            Route::get('/show', [LaporanBarangController::class, 'show']);
+            Route::get('/detail', [LaporanBarangController::class, 'detail']);
         });
 
         Route::prefix('/penjualan')->middleware('permission:lihat_laporan_penjualan')->group(function () {
@@ -179,6 +177,23 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
             Route::get('/edit', [LaporanPenjualanController::class, 'edit']);
             Route::post('/update', [LaporanPenjualanController::class, 'update']);
             Route::post('/destroy', [LaporanPenjualanController::class, 'destroy']);
+        });
+
+        Route::prefix('/opname')->middleware('permission:kelola_stock_opname')->group(function () {
+            Route::get('/', [StockOpnameController::class, 'index'])->name('stock.opname');
+            Route::get('/show', [StockOpnameController::class, 'show']);
+            Route::post('/store', [StockOpnameController::class, 'store']);
+            Route::delete('/destroy/{id}', [StockOpnameController::class, 'destroy']);
+            Route::get('/detail/{id}', [StockOpnameController::class, 'detail'])->name('stock.opname.detail');
+            Route::get('/items-data/{id}', [StockOpnameController::class, 'itemsData']);
+            Route::post('/start-counting', [StockOpnameController::class, 'startCounting']);
+            Route::post('/scan-barcode', [StockOpnameController::class, 'scanBarcode']);
+            Route::post('/update-qty-manual', [StockOpnameController::class, 'updateQtyManual']);
+            Route::post('/generate-recount', [StockOpnameController::class, 'generateRecount']);
+            Route::post('/approve-final', [StockOpnameController::class, 'approveFinal']);
+            Route::post('/post-adjustment', [StockOpnameController::class, 'postAdjustment']);
+            Route::get('/export/{id}', [StockOpnameController::class, 'export']);
+            Route::get('/audit-logs/{id}', [StockOpnameController::class, 'auditLogs']);
         });
     });
 

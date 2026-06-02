@@ -57,6 +57,12 @@ class RBACSeeder extends Seeder
                 'module' => 'Stok',
             ],
             [
+                'name' => 'kelola_stock_opname',
+                'display_name' => 'Kelola Stock Opname',
+                'description' => 'Mengizinkan pengguna melakukan pencatatan kuantitas fisik dan perhitungan Stock Opname.',
+                'module' => 'Laporan',
+            ],
+            [
                 'name' => 'kelola_cabang',
                 'display_name' => 'Kelola Toko/Cabang',
                 'description' => 'Mengizinkan pengguna menambah dan mengelola informasi cabang toko (warehouse).',
@@ -109,6 +115,7 @@ class RBACSeeder extends Seeder
                 'kelola_supplier',
                 'kelola_stok_inout',
                 'kelola_stok_toko',
+                'kelola_stock_opname',
                 'kelola_cabang',
                 'lihat_laporan_penjualan',
                 'kelola_pengguna',
@@ -124,6 +131,12 @@ class RBACSeeder extends Seeder
                 'lihat_dashboard',
                 'kelola_stok_inout',
                 'kelola_stok_toko',
+                'kelola_stock_opname',
+                'lihat_buku_panduan',
+            ],
+            'supervisor' => [
+                'lihat_dashboard',
+                'kelola_stock_opname',
                 'lihat_buku_panduan',
             ],
         ];

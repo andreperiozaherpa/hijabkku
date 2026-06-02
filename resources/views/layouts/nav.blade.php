@@ -75,26 +75,32 @@
                         <span class="label">Dashboards</span>
                     </a>
                 </li>
+                @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('proses_transaksi') || Auth::user()->hasPermission('lihat_daftar_penjualan'))
                 <li>
                     <a href="#transaksi">
                         <i data-acorn-icon="cart" class="icon" data-acorn-size="18"></i>
                         <span class="label">Transaksi</span>
                     </a>
                     <ul id="transaksi">
+                        @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('proses_transaksi'))
                         <li>
                             <a href="/transaksi/penjualan">
                                 <span class="label">Penjualan</span>
                             </a>
                         </li>
+                        @endif
+                        @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('lihat_daftar_penjualan'))
                         <li>
-                            {{-- <a href="/transaksi/daftar"> --}}
-                            <a href="/laporan/penjualan">
+                            <a href="/transaksi/daftar">
                                 <span class="label">Daftar Penjualan</span>
                             </a>
                         </li>
+                        @endif
                     </ul>
                 </li>
+                @endif
 
+                @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('lihat_buku_panduan'))
                 <li>
                     <a href="#buku">
                         <i data-acorn-icon="book" class="icon" data-acorn-size="18"></i>
@@ -108,14 +114,16 @@
                         </li>
                     </ul>
                 </li>
+                @endif
 
-                @if (Auth::user()->role == 'admin')
+                @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('kelola_barang') || Auth::user()->hasPermission('kelola_supplier') || Auth::user()->hasPermission('kelola_stok_inout') || Auth::user()->hasPermission('kelola_stok_toko') || Auth::user()->hasPermission('kelola_cabang'))
                     <li>
                         <a href="#manajemen">
                             <i data-acorn-icon="balance" class="icon" data-acorn-size="18"></i>
                             <span class="label">Manajemen</span>
                         </a>
                         <ul id="manajemen">
+                            @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('kelola_barang'))
                             <li>
                                 <a href="#barang">
                                     <i data-acorn-icon="handbag" class="icon" data-acorn-size="18"></i>
@@ -164,55 +172,71 @@
                                     </li>
                                 </ul>
                             </li>
+                            @endif
+
+                            @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('kelola_supplier'))
                             <li>
                                 <a href="/manajemen/supplier/index">
                                     <i data-acorn-icon="factory" class="icon" data-acorn-size="18"></i>
                                     <span class="label">Supplier</span>
                                 </a>
                             </li>
+                            @endif
+
+                            @if (Auth::user()->role == 'admin')
                             <li>
                                 <a href="#">
                                     <i data-acorn-icon="credit-card" class="icon" data-acorn-size="18"></i>
                                     <span class="label">Member</span>
                                 </a>
                             </li>
+                            @endif
+
+                            @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('kelola_stok_inout') || Auth::user()->hasPermission('kelola_stok_toko'))
                             <li>
                                 <a href="#stock">
                                     <i data-acorn-icon="exchange" class="icon" data-acorn-size="18"></i>
                                     <span class="label">Stock</span>
                                 </a>
                                 <ul id="stock">
+                                    @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('kelola_stok_inout'))
                                     <li>
                                         <a href="/manajemen/stock/inout/index">
                                             <span class="label">Stock In/Out</span>
                                         </a>
                                     </li>
+                                    @endif
+                                    @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('kelola_stok_toko'))
                                     <li>
                                         <a href="/manajemen/stock/toko/index">
                                             <span class="label">Stock Toko/Warehouse</span>
                                         </a>
                                     </li>
-                                    <li>
-                                        <a href="#opname">
-                                            <span class="label">Opname</span>
-                                        </a>
-                                    </li>
+                                    @endif
                                 </ul>
                             </li>
+                            @endif
+
+                            @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('kelola_cabang'))
                             <li>
                                 <a href="/manajemen/warehouse/index">
                                     <i data-acorn-icon="signboard" class="icon" data-acorn-size="18"></i>
                                     <span class="label">Toko/Warehouse</span>
                                 </a>
                             </li>
+                            @endif
                         </ul>
                     </li>
+                @endif
+
+                @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('lihat_laporan_penjualan') || Auth::user()->hasPermission('kelola_stock_opname'))
                     <li>
                         <a href="#laporan">
                             <i data-acorn-icon="book-open" class="icon" data-acorn-size="18"></i>
                             <span class="label">Laporan</span>
                         </a>
                         <ul id="laporan">
+                            @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('lihat_laporan_penjualan'))
                             <li>
                                 <a href="/laporan/barang">
                                     <span class="label">Laporan Barang</span>
@@ -228,8 +252,19 @@
                                     <span class="label">Laporan Stock</span>
                                 </a>
                             </li>
+                            @endif
+                            @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('kelola_stock_opname'))
+                            <li>
+                                <a href="/laporan/opname">
+                                    <span class="label">Stock Opname</span>
+                                </a>
+                            </li>
+                            @endif
                         </ul>
                     </li>
+                @endif
+
+                @if (Auth::user()->role == 'admin')
                     <li>
                         <a href="#user">
                             <i data-acorn-icon="user" class="icon" data-acorn-size="18"></i>

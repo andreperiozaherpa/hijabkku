@@ -9,6 +9,8 @@ class DataBarang extends Model
 {
     use HasFactory;
 
+    protected $guarded = ['id'];
+
     public function stockTokos()
     {
         return $this->hasMany(StockToko::class, 'kode_barang', 'kode');

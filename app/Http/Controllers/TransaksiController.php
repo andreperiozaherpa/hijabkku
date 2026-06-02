@@ -21,29 +21,26 @@ class TransaksiController extends Controller
      */
     public function index()
     {
-        //
         $user = Auth::user();
-        $data_toko = Toko::where('kode', $user->kode_toko)->first();
-        $stock_toko = StockToko::where('kode_toko', $user->kode_toko)->whereColumn('jumlah', '!=', 'terjual')->get();
+        $data_toko = $user->toko;
         return view('transaksi.penjualan', [
             'data_toko' => $data_toko,
-            'stock' => $stock_toko
         ]);
     }
 
     public function index_daftar()
     {
-        //
         if (Auth::user()->role == 'admin') {
-            # code...
-            $data_toko = Toko::get();
-            $data_kasir = User::where('role', 'admin')
-                ->orWhere('role', 'kasir')
+            $data_toko = Toko::whereNotIn('nama_toko', ['stock hilang', 'Online Shop'])->get();
+            $data_kasir = User::where('status', 'on')
+                ->whereIn('role', ['admin', 'kasir'])
                 ->get();
         } else {
-            # code...
-            $data_toko = Toko::where('kode', Auth::user()->kode_toko)->get();
+            $data_toko = Toko::where('kode', Auth::user()->kode_toko)
+                ->whereNotIn('nama_toko', ['stock hilang', 'Online Shop'])
+                ->get();
             $data_kasir = User::where('id', Auth::user()->id)
+                ->where('status', 'on')
                 ->get();
         }
         return view('transaksi.daftar', [
@@ -57,35 +54,27 @@ class TransaksiController extends Controller
      */
     public function create(Request $request)
     {
-        //
         $user = Auth::user();
         $key1 = $request->key1;
         $key2 = $request->key2;
         $param = $request->param;
         if ($param == 'all') {
-            # code...
-            // $stock_toko = StockToko::where('kode_toko', $user->kode_toko)->whereColumn('jumlah', '!=', 'terjual')->get();
             $stock_toko = StockToko::leftJoin('data_barangs', 'stock_tokos.kode_barang', '=', 'data_barangs.kode')
                 ->select('stock_tokos.*', 'data_barangs.jenis_barang', 'data_barangs.harga_beli', 'data_barangs.harga_jual', 'data_barangs.harga_grosir')
                 ->where('kode_toko', $user->kode_toko)
-                // ->where('kode_barang', 'DB-06wj')
                 ->whereColumn('jumlah', '!=', 'terjual')
-                ->groupBy('kode_barang', 'kode_toko')
                 ->orderByDesc('kode_toko')
                 ->get();
         } else {
-            // $stock_toko = StockToko::where('nama_barang', 'like', '%' . $key . '%')->where('kode_toko', $user->kode_toko)->whereColumn('jumlah', '!=', 'terjual')->get();
             $stock_toko = StockToko::leftJoin('data_barangs', 'stock_tokos.kode_barang', '=', 'data_barangs.kode')
                 ->select('stock_tokos.*', 'data_barangs.jenis_barang', 'data_barangs.harga_beli', 'data_barangs.harga_jual', 'data_barangs.harga_grosir')
                 ->where('stock_tokos.nama_barang', 'like', '%' . $key1 . '%')
                 ->where('stock_tokos.nama_barang', 'like', '%' . $key2 . '%')
                 ->where('kode_toko', $user->kode_toko)
                 ->whereColumn('jumlah', '!=', 'terjual')
-                ->groupBy('kode_barang', 'kode_toko')
                 ->orderByDesc('kode_toko')
                 ->get();
         }
-        // dd($stock_toko);
         return response()->json([
             'stock' => $stock_toko
         ]);
@@ -96,7 +85,6 @@ class TransaksiController extends Controller
      */
     public function store(Request $request)
     {
-        //
         $invoice = $request->invoice;
         $total_harga = $request->total_harga;
         $pembayaran = $request->pembayaran;
@@ -109,10 +97,8 @@ class TransaksiController extends Controller
         $time  = $now->format('H:i');
 
         if ($time >= '07:30' && $time <= '17:01') {
-            # code...
             $shif = 1;
         } elseif ($time >= '17:00' && $time <= '23:59') {
-            # code...
             $shif = 2;
         } else {
             $shif = 0;
@@ -120,9 +106,14 @@ class TransaksiController extends Controller
 
         if ($user->shift == $shif || $user->shift == 0) {
             if ($cek_transaksi <= 0) {
-                # code...
+                // Eager load all required DataBarang models in 1 query outside the loop (O(1))
+                $productCodes = array_column($data, 'nomor_paket');
+                $dataBarangs = DataBarang::whereIn('kode', $productCodes)->get()->keyBy('kode');
+
                 foreach ($data as $d) {
-                    $dataBarang = DataBarang::where('kode', $d['nomor_paket'])->first();
+                    $dataBarang = $dataBarangs->get($d['nomor_paket']);
+                    $hargaBeliMentah = $dataBarang ? $dataBarang->harga_beli : 0;
+
                     $arr = [
                         'kode_invoice' => $invoice,
                         'kode_toko' => $user->kode_toko,
@@ -131,16 +122,15 @@ class TransaksiController extends Controller
                         'metode' => $d['method'],
                         'jumlah' => $d['jumlah_barang'],
                         'harga' => $d['harga_item'],
-                        'harga_beli' => str_replace(".", "", $dataBarang->harga_beli),
+                        'harga_beli' => str_replace(".", "", $hargaBeliMentah),
                         'harga_total' => $d['harga_jual'],
                     ];
                     Transaksi::create($arr);
-                    $getstock = StockToko::where('kode_toko', $user->kode_toko)->where('kode_barang', $d['nomor_paket'])->get();
-                    $stock_terjual = $getstock[0]['terjual'] + $d['jumlah_barang'];
-                    // dd($total_stock);
-                    StockToko::where('kode_toko', $user->kode_toko)->where('kode_barang', $d['nomor_paket'])->update([
-                        'terjual' => $stock_terjual
-                    ]);
+
+                    // Use atomic increment query to avoid concurrency race conditions and separate select query (O(1) instead of N+1)
+                    StockToko::where('kode_toko', $user->kode_toko)
+                        ->where('kode_barang', $d['nomor_paket'])
+                        ->increment('terjual', $d['jumlah_barang']);
                 }
                 $data_pembayaran = [
                     'kode_invoice' => $invoice,
@@ -173,109 +163,111 @@ class TransaksiController extends Controller
      */
     public function show(Request $request)
     {
-        //
-        if (Auth::user()->role == 'admin') {
-            # code...
-            $data = Pembayaran::orderBy('id', 'desc')->get();
-        } else {
-            $data = Pembayaran::where('user_id', Auth::user()->id)->orderBy('id', 'desc')->get();
-        }
-        // return DataTables()->of($data)
-        //     ->addColumn('Keterangan', function ($data) {
-        //         $tanggal = Carbon::parse($data->created_at)->locale('id');
-        //         $tanggal->settings(['formatFunction' => 'translatedFormat']);
+        $user = Auth::user();
+        $query = Pembayaran::query()->with(['transaksis.toko']);
 
-        //         $keterangan = '
-        //             <table class="table table-borderless" style="width:100%">
-        //                 <tbody>
-        //                     <tr>
-        //                         <td style="width:20%">Invoice</td>
-        //                         <td style="width:10%">:</td>
-        //                         <td style="width:70%">' . $data->kode_invoice . '</td>
-        //                     </tr>
-        //                     <tr>
-        //                         <td>Kasir</td>
-        //                         <td>:</td>
-        //                         <td>' . $data->user_name . '</td>
-        //                     </tr>
-        //                     <tr>
-        //                         <td>Tanggal</td>
-        //                         <td>:</td>
-        //                         <td>' . $tanggal->format('l, d M Y, h:i:s') . '</td>
-        //                     </tr>
-        //                     <tr>
-        //                         <td>Totak</td>
-        //                         <td>:</td>
-        //                         <td>Rp. ' .  number_format($data->total_harga, 0, ',', '.') . '</td>
-        //                     </tr>
-        //                 </tbody>
-        //             </table>
-        //         ';
-        //         return $keterangan;
-        //     })
-        //     ->addColumn('aksi', function ($data) {
-        //         $group = '<button data-invoice="' . $data->kode_invoice . '" type="button" class="detailTransaksi btn btn-quaternary"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
-        //         <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
-        //         <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
-        //       </svg></button>';
-        //         return '<div class="btn-group" role="group" aria-label="Basic example">' . $group . ' </div>';
-        //     })
-        //     ->rawColumns(['aksi', 'Keterangan'])
-        //     ->make(true);
+        if ($user->role != 'admin') {
+            $query->where('user_id', $user->id);
+        } else {
+            if ($request->filled('kasir') && $request->kasir !== 'semua') {
+                $query->where('user_id', $request->kasir);
+            }
+        }
+
+        if ($request->filled('date') && $request->filled('param')) {
+            $date = $request->date;
+            try {
+                $carbonDate = Carbon::createFromFormat('d-m-Y', $date);
+            } catch (\Exception $e) {
+                try {
+                    $carbonDate = Carbon::createFromFormat('Y-m-d', $date);
+                } catch (\Exception $ex) {
+                    $carbonDate = null;
+                }
+            }
+
+            if ($carbonDate) {
+                $param = $request->param;
+                if ($param == 'hari') {
+                    $query->whereDate('created_at', $carbonDate->format('Y-m-d'));
+                } elseif ($param == 'bulan') {
+                    $query->whereYear('created_at', $carbonDate->year)
+                          ->whereMonth('created_at', $carbonDate->month);
+                } elseif ($param == 'tahun') {
+                    $query->whereYear('created_at', $carbonDate->year);
+                }
+            }
+        }
+
+        if ($request->filled('toko') && $request->toko !== 'semua') {
+            $toko = $request->toko;
+            $query->whereHas('transaksis', function ($q) use ($toko) {
+                $q->where('kode_toko', $toko);
+            });
+        }
+
+        $data = $query->orderBy('id', 'desc');
 
         return DataTables()->of($data)
-            ->addColumn('Keterangan', function ($data) {
-                $tanggal = Carbon::parse($data->created_at)->locale('id');
+            ->addColumn('tanggal', function ($row) {
+                $tanggal = Carbon::parse($row->created_at)->locale('id');
                 $tanggal->settings(['formatFunction' => 'translatedFormat']);
-
-                $keterangan = '
-                    <table class="table table-borderless" style="width:100%">
-                        <tbody>
-                            <tr>
-                                <td style="width:20%">Invoice</td>
-                                <td style="width:10%">:</td>
-                                <td style="width:70%">' . $data->kode_invoice . '</td>
-                            </tr>
-                            <tr>
-                                <td>Kasir</td>
-                                <td>:</td>
-                                <td>' . $data->user_name . '</td>
-                            </tr>
-                            <tr>
-                                <td>Tanggal</td>
-                                <td>:</td>
-                                <td>' . $tanggal->format('l, d M Y, h:i:s') . '</td>
-                            </tr>
-                            <tr>
-                                <td>Totak</td>
-                                <td>:</td>
-                                <td>Rp. ' .  number_format($data->total_harga, 0, ',', '.') . '</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                ';
-                return $keterangan;
+                return $tanggal->format('l, d M Y, H:i');
             })
-            ->addColumn('aksi', function ($data) {
-                $group = '<button data-invoice="' . $data->kode_invoice . '" type="button" class="detailTransaksi btn btn-quaternary"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
-                <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
-                <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
-              </svg></button>';
-                return '<div class="btn-group" role="group" aria-label="Basic example">' . $group . ' </div>';
+            ->addColumn('toko', function ($row) {
+                $firstItem = $row->transaksis->first();
+                return $firstItem && $firstItem->toko ? $firstItem->toko->nama_toko : '-';
             })
-            ->rawColumns(['aksi', 'Keterangan'])
+            ->addColumn('metode', function ($row) {
+                $uniqueMetodes = $row->transaksis->pluck('metode')->unique()->filter()->toArray();
+                if (empty($uniqueMetodes)) {
+                    $uniqueMetodes = ['umum'];
+                }
+                $badges = [];
+                foreach ($uniqueMetodes as $metode) {
+                    if ($metode === 'grosir') {
+                        $badges[] = '<span class="badge bg-outline-success text-success text-uppercase">Grosir</span>';
+                    } else {
+                        $badges[] = '<span class="badge bg-outline-primary text-primary text-uppercase">Umum</span>';
+                    }
+                }
+                return implode(' ', $badges);
+            })
+            ->addColumn('total_rupiah', function ($row) {
+                return 'Rp. ' . number_format($row->total_harga, 0, ',', '.');
+            })
+            ->addColumn('aksi', function ($row) {
+                $eyeIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
+                    <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+                    <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+                </svg>';
+                return '<button data-invoice="' . $row->kode_invoice . '" type="button" class="detailTransaksi btn btn-sm btn-icon btn-icon-only btn-outline-primary me-1" title="Detail Transaksi">' . $eyeIcon . '</button>';
+            })
+            ->rawColumns(['metode', 'aksi'])
             ->make(true);
     }
 
     public function show_detail(Request $request)
     {
-        //
         $invoice = $request->invoice;
-        $data_perinvoice = Pembayaran::where('kode_invoice', $invoice)->first();
-        $data_perbarang = Transaksi::where('kode_invoice', $invoice)->get();
+        $data_perinvoice = Pembayaran::with(['transaksis.toko'])->where('kode_invoice', $invoice)->first();
+
+        if (!$data_perinvoice) {
+            return response()->json(['error' => 'Invoice not found'], 404);
+        }
+
+        $data_perbarang = $data_perinvoice->transaksis;
         $tanggal = Carbon::parse($data_perinvoice->created_at)->locale('id');
         $tanggal->settings(['formatFunction' => 'translatedFormat']);
-        $toko = Toko::where('kode', $data_perbarang[0]->kode_toko)->first();
+
+        $firstItem = $data_perbarang->first();
+        $tokoName = $firstItem && $firstItem->toko ? $firstItem->toko->nama_toko : '-';
+        $uniqueMetodes = $data_perbarang->pluck('metode')->unique()->filter()->toArray();
+        if (empty($uniqueMetodes)) {
+            $uniqueMetodes = ['umum'];
+        }
+        $metode = implode(' / ', array_map('strtoupper', $uniqueMetodes));
+
         return response()->json([
             'data' => $data_perbarang,
             'total_harga' => $data_perinvoice->total_harga,
@@ -283,8 +275,8 @@ class TransaksiController extends Controller
             'kembalian' => $data_perinvoice->kembalian,
             'username' => $data_perinvoice->user_name,
             'tanggal' => $tanggal->format('l, d M Y, a H:i'),
-            'metode' => $data_perbarang[0]->metode,
-            'toko' => $toko->nama_toko,
+            'metode' => $metode,
+            'toko' => $tokoName,
         ]);
     }
 

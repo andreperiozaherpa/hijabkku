@@ -1,138 +1,550 @@
 @extends('layouts.main')
 @section('main')
-    <main>
-        <div class="container">
-            <!-- Title and Top Buttons Start -->
-            <div class="page-title-container">
-                <div class="row">
-                    <!-- Title Start -->
-                    <div class="col-12 col-md-7">
-                        <h1 class="mb-0 pb-0 display-4" id="title">Penjualan</h1>
+    <style>
+        /* ── POS Layout ── */
+        .pos-container {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+        }
+
+        .pos-left {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pos-right {
+            width: 380px;
+            position: sticky;
+            top: 100px;
+            background: var(--foreground);
+            border-radius: 1rem;
+            border: 1px solid var(--separator);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 130px);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* ── Tablet Optimization (Medium Screens) ── */
+        @media (min-width: 768px) and (max-width: 1199.98px) {
+            .pos-right {
+                width: 310px;
+            }
+
+            .cart-item-row {
+                padding: 0.65rem;
+            }
+
+            .cart-item-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.35rem;
+            }
+
+            .cart-item-meta>div {
+                width: 100%;
+                justify-content: space-between !important;
+            }
+        }
+
+        /* ── Phone Optimization (Small Screens) ── */
+        @media (max-width: 767.98px) {
+            .pos-container {
+                flex-direction: column;
+            }
+
+            .pos-right {
+                width: 100%;
+                position: static;
+                max-height: none;
+            }
+        }
+
+        /* ── Product Grid & Cards ── */
+        .product-grid-scroll {
+            max-height: calc(100vh - 280px);
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        @media (max-width: 767.98px) {
+            .product-grid-scroll {
+                max-height: none;
+                overflow-y: visible;
+            }
+        }
+
+        .product-card {
+            background: var(--foreground);
+            border: 1px solid var(--separator);
+            border-radius: 0.85rem;
+            transition: all 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+            border-color: var(--primary);
+        }
+
+        .product-card .btn-transparent {
+            width: 100%;
+            text-align: left;
+            padding: 1rem;
+            background: transparent;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            justify-content: space-between;
+        }
+
+        .product-card .nama-barang {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--body);
+            line-height: 1.4;
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 2.6em;
+        }
+
+        .product-card .price-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .price-badge {
+            font-size: 0.72rem;
+            padding: 0.2rem 0.45rem;
+            border-radius: 0.35rem;
+            font-weight: 500;
+        }
+
+        .price-badge.eceran {
+            background: rgba(var(--primary-rgb), 0.08);
+            color: var(--primary);
+        }
+
+        .price-badge.grosir {
+            background: rgba(var(--secondary-rgb), 0.08);
+            color: var(--secondary);
+        }
+
+        .product-card .stock-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-top: 1px solid var(--separator);
+            padding-top: 0.5rem;
+            margin-top: auto;
+            width: 100%;
+        }
+
+        .stock-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .stock-ok {
+            color: var(--success);
+        }
+
+        .stock-ok .stock-indicator {
+            background-color: var(--success);
+        }
+
+        .stock-low {
+            color: var(--warning);
+        }
+
+        .stock-low .stock-indicator {
+            background-color: var(--warning);
+        }
+
+        .stock-empty {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .stock-empty .stock-indicator {
+            background-color: var(--danger);
+        }
+
+        /* ── Right Panel Checkout ── */
+        .cart-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--separator);
+            background: rgba(var(--primary-rgb), 0.02);
+        }
+
+        .cart-items-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            min-height: 180px;
+        }
+
+        .cart-item-row {
+            background: var(--background);
+            border: 1px solid var(--separator);
+            border-left: 3px solid var(--primary);
+            border-radius: 0.65rem;
+            padding: 0.85rem;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+        }
+
+        .cart-item-row:hover {
+            border-color: var(--primary);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+            transform: scale(1.01);
+        }
+
+        .cart-item-title {
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: var(--alternate);
+            margin-bottom: 0.5rem;
+            padding-right: 20px;
+        }
+
+        .cart-item-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.82rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .cart-item-price {
+            font-weight: 800;
+            color: var(--primary);
+            font-size: 0.92rem;
+        }
+
+        .cart-footer {
+            padding: 1.25rem;
+            border-top: 1px solid var(--separator);
+            background: var(--foreground);
+        }
+
+        /* ── Modern Form Control Inputs ── */
+        .pos-search-wrapper {
+            position: relative !important;
+            width: 100% !important;
+            display: block !important;
+        }
+        .pos-search-wrapper input.form-control {
+            border-radius: 0.75rem !important;
+            font-size: 0.9rem !important;
+            padding: 0.75rem 1.25rem 0.75rem 2.75rem !important;
+            background: var(--foreground) !important;
+            border: 1px solid var(--separator) !important;
+            transition: all 0.2s ease !important;
+            height: 48px !important;
+            box-shadow: none !important;
+            width: 100% !important;
+        }
+        .pos-search-wrapper input.form-control:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12) !important;
+            background: var(--foreground) !important;
+        }
+        .pos-search-wrapper .search-magnifier-icon {
+            position: absolute !important;
+            left: 1rem !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            color: var(--muted) !important;
+            pointer-events: none !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            z-index: 10 !important;
+        }
+
+        .payment-input {
+            font-size: 1.15rem !important;
+            font-weight: 700 !important;
+            text-align: right;
+            letter-spacing: 0.05em;
+        }
+
+        .change-input {
+            font-size: 1.1rem !important;
+            font-weight: 700 !important;
+            text-align: right;
+            background-color: rgba(var(--success-rgb), 0.05) !important;
+            color: var(--success) !important;
+        }
+
+        .change-input.kurang {
+            background-color: rgba(var(--danger-rgb), 0.05) !important;
+            color: var(--danger) !important;
+        }
+
+        /* ── Info Bar ── */
+        .pos-info-bar {
+            background: var(--foreground);
+            border-radius: 1rem;
+            border: 1px solid var(--separator);
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        }
+
+        .pos-info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .pos-info-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: rgba(var(--primary-rgb), 0.08);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pos-info-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+        }
+
+        .pos-info-val {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: var(--body);
+        }
+    </style>
+
+    <main class="py-4">
+        <div class="container-fluid px-lg-4">
+            <!-- Header -->
+            <div class="page-title-container mb-4">
+                <div class="row align-items-center">
+                    <div class="col-12 col-md-6">
+                        <h1 class="mb-0 pb-0 display-4 fw-bold text-alternate" id="title">Point of Sale (POS)</h1>
+                        <nav class="breadcrumb-container d-inline-block" aria-label="breadcrumb">
+                            <ul class="breadcrumb pt-0 mb-0">
+                                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Penjualan</li>
+                            </ul>
+                        </nav>
                     </div>
-                    <!-- Title End -->
+                    <!-- Right side clock or status -->
+                    <div class="col-12 col-md-6 text-md-end mt-2 mt-md-0">
+                        <span class="badge bg-outline-primary py-2 px-3 fs-7" id="posClock"></span>
+                    </div>
                 </div>
             </div>
-            <!-- Title and Top Buttons End -->
 
-            <!-- Content Start -->
-            <div class="row mb-3">
-                <div class="col-12">
-                    <div class="card mb-2">
-                        <div class="card-body h-100">
-                            <div class="row">
-                                <div class="col-6 col-md-6 col-lg-5">
-                                    <table class="table table-borderless">
-                                        <tbody>
-                                            <tr>
-                                                <td>Nama Toko</td>
-                                                <td>:</td>
-                                                <td> <strong>{{ $data_toko->nama_toko }}</strong></td>
-                                            </tr>
-                                            <tr>
-                                                <td>Kasir</td>
-                                                <td>:</td>
-                                                <td> <strong>{{ Auth::user()->name }}</strong></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div class="col-6 col-md-6 col-lg-3">
-                                    <div class="w-100 mb-3">
-                                        <label class="form-label mt-2">Metode Pembayaran</label>
-                                        <select id="jenisPembayaran">
-                                            <option value="umum">Umum</option>
-                                            <option value="grosir">Grosir</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-12 col-md-12 col-lg-3">
-                                    <div id="basked" data-bs-toggle="modal" data-bs-target="#baskedModal" class="card btn btn-primary bg-primary p-0 m-0">
-                                        <span class="baskeds badge rounded-pill bg-quaternary me-1 position-absolute e-n4 t-2 z-index-1 fs-4"></span>
-                                        <div class="card-body">
-                                            <i data-acorn-icon="basket" data-acorn-size="50"></i>
-                                        </div>
-                                    </div>
-                                </div>
+            <!-- Top Info Bar -->
+            <div class="pos-info-bar mb-4">
+                <div class="row g-4 align-items-center">
+                    <div class="col-6 col-md-4">
+                        <div class="pos-info-item">
+                            <div class="pos-info-icon"><i data-acorn-icon="shop" data-acorn-size="18"></i></div>
+                            <div>
+                                <div class="pos-info-label">Toko / Cabang</div>
+                                <div class="pos-info-val">{{ $data_toko->nama_toko }}</div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-12 mt-3">
-                    <div class="d-inline-block float-md-start mb-2 search-input-container w-100 shadow bg-foreground">
-                        <input class="form-control w-100 fs-2" placeholder="Cari Jenis/Merek/Bahan" id="cariProduk" name="cariProduk">
+                    <div class="col-6 col-md-4">
+                        <div class="pos-info-item">
+                            <div class="pos-info-icon"><i data-acorn-icon="user" data-acorn-size="18"></i></div>
+                            <div>
+                                <div class="pos-info-label">Petugas Kasir</div>
+                                <div class="pos-info-val">{{ Auth::user()->name }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 text-md-end">
+                        <span class="text-muted d-block small mb-1">Kode Invoice</span>
+                        <h4 class="fw-bold text-primary mb-0" id="invoiceLabel">GENERATING...</h4>
                     </div>
                 </div>
-                <div class="col-12 mb-3">
-                    <div class="d-inline-block float-md-start mb-2 search-input-container w-100 shadow bg-foreground">
-                        <input class="form-control w-100 fs-2" placeholder="Cari Model/Variasi/Packaging" id="cariProdukOptional" name="cariProdukOptional">
-                    </div>
-                </div>
-                <div class="stock row p-0 m-0"></div>
             </div>
-            <!-- Content End -->
+
+            <!-- Main Layout Split Screen -->
+            <div class="pos-container">
+                <!-- Left Side: Product Catalogue -->
+                <div class="pos-left">
+                    <!-- Search Controls -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-md-6">
+                            <div class="pos-search-wrapper">
+                                <input class="form-control" placeholder="Cari berdasarkan Jenis, Merek, atau Bahan..."
+                                    id="cariProduk" name="cariProduk">
+                                <span class="search-magnifier-icon"><i data-acorn-icon="search"></i></span>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="pos-search-wrapper">
+                                <input class="form-control" placeholder="Cari berdasarkan Model, Variasi, atau Packaging..."
+                                    id="cariProdukOptional" name="cariProdukOptional">
+                                <span class="search-magnifier-icon"><i data-acorn-icon="search"></i></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Products Grid Scrollable Container -->
+                    <div class="product-grid-scroll">
+                        <div
+                            class="stock row row-cols-2 row-cols-sm-3 row-cols-md-3 row-cols-lg-4 row-cols-xl-4 g-3 p-0 m-0">
+                            <!-- Pre-rendered by AJAX -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Sticky Checkout Panel -->
+                <div class="pos-right">
+                    <!-- Cart Header -->
+                    <div class="cart-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <i data-acorn-icon="basket" class="text-primary"></i>
+                            <h5 class="fw-bold text-alternate mb-0">Keranjang</h5>
+                        </div>
+                        <span class="badge bg-primary rounded-pill px-3 py-1 fs-8" id="cartCount">0 Item</span>
+                    </div>
+
+                    <!-- Cart Item Rows Wrapper -->
+                    <div class="cart-items-wrapper">
+                        <!-- Table structure kept inside to preserve standard JS selectors -->
+                        <table class="transaksi w-100 d-none">
+                            <thead>
+                                <tr class="codeTransaksi-row"></tr>
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>Jml</th>
+                                    <th>Metode</th>
+                                    <th>Harga</th>
+                                    <th>Total</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+
+                        <!-- Gorgeous visual flex container mapped to old table rows -->
+                        <div id="cartVisualList">
+                            <div class="text-center py-5 text-muted" id="emptyCartMessage">
+                                <i data-acorn-icon="shopping-bag" data-acorn-size="48" class="mb-3 opacity-30"></i>
+                                <p class="mb-0">Keranjang masih kosong.<br>Silakan pilih produk di sebelah kiri.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cart Summary & Payments Footer -->
+                    <div class="cart-footer">
+                        <!-- Total Price Display -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted fw-semibold">Total Belanja</span>
+                            <div class="totals">
+                                <table>
+                                    <tbody></tbody>
+                                </table>
+                                <h3 class="fw-bold text-alternate mb-0" id="totalBayarDisplay">Rp 0</h3>
+                            </div>
+                        </div>
+
+                        <!-- Real POS Checkout Form -->
+                        <form id="formValid" class="tooltip-label-end" novalidate>
+                            <div class="mb-2">
+                                <label class="form-label small text-muted mb-1">Jumlah Uang Diterima</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light fw-bold text-muted">Rp</span>
+                                    <input id="jumlahUang" type="text" class="form-control payment-input" placeholder="0"
+                                        required>
+                                    <button class="btn btn-outline-secondary fw-semibold" type="button"
+                                        id="button_pas">Pas</button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small text-muted mb-1">Uang Kembalian</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light fw-bold text-muted">Rp</span>
+                                    <input id="kembalian" type="text" class="form-control change-input" placeholder="0"
+                                        readonly>
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="button" class="simpan btn btn-primary py-2 fw-bold fs-6 shadow-sm">
+                                <i data-acorn-icon="check" class="me-1"></i> PROSES BAYAR
+                            </button>
+                            <button type="button" class="closed btn btn-outline-muted btn-sm py-1 fw-semibold">
+                                <i data-acorn-icon="rotate-left" class="me-1"></i> Reset Keranjang
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
-    <div class="modal fade" id="baskedModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"></h5>
-                </div>
-                <div class="modal-body">
-                    <table class="transaksi table table-borderless">
-                        <thead>
-                            <tr>
-                                <td colspan="5" class="text-center" id="methodPembayaran"><strong></strong>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="col-4"><strong>Nama Barang</strong></td>
-                                <td class="counter col-1">Jumlah</td>
-                                <td class="col-2">Metode</td>
-                                <td class="col-2">Harga</td>
-                                <td class="totalJual col-3">Total Harga</td>
-                                <td class="col-2">Kurangi</td>
-                            </tr>
-                        </thead>
-                        <tbody>
-
-                        </tbody>
-                    </table>
-                    <table class="totals table table-borderless">
-                        <thead>
-                            <tr>
-                                <td class="col-6"></td>
-                                <td class="counter col-1"></td>
-                                <td class="col-2"></td>
-                                <td class="totalJual col-3"></td>
-                            </tr>
-                        </thead>
-                        <tbody> </tbody>
-                    </table>
-                    <form id="formValid" class="tooltip-label-end" novalidate>
-                        <div class="mb-2 input-group">
-                            <input id="jumlahUang" type="text" class="form-control" placeholder="Jumlah uang" required>
-                            <button class="btn btn-outline-secondary" type="button" id="button_pas">Uang Pas</button>
-                        </div>
-                        <div>
-                            <input id="kembalian" type="text" class="form-control" readonly required>
-                        </div>
-                    </form>
-                    <div class="mt-3 float-end">
-                        <button type="button" class="closed btn btn-muted">Close</button>
-                        <button type="button" class="simpan btn btn-primary">Bayar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
+
 @push('script')
     <script>
         $(document).ready(function() {
-            $('#jenisPembayaran').select2({
-                placeholder: '',
-            });
+            // Clock Real-time POS
+            function updateClock() {
+                const now = new Date();
+                const options = {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                };
+                $('#posClock').text(now.toLocaleDateString('id-ID', options));
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+
+
+            // Generate invoice ID
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+            function genStr(len) {
+                return Array.from({
+                    length: len
+                }, () => chars[Math.floor(Math.random() * chars.length)]).join('').toLowerCase();
+            }
+            const currentInvoice = 'TRHJ_' + genStr(4) + new Date().getFullYear();
+            $('#invoiceLabel').text(currentInvoice);
 
             function ajaxQuery(method, url, data) {
                 $.ajaxSetup({
@@ -145,358 +557,630 @@
                     url: url,
                     data: data,
                     success: function(response) {
-                        dataStock(response)
+                        dataStock(response);
                         if (method == 'post') {
-                            simpan(response)
+                            simpan(response);
+                        } else {
+                            loadCartFromStorage();
                         }
-                        // return response
                     }
                 });
             }
 
             function simpan(res) {
-                console.log(res.cek_data)
+                if (res.icon === 'success') {
+                    localStorage.removeItem('hijabkku_pos_cart');
+                }
                 Swal.fire({
                     position: 'center',
                     icon: res.icon,
                     title: res.cek_data,
                     showConfirmButton: true,
                     timer: 2500
-                }).then((result) => {
-                    /* Read more about isConfirmed, isDenied below */
-                    location.reload();
-                })
-            };
+                }).then(() => location.reload());
+            }
+
+            function rupiah(param) {
+                if (param === undefined || param === null) return '0';
+                var str = param.toString().trim();
+
+                // If it ends with .00 (laravel decimal), strip it
+                if (str.endsWith('.00')) {
+                    str = str.slice(0, -3);
+                }
+
+                // If it already has thousands separators, just return it
+                if (str.includes('.') && !str.includes('.00')) {
+                    return str;
+                }
+
+                // Otherwise format it
+                var clean = str.replace(/\D/g, '');
+                if (clean === '') return '0';
+
+                var sisa = clean.length % 3,
+                    r = clean.substr(0, sisa),
+                    ribuan = clean.substr(sisa).match(/\d{3}/g);
+                if (ribuan) {
+                    r += (sisa ? '.' : '') + ribuan.join('.');
+                }
+                return r;
+            }
+
+            function saveCartToStorage() {
+                var cartItems = [];
+                $('.transaksi tbody tr').each(function() {
+                    var kode_barang = this.id.replaceAll('transaksi_', '');
+                    var nama_barang = $(this).find('.namaBarangLabel').text();
+                    var qty = parseInt($(this).find('.counter').text()) || 0;
+                    var method = $(this).find('.metode').text();
+                    var harga_jual = $(this).find('.hargaJual').text().replaceAll('.', '');
+                    var total_jual = $(this).find('.totalJual').text().replaceAll('.', '');
+
+                    var visualRow = $('#visual_transaksi_' + kode_barang);
+                    var priceRetail = visualRow.attr('data-harga_jual') || harga_jual;
+                    var priceGrosir = visualRow.attr('data-harga_grosir') || harga_jual;
+
+                    cartItems.push({
+                        kode_barang: kode_barang,
+                        nama_barang: nama_barang,
+                        qty: qty,
+                        method: method,
+                        harga_jual: harga_jual,
+                        total_jual: total_jual,
+                        priceRetail: priceRetail,
+                        priceGrosir: priceGrosir
+                    });
+                });
+                localStorage.setItem('hijabkku_pos_cart', JSON.stringify(cartItems));
+            }
+
+            function loadCartFromStorage() {
+                var stored = localStorage.getItem('hijabkku_pos_cart');
+                if (!stored) {
+                    recalculatePosTotal();
+                    return;
+                }
+                
+                var cartItems = [];
+                try {
+                    cartItems = JSON.parse(stored);
+                } catch(e) {
+                    console.error("Failed to parse cart storage", e);
+                }
+                
+                if (!Array.isArray(cartItems) || cartItems.length === 0) {
+                    recalculatePosTotal();
+                    return;
+                }
+                
+                $('.transaksi tbody').html('');
+                $('#cartVisualList').html('');
+                
+                $.each(cartItems, function(idx, item) {
+                    var kode_barang = item.kode_barang;
+                    var nama_barang = item.nama_barang;
+                    var qty = item.qty;
+                    var method = item.method || 'umum';
+                    var harga_jual_retail = item.priceRetail;
+                    var harga_grosir = item.priceGrosir;
+                    
+                    var unitPrice = method === 'grosir' ? harga_grosir : harga_jual_retail;
+                    var totalJual = unitPrice * qty;
+                    
+                    var productBtn = $('button.selected[data-kode_barang="' + kode_barang + '"]');
+                    if (productBtn.length) {
+                        var el = productBtn.find('.sisaStock');
+                        var originalStock = parseInt(el.attr('data-jumlah')) || 0;
+                        var newSisa = originalStock - qty;
+                        
+                        el.attr('data-jumlah', newSisa).text(newSisa <= 0 ? 'Habis' : 'Stok: ' + newSisa);
+                        productBtn.closest('.product-card').removeClass('stock-ok stock-low stock-empty').addClass(stockClass(newSisa));
+                        if (newSisa <= 0) {
+                            productBtn.prop('disabled', true).css({
+                                'opacity': '0.5',
+                                'pointer-events': 'none'
+                            });
+                        }
+                    }
+                    
+                    $('.transaksi tbody').append(`
+                    <tr id="transaksi_${kode_barang}">
+                        <td class="col-4 namaBarangLabel">${nama_barang}</td>
+                        <td class="counter col-1 text-center">${qty}</td>
+                        <td class="metode col-2">${method}</td>
+                        <td class="hargaJual col-2">${unitPrice}</td>
+                        <td class="totalJual col-2">${totalJual}</td>
+                        <td class="col-1">
+                            <button type="button" data-kode_barang="${kode_barang}" class="kurangi"></button>
+                        </td>
+                    </tr>`);
+                    
+                    $('#cartVisualList').append(`
+                    <div class="cart-item-row" id="visual_transaksi_${kode_barang}"
+                         data-harga_jual="${harga_jual_retail}"
+                         data-harga_grosir="${harga_grosir}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="cart-item-title me-2">${nama_barang}</div>
+                            <button type="button" data-kode_barang="${kode_barang}"
+                                    class="hapus-item btn btn-link text-danger p-0 border-0"
+                                    style="line-height:1; font-size:1.2rem; position: absolute; top: 8px; right: 8px;"
+                                    title="Hapus dari keranjang">
+                                <i data-acorn-icon="close" data-acorn-size="14"></i>
+                            </button>
+                        </div>
+                        <div class="cart-item-meta">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="d-flex align-items-center border rounded-md bg-light overflow-hidden" style="height: 24px; padding: 0 2px;">
+                                    <button type="button" data-kode_barang="${kode_barang}" class="kurangi btn btn-link text-body p-0 px-2 border-0 fw-bold" style="font-size:0.9rem; text-decoration:none; line-height:1;">−</button>
+                                    <span class="visual-counter fw-bold px-1 text-primary" style="font-size:0.8rem; min-width:18px; text-align:center;">${qty}</span>
+                                    <button type="button" data-kode_barang="${kode_barang}" class="tambah-qty btn btn-link text-body p-0 px-2 border-0 fw-bold" style="font-size:0.9rem; text-decoration:none; line-height:1;">+</button>
+                                </div>
+                                <span class="text-muted fs-8">x Rp <span class="visual-unit-price">${rupiah(unitPrice)}</span></span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <select class="form-select form-select-xs py-0 px-1 border-separator change-item-method" data-kode_barang="${kode_barang}" style="font-size:0.68rem; height:22px; width:75px; cursor:pointer; border-radius:0.35rem;">
+                                    <option value="umum" ${method === 'umum' ? 'selected' : ''}>Umum</option>
+                                    <option value="grosir" ${method === 'grosir' ? 'selected' : ''}>Grosir</option>
+                                </select>
+                                <span class="cart-item-price visual-total">Rp ${rupiah(totalJual)}</span>
+                            </div>
+                        </div>
+                    </div>`);
+                });
+                
+                if (typeof AcornIcons !== 'undefined') {
+                    new AcornIcons().replace();
+                }
+                
+                recalculatePosTotal();
+            }
+
+            function stockClass(jumlah) {
+                if (jumlah <= 0) return 'stock-empty';
+                return jumlah <= 3 ? 'stock-low' : 'stock-ok';
+            }
 
             function dataStock(params) {
                 $('.stock').html('');
                 $.each(params.stock, function(index, value) {
+                    var sisa = value.jumlah - value.terjual;
+                    var cls = stockClass(sisa);
+                    var stateAttr = sisa <= 0 ? 'disabled style="opacity: 0.5; pointer-events: none;"' : '';
 
-                    $('.stock').prepend(`
-                    <div class="col-12 col-md-4 col-lg-3 ">
-                        <div class="card mb-2">
-                            <button id="` + value.id +
-                        `" class="selected btn btn-transparent" data-nama_barang="` + value
-                        .nama_barang +
-                        `" data-kode_barang="` + value.kode_barang + `" data-kode_toko="` + value
-                        .kode_toko + `" data-harga_grosir="` + value.harga_grosir +
-                        `" data-harga_jual="` + value.harga_jual +
-                        `">
-                                <div class="row">
-                                    <div class="col sw-9 sh-10">
-                                        <div
-                                            class="card-body p-0 m-0 d-flex flex-column h-100 justify-content-center">
-                                            <div class="d-flex flex-column p-0 m-0">
-                                                <div style="white-space: normal;" class="text-alternate">` +
-                        value.nama_barang + `</div>
-                                                <div class="sisaStock text-small text-muted" data-jumlah="` + (value
-                            .jumlah - value
-                            .terjual) + `">Stock : ` + (value
-                            .jumlah - value
-                            .terjual) + `</div>
-                                                <div class="text-alternate">E :` + value.harga_jual + ` G :` + value.harga_grosir + `</div>
-                                            </div>
-                                        </div>
+                    $('.stock').append(`
+                    <div class="col">
+                        <div class="card product-card h-100 ${sisa <= 0 ? 'stock-empty' : ''}">
+                            <button id="${value.id}" class="selected btn-transparent" ${stateAttr}
+                                data-nama_barang="${value.nama_barang}"
+                                data-kode_barang="${value.kode_barang}"
+                                data-kode_toko="${value.kode_toko}"
+                                data-harga_grosir="${value.harga_grosir}"
+                                data-harga_jual="${value.harga_jual}">
+                                <div class="nama-barang" title="${value.nama_barang}">${value.nama_barang}</div>
+                                <div class="price-badges">
+                                    <span class="price-badge eceran">E: Rp ${rupiah(value.harga_jual)}</span>
+                                    <span class="price-badge grosir">G: Rp ${rupiah(value.harga_grosir)}</span>
+                                </div>
+                                <div class="stock-bar ${cls}">
+                                    <div class="sisaStock" data-jumlah="${sisa}">
+                                        ${sisa <= 0 ? 'Habis' : 'Stok: ' + sisa}
                                     </div>
+                                    <span class="stock-indicator"></span>
                                 </div>
                             </button>
                         </div>
-                    </div>
-                    `);
+                    </div>`);
                 });
             }
 
             ajaxQuery('get', '/transaksi/penjualan/create', {
                 param: 'all'
-            })
-
-            // $('#cariProduk').keyup(function(e) {
-            //     var searchKey = $(this).val();
-            //     var data = {
-            //         key: searchKey
-            //     }
-            //     ajaxQuery('get', '/transaksi/penjualan/create', data)
-            // });
-
-            $('input').keyup(function(e) {
-                var searchKey1 = $('input[name=cariProduk]').val();
-                var searchKey2 = $('input[name=cariProdukOptional]').val();
-                console.log(searchKey1, searchKey2);
-
-                var data = {
-                    key1: searchKey1,
-                    key2: searchKey2
-                }
-                ajaxQuery('get', '/transaksi/penjualan/create', data)
             });
 
-            function rupiah(param) {
-                var bilangan = param;
-                var number_string = bilangan.toString(),
-                    sisa = number_string.length % 3,
-                    rupiah = number_string.substr(0, sisa),
-                    ribuan = number_string.substr(sisa).match(/\d{3}/g);
-                if (ribuan) {
-                    separator = sisa ? '.' : '';
-                    rupiah += separator + ribuan.join('.');
-                }
-                return rupiah;
-            }
+            $('input[name=cariProduk], input[name=cariProdukOptional]').on('keyup', function() {
+                ajaxQuery('get', '/transaksi/penjualan/create', {
+                    key1: $('input[name=cariProduk]').val(),
+                    key2: $('input[name=cariProdukOptional]').val()
+                });
+            });
 
-            var i = 1;
             var c = 1;
-            var x = 1;
-            $(document).on('click', '.selected', function() {
-                var id = $(this).attr('id');
-                var nama_barang = $(this).attr('data-nama_barang');
-                var kode_barang = $(this).attr('data-kode_barang');
-                var kode_toko = $(this).attr('data-kode_toko');
-                // var sisaStock = $(this).find('.sisaStock').attr('data-jumlah');
-                var sisaStock = $(this).find('.sisaStock').text().replaceAll('Stock : ', '');
-                var transaksiCount = $('.transaksi #transaksi_' + kode_barang + '').length
-                var metode_pembayaran = $('#jenisPembayaran').val();
-                if (metode_pembayaran == 'grosir') {
-                    var harga_jual = $(this).attr('data-harga_grosir');
-                } else {
-                    var harga_jual = $(this).attr('data-harga_jual');
-                }
-                // $('#jenisPembayaran').prop('disabled', true);
-                if (sisaStock > 0) {
-                    $(this).find('.sisaStock').text('Stock : ' + (sisaStock - i));
-                    // $('.baskeds').text(' ');
-                    var countItem = $('.baskeds').text();
-                    if (countItem == '') {
-                        var v = 1;
-                    } else {
-                        var v = +countItem + 1;
-                    }
-                    $('.baskeds').text(v);
-                    if (transaksiCount < 1) {
-                        $('.transaksi tbody').append(`
-                        <tr id="transaksi_` + kode_barang + `">
-                            <td class="col-4">` + nama_barang + `</td>
-                            <td class="counter col-1">` + c + `</td>
-                            <td class="metode col-2">` + metode_pembayaran + `</td>
-                            <td class="hargaJual col-2">` + harga_jual + `</td>
-                            <td class="totalJual col-3">` + harga_jual + `</td>
-                            <td class="col-2"><button type="button" data-kode_barang="` + kode_barang + `" class="kurangi btn btn-danger px-3 py-1">&#8722;</button></td>
-                        </tr>
-                        `);
-                    } else {
-                        var counter = $('#transaksi_' + kode_barang + ' .counter ');
-                        var jual = $('#transaksi_' + kode_barang + ' .totalJual ');
-                        var counterSum = counter.text();
-                        var jualSum = jual.text().replaceAll('.', '');
 
-                        counter.text((+counterSum + c));
-                        var bilangan = (+harga_jual.replaceAll('.', '') + +jualSum);
-                        jual.text(rupiah(bilangan));
-                    }
-                };
-
-                var checkMethod = $('#methodPembayaran strong').text();
-                if (checkMethod == '') {
-                    $('#methodPembayaran strong').text(metode_pembayaran);
-                }
-            });
-
-            $('#basked').click(function(e) {
-                e.preventDefault();
-                $('#baskedModal').modal('show');
-
-                // declare all characters
-                const characters =
-                    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-                function generateString(length) {
-                    let result = '';
-                    const charactersLength = characters.length;
-                    for (let i = 0; i < length; i++) {
-                        result += characters.charAt(Math.floor(Math.random() *
-                            charactersLength));
-                    }
-
-                    return result.toLowerCase();
-                }
-
+            // Recalculate POS Total
+            function recalculatePosTotal() {
                 var sum = 0;
-                $('.totalJual').each(function(index, value) {
+                $('.totalJual').each(function() {
                     var combat = $(this).text().replaceAll('.', '');
                     if (!isNaN(combat) && combat.length !== 0) {
                         sum += parseFloat(combat);
                     }
                 });
 
-                $('.codeTransaksi').remove();
+                // Update UI Display
+                $('#totalBayarDisplay').text('Rp ' + rupiah(sum));
 
-                $('.transaksi thead').prepend(
-                    '<tr class="codeTransaksi"><td colspan="4" class="text-center"><strong>' +
-                    'TRHJ_' +
-                    generateString(4) +
-                    new Date()
-                    .getFullYear() +
-                    '</strong></td></tr>');
-
+                // Keep the totalBayar element updated for standard selectors
                 if ($('#totalBayar').length <= 0) {
-                    $('.totals tbody').append(`
-                        <tr id="totalBayar">
-                            <td class="text-center" colspan="3"><strong>Total</strong></td>
-                            <td class="totalRupiah" colspan="1">` + rupiah(sum) + `</td>
-                        </tr>
-                        `);
+                    $('.totals tbody').html(`
+                    <tr id="totalBayar">
+                        <td class="totalRupiah d-none">${sum}</td>
+                    </tr>`);
                 } else {
-                    $('.totals .totalRupiah').text(rupiah(sum))
+                    $('.totals .totalRupiah').text(sum);
                 }
 
+                // Update Kembalian dynamically
+                var val = $('#jumlahUang').val().replaceAll('.', '');
+                if (val) {
+                    var all = +val - sum;
+                    if (all >= 0) {
+                        $('#kembalian').val(rupiah(all)).removeClass('kurang');
+                    } else {
+                        $('#kembalian').val('kurang').addClass('kurang');
+                    }
+                }
+
+                // Cart Count update
+                var totalItems = 0;
+                $('.transaksi tbody tr').each(function() {
+                    totalItems += parseInt($(this).find('.counter').text()) || 0;
+                });
+                $('#cartCount').text(totalItems + ' Item');
+                $('.baskeds').text(totalItems > 0 ? totalItems : '');
+
+                if (totalItems > 0) {
+                    $('#emptyCartMessage').addClass('d-none');
+                } else {
+                    $('#emptyCartMessage').removeClass('d-none');
+                }
+            }
+
+            $(document).on('click', '.selected', function() {
+                var id = $(this).attr('id');
+                var nama_barang = $(this).attr('data-nama_barang');
+                var kode_barang = $(this).attr('data-kode_barang');
+                var sisaStock = parseInt($(this).find('.sisaStock').attr('data-jumlah'));
+                var exists = $('.transaksi #transaksi_' + kode_barang).length;
+                var harga_jual_retail = $(this).attr('data-harga_jual');
+                var harga_grosir = $(this).attr('data-harga_grosir');
+
+                var metode = 'umum';
+                if (exists >= 1) {
+                    metode = $('#visual_transaksi_' + kode_barang + ' .change-item-method').val();
+                }
+
+                var harga_jual = metode == 'grosir' ?
+                    harga_grosir :
+                    harga_jual_retail;
+
+                if (sisaStock > 0) {
+                    // Update Stock visual counter
+                    var newSisa = sisaStock - 1;
+                    $(this).find('.sisaStock')
+                        .attr('data-jumlah', newSisa)
+                        .text(newSisa <= 0 ? 'Habis' : 'Stok: ' + newSisa);
+
+                    $(this).closest('.product-card').removeClass('stock-ok stock-low stock-empty').addClass(
+                        stockClass(newSisa));
+                    if (newSisa <= 0) {
+                        $(this).prop('disabled', true).css({
+                            'opacity': '0.5',
+                            'pointer-events': 'none'
+                        });
+                    }
+
+                    if (exists < 1) {
+                        // Standard Table Row (invisible but used by backend scripts)
+                        $('.transaksi tbody').append(`
+                        <tr id="transaksi_${kode_barang}">
+                            <td class="col-4 namaBarangLabel">${nama_barang}</td>
+                            <td class="counter col-1 text-center">${c}</td>
+                            <td class="metode col-2">${metode}</td>
+                            <td class="hargaJual col-2">${harga_jual}</td>
+                            <td class="totalJual col-2">${harga_jual}</td>
+                            <td class="col-1">
+                                <button type="button" data-kode_barang="${kode_barang}" class="kurangi"></button>
+                            </td>
+                        </tr>`);
+
+                        // Dynamic POS Visual Card
+                        $('#cartVisualList').append(`
+                        <div class="cart-item-row" id="visual_transaksi_${kode_barang}"
+                             data-harga_jual="${harga_jual_retail}"
+                             data-harga_grosir="${harga_grosir}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="cart-item-title me-2">${nama_barang}</div>
+                                <button type="button" data-kode_barang="${kode_barang}"
+                                        class="hapus-item btn btn-link text-danger p-0 border-0"
+                                        style="line-height:1; font-size:1.2rem; position: absolute; top: 8px; right: 8px;"
+                                        title="Hapus dari keranjang">
+                                    <i data-acorn-icon="close" data-acorn-size="14"></i>
+                                </button>
+                            </div>
+                            <div class="cart-item-meta">
+                                <div class="d-flex align-items-center gap-2">
+                                    <!-- Compact Qty Controls -->
+                                    <div class="d-flex align-items-center border rounded-md bg-light overflow-hidden" style="height: 24px; padding: 0 2px;">
+                                        <button type="button" data-kode_barang="${kode_barang}" class="kurangi btn btn-link text-body p-0 px-2 border-0 fw-bold" style="font-size:0.9rem; text-decoration:none; line-height:1;">−</button>
+                                        <span class="visual-counter fw-bold px-1 text-primary" style="font-size:0.8rem; min-width:18px; text-align:center;">1</span>
+                                        <button type="button" data-kode_barang="${kode_barang}" class="tambah-qty btn btn-link text-body p-0 px-2 border-0 fw-bold" style="font-size:0.9rem; text-decoration:none; line-height:1;">+</button>
+                                    </div>
+                                    <span class="text-muted fs-8">x Rp <span class="visual-unit-price">${rupiah(harga_jual)}</span></span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <select class="form-select form-select-xs py-0 px-1 border-separator change-item-method" data-kode_barang="${kode_barang}" style="font-size:0.68rem; height:22px; width:75px; cursor:pointer; border-radius:0.35rem;">
+                                        <option value="umum" ${metode === 'umum' ? 'selected' : ''}>Umum</option>
+                                        <option value="grosir" ${metode === 'grosir' ? 'selected' : ''}>Grosir</option>
+                                    </select>
+                                    <span class="cart-item-price visual-total">Rp ${rupiah(harga_jual)}</span>
+                                </div>
+                            </div>
+                        </div>`);
+
+                        // Instantly render new icons inside dynamically created elements
+                        if (typeof AcornIcons !== 'undefined') {
+                            new AcornIcons().replace();
+                        }
+                    } else {
+                        var counter = $('#transaksi_' + kode_barang + ' .counter');
+                        var jual = $('#transaksi_' + kode_barang + ' .totalJual');
+                        var newCount = parseInt(counter.text()) + c;
+                        var newTotal = parseInt(harga_jual.toString().replaceAll('.', '')) + parseInt(jual
+                            .text().replaceAll('.', ''));
+
+                        counter.text(newCount);
+                        jual.text(newTotal);
+
+                        // Update POS Visual row
+                        var visRow = $('#visual_transaksi_' + kode_barang);
+                        visRow.find('.visual-counter').text(newCount);
+                        visRow.find('.visual-total').text('Rp ' + rupiah(newTotal));
+                    }
+
+                    recalculatePosTotal();
+                    saveCartToStorage();
+                }
             });
 
-            $('.closed').click(function(e) {
-                e.preventDefault();
-                $('#baskedModal').modal('hide');
-                $('#kembalian').val('');
-                $('#jumlahUang').val('');
-                // $('.codeTransaksi').remove();
+            // Handle inline price method change
+            $(document).on('change', '.change-item-method', function() {
+                var kode_barang = $(this).attr('data-kode_barang');
+                var newMethod = $(this).val();
+
+                var visualRow = $('#visual_transaksi_' + kode_barang);
+                var priceRetail = parseInt(visualRow.attr('data-harga_jual').replaceAll('.', ''));
+                var priceGrosir = parseInt(visualRow.attr('data-harga_grosir').replaceAll('.', ''));
+
+                var newUnitPrice = newMethod === 'grosir' ? priceGrosir : priceRetail;
+                var count = parseInt(visualRow.find('.visual-counter').text());
+                var newTotal = newUnitPrice * count;
+
+                // Update POS Visual row
+                visualRow.find('.visual-unit-price').text(rupiah(newUnitPrice));
+                visualRow.find('.visual-total').text('Rp ' + rupiah(newTotal));
+
+                // Update standard hidden table row (used by backend)
+                var hiddenRow = $('#transaksi_' + kode_barang);
+                hiddenRow.find('.metode').text(newMethod);
+                hiddenRow.find('.hargaJual').text(newUnitPrice);
+                hiddenRow.find('.totalJual').text(newTotal);
+
+                recalculatePosTotal();
+                saveCartToStorage();
+            });
+
+            // Increment quantity directly inside POS cart
+            $(document).on('click', '.tambah-qty', function() {
+                var barang = $(this).attr('data-kode_barang');
+                $('button.selected[data-kode_barang="' + barang + '"]').trigger('click');
+            });
+
+            // Remove whole item from POS cart
+            $(document).on('click', '.hapus-item', function() {
+                var barang = $(this).attr('data-kode_barang');
+                Swal.fire({
+                    title: 'Hapus Item?',
+                    text: 'Apakah Anda yakin ingin menghapus produk ini dari keranjang?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Hapus',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Restore all stock on card
+                        var counter = $('#transaksi_' + barang + ' .counter');
+                        var jumlahLama = parseInt(counter.text()) || 0;
+
+                        $('button.selected[data-kode_barang="' + barang + '"]').each(function() {
+                            var el = $(this).find('.sisaStock');
+                            var cur = parseInt(el.attr('data-jumlah')) + jumlahLama;
+                            el.attr('data-jumlah', cur).text('Stok: ' + cur);
+                            $(this).prop('disabled', false).css({
+                                'opacity': '',
+                                'pointer-events': ''
+                            });
+                            $(this).closest('.product-card').removeClass(
+                                'stock-ok stock-low stock-empty').addClass(stockClass(
+                                cur));
+                        });
+
+                        $('#transaksi_' + barang).remove();
+                        $('#visual_transaksi_' + barang).remove();
+                        recalculatePosTotal();
+                        saveCartToStorage();
+                    }
+                });
+            });
+
+            // Reset / Clear cart
+            $('.closed').click(function() {
+                Swal.fire({
+                    title: 'Reset Keranjang?',
+                    text: 'Tindakan ini akan mengosongkan seluruh isi keranjang!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Reset',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        localStorage.removeItem('hijabkku_pos_cart');
+                        location.reload();
+                    }
+                });
             });
 
             $('.simpan').click(function(e) {
                 e.preventDefault();
-                var valid = $("#formValid").valid();
+                if (!$('#formValid').valid()) return;
                 var kembalianCek = $('#kembalian').val();
-                if (valid == true) {
-                    if (kembalianCek == 'kurang') {
-                        Swal.fire({
-                            position: 'center',
-                            icon: 'error',
-                            title: 'Pastikan Uang Cukup',
-                            showConfirmButton: true,
-                            timer: 2500
-                        })
-                    } else {
-                        var trCheck = $('.transaksi tbody tr')
-                        var invoice = $('.codeTransaksi').find('td:eq(0) strong').text();
-                        var kembali = $('#kembalian').val().replaceAll('.', '');
-                        var pembayaran = $('#jumlahUang').val().replaceAll('.', '');
-                        var total_harga = $('.totals tbody #totalBayar').find("td:eq(1)").text()
-                            .replaceAll(
-                                '.', '');
+                if (kembalianCek == 'kurang') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Pastikan Uang Cukup',
+                        timer: 2500
+                    });
+                    return;
+                }
+                var trCheck = $('.transaksi tbody tr');
+                var invoice = $('#invoiceLabel').text();
+                var kembali = $('#kembalian').val().replaceAll('.', '');
+                var pembayaran = $('#jumlahUang').val().replaceAll('.', '');
+                var total_harga = $('.totals .totalRupiah').text();
 
-                        var arr = {};
-                        trCheck.each(function(index, value) {
-                            var nomor_paket = this.id.replaceAll('transaksi_', '');
-                            var nama_barang = $(this).find("td:eq(0)").text();
-                            var jumlah_barang = $(this).find("td:eq(1)").text();
-                            var method = $(this).find("td:eq(2)").text();
-                            var harga_item = $(this).find("td:eq(3)").text().replaceAll(
-                                '.',
-                                '');
-                            var harga_jual = $(this).find("td:eq(4)").text().replaceAll(
-                                '.',
-                                '');
-                            // var method = $('#jenisPembayaran').val();
+                var arr = {};
+                trCheck.each(function(index) {
+                    arr[index] = {
+                        nomor_paket: this.id.replaceAll('transaksi_', ''),
+                        nama_barang: $(this).find('.namaBarangLabel').text(),
+                        jumlah_barang: $(this).find('.counter').text(),
+                        method: $(this).find('.metode').text(),
+                        harga_item: $(this).find('.hargaJual').text().replaceAll('.', ''),
+                        harga_jual: $(this).find('.totalJual').text().replaceAll('.', ''),
+                    };
+                });
 
+                if (!arr[0]) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Keranjang masih kosong',
+                        timer: 2000
+                    });
+                    return;
+                }
 
-                            // var data = {};
-                            arr[index] = {
-                                nomor_paket: nomor_paket,
-                                nama_barang: nama_barang,
-                                jumlah_barang: jumlah_barang,
-                                harga_item: harga_item,
-                                harga_jual: harga_jual,
-                                method: method,
-                            };
-
+                Swal.fire({
+                    title: 'Konfirmasi Pembayaran',
+                    html: `
+                        <div class="text-start fs-7 p-2 rounded bg-light border" style="font-family: inherit;">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Total Belanja:</span>
+                                <strong class="text-body">Rp ${rupiah(total_harga)}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Uang Diterima:</span>
+                                <strong class="text-success">Rp ${rupiah(pembayaran)}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Kembalian:</span>
+                                <strong class="text-primary">Rp ${rupiah(kembali)}</strong>
+                            </div>
+                        </div>
+                        <p class="mt-3 mb-0 text-center fw-bold text-muted" style="font-size:0.82rem;">Apakah data pembayaran sudah benar?</p>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Bayar Sekarang',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $(".simpan").attr("disabled", true);
+                        ajaxQuery('post', '/transaksi/penjualan/store', {
+                            invoice,
+                            kembali,
+                            pembayaran,
+                            total_harga,
+                            data: arr
                         });
-                        var data = {
-                            invoice: invoice,
-                            kembali: kembali,
-                            pembayaran: pembayaran,
-                            total_harga: total_harga
-                        };
-                        data['data'] = arr;
-                        if (data['data'][0]) {
-                            $(".simpan").attr("disabled", true);
-                            ajaxQuery('post', '/transaksi/penjualan/store', data)
-                        } else {
-                            Swal.fire({
-                                position: 'center',
-                                icon: 'error',
-                                title: 'Tidak Ada Barang Yang harus Dibayar',
-                                showConfirmButton: true,
-                                timer: 2500
-                            })
-                        }
+                    }
+                });
+            });
+
+            var jumlahUangMask = IMask(document.getElementById('jumlahUang'), {
+                mask: 'num',
+                blocks: {
+                    num: {
+                        mask: Number,
+                        thousandsSeparator: '.'
                     }
                 }
             });
 
-            var jumlahUangTerima = IMask(
-                document.getElementById('jumlahUang'), {
-                    mask: 'num',
-                    blocks: {
-                        num: {
-                            mask: Number,
-                            thousandsSeparator: '.',
-                        },
-                    },
-                });
-
-
-            $('#jumlahUang').keyup(function(e) {
-                e.preventDefault();
-                var jumlahUang = $(this).val().replaceAll('.', '');
-                jumlahUangTerima.updateOptions({
-                    mask: 'num',
-                    blocks: {
-                        num: {
-                            mask: Number,
-                            thousandsSeparator: '.'
-                        }
-                    }
-                });
-                jumlahUangTerima.typedValue = jumlahUang;
-                var totalBelanja = $('.totals .totalRupiah').text().replaceAll('.', '');
-                var all = +jumlahUang - +totalBelanja
-                if (all > 0) {
-                    $('#kembalian').val(rupiah(all))
+            $('#jumlahUang').on('keyup', function() {
+                var jumlah = $(this).val().replaceAll('.', '');
+                var total = $('.totals .totalRupiah').text();
+                if (!total) total = 0;
+                var all = +jumlah - +total;
+                if (all >= 0) {
+                    $('#kembalian').val(rupiah(all)).removeClass('kurang');
                 } else {
-                    $('#kembalian').val('kurang')
+                    $('#kembalian').val('kurang').addClass('kurang');
                 }
             });
 
-            $('#button_pas').click(function(e) {
-                e.preventDefault();
-                var jumlahUang = $('.totals .totalRupiah').text();
-                $('#jumlahUang').val(jumlahUang);
-                $('#kembalian').val(0);
+            $('#button_pas').click(function() {
+                var total = $('.totals .totalRupiah').text();
+                if (total > 0) {
+                    $('#jumlahUang').val(rupiah(total));
+                    jumlahUangMask.updateValue();
+                    $('#kembalian').val(0).removeClass('kurang');
+                }
             });
 
-            // kurangi item
             $(document).on('click', '.kurangi', function() {
+                var barang = $(this).attr('data-kode_barang');
+                var counter = $('#transaksi_' + barang + ' .counter');
+                var jual = $('#transaksi_' + barang + ' .totalJual');
+                var hargaItem = parseInt($('#transaksi_' + barang + ' .hargaJual').text().replaceAll('.',
+                    ''));
+                var jumlahLama = parseInt(counter.text());
+                var newCount = jumlahLama - 1;
 
-                var barang = $(this).attr('data-kode_barang')
-                var jumlah_lama = $('#transaksi_' + barang + ' .counter').text();
-                var kurang = $('#transaksi_' + barang + ' .counter').text((jumlah_lama - 1));
-                var jumlah_baru = $('#transaksi_' + barang + ' .counter').text();
-                var hargaJual = $('#transaksi_' + barang + ' .hargaJual').text().replaceAll('.',
-                    '');
-                var totalJual = $('#transaksi_' + barang + ' .totalJual').text().replaceAll('.',
-                    '');
-                var totalJualBaru = $('#transaksi_' + barang + ' .totalJual').text(rupiah(
-                    totalJual -
-                    hargaJual));
-                var totalRupiah = $('.totalRupiah').text().replaceAll('.', '');
-                var totalRupiahbaru = $('.totalRupiah').text(rupiah(totalRupiah - hargaJual));
+                if (newCount <= 0) {
+                    $('#transaksi_' + barang).remove();
+                    $('#visual_transaksi_' + barang).remove();
+                } else {
+                    counter.text(newCount);
+                    var newTotal = parseInt(jual.text().replaceAll('.', '')) - hargaItem;
+                    jual.text(newTotal);
 
-                var basked = $('.baskeds')
-                basked.text((+basked.text() - 1));
-
-                if (jumlah_baru == '0') {
-                    $('#transaksi_' + barang).remove()
+                    // Update POS Visual row
+                    var visRow = $('#visual_transaksi_' + barang);
+                    visRow.find('.visual-counter').text(newCount);
+                    visRow.find('.visual-total').text('Rp ' + rupiah(newTotal));
                 }
-                var tables = $('.transaksi tbody tr').length;
-                if (tables == 0) {
-                    basked.text('');
-                }
+
+                // Restore stock on card
+                $('button.selected[data-kode_barang="' + barang + '"]').each(function() {
+                    var el = $(this).find('.sisaStock');
+                    var cur = parseInt(el.attr('data-jumlah')) + 1;
+                    el.attr('data-jumlah', cur).text('Stok: ' + cur);
+                    $(this).prop('disabled', false).css({
+                        'opacity': '',
+                        'pointer-events': ''
+                    });
+                    $(this).closest('.product-card').removeClass('stock-ok stock-low stock-empty')
+                        .addClass(stockClass(cur));
+                });
+
+                recalculatePosTotal();
+                saveCartToStorage();
             });
         });
     </script>
