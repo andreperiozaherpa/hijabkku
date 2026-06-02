@@ -189,6 +189,11 @@
                         next: '<i class="cs-chevron-right"></i>',
                     },
                 },
+                drawCallback: function() {
+                    if (typeof acorn !== 'undefined' && acorn.initIcons) {
+                        acorn.initIcons();
+                    }
+                },
             });
             window.tbStockOpname = table;
 
