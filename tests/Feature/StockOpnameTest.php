@@ -729,4 +729,42 @@ class StockOpnameTest extends TestCase
             'snapshot_qty' => 0 // '99999999' has 5 - 5 = 0 available stock
         ]);
     }
+
+    public function test_unauthorized_user_cannot_add_master_product_manually()
+    {
+        $unauthorizedUser = User::factory()->create(['role' => 'gudang']);
+        $so = StockOpname::create([
+            'nomor_so' => 'SO-UNAUTH-ADD-MASTER',
+            'kode_toko' => 'TK_001',
+            'status' => 'Counting',
+            'petugas_id' => $this->admin->id,
+        ]);
+
+        $response = $this->actingAs($unauthorizedUser)->post("/laporan/opname/add-master-product/{$so->id}", [
+            'kode_barang' => '99999999'
+        ]);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_assigned_supervisor_can_add_master_product_manually()
+    {
+        $supervisor = User::factory()->create(['role' => 'gudang']);
+        $so = StockOpname::create([
+            'nomor_so' => 'SO-SUPERVISOR-ADD-MASTER',
+            'kode_toko' => 'TK_001',
+            'status' => 'Counting',
+            'petugas_id' => $this->admin->id,
+            'supervisor_id' => $supervisor->id,
+        ]);
+
+        $response = $this->actingAs($supervisor)->post("/laporan/opname/add-master-product/{$so->id}", [
+            'kode_barang' => '99999999'
+        ]);
+
+        $response->assertJson([
+            'success' => true,
+            'message' => 'Barang berhasil ditambahkan ke list stock opname!'
+        ]);
+    }
 }

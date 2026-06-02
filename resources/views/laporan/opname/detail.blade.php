@@ -321,8 +321,7 @@
                         <i data-acorn-icon="history" class="me-2" style="width:16px; height:16px;"></i> Audit History Logs
                         <span class="badge bg-info text-white ms-2" id="auditCountBadge">0</span>
                     </button>
- 
-                    @if(in_array($session->status, ['Counting', 'Recount']))
+                    @if(in_array($session->status, ['Counting', 'Recount']) && (Auth::user()->role === 'admin' || Auth::user()->id === $session->supervisor_id))
                         <button type="button" class="btn btn-outline-primary font-weight-bold d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#addManualItemModal">
                             <i data-acorn-icon="plus" class="me-2" style="width:16px; height:16px;"></i> Tambah Barang Manual
                         </button>

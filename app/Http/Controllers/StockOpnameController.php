@@ -762,6 +762,11 @@ class StockOpnameController extends Controller
     public function searchMasterProducts(Request $request, $id)
     {
         $session = StockOpname::findOrFail($id);
+        $user = Auth::user();
+        if ($user->role !== 'admin' && $session->supervisor_id !== $user->id) {
+            return response()->json(['success' => false, 'message' => 'Hanya Admin atau Supervisor yang ditunjuk yang berhak mengakses fitur ini!'], 403);
+        }
+
         $search = trim($request->query('search_query'));
 
         if (empty($search)) {
@@ -796,6 +801,10 @@ class StockOpnameController extends Controller
     public function addMasterProduct(Request $request, $id)
     {
         $session = StockOpname::findOrFail($id);
+        $user = Auth::user();
+        if ($user->role !== 'admin' && $session->supervisor_id !== $user->id) {
+            return response()->json(['success' => false, 'message' => 'Hanya Admin atau Supervisor yang ditunjuk yang berhak menambahkan barang manual!'], 403);
+        }
 
         if (!in_array($session->status, ['Counting', 'Recount'])) {
             return response()->json(['success' => false, 'message' => 'Proses tambah barang tidak diizinkan pada status sesi ini!']);
