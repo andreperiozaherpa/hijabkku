@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Services\FirebaseService;
 
 class TransaksiController extends Controller
 {
@@ -60,16 +61,37 @@ class TransaksiController extends Controller
         $param = $request->param;
         if ($param == 'all') {
             $stock_toko = StockToko::leftJoin('data_barangs', 'stock_tokos.kode_barang', '=', 'data_barangs.kode')
-                ->select('stock_tokos.*', 'data_barangs.jenis_barang', 'data_barangs.harga_beli', 'data_barangs.harga_jual', 'data_barangs.harga_grosir')
+                ->select(
+                    'stock_tokos.*',
+                    DB::raw('COALESCE(data_barangs.nama_barang, stock_tokos.nama_barang) as nama_barang'),
+                    'data_barangs.jenis_barang',
+                    'data_barangs.harga_beli',
+                    'data_barangs.harga_jual',
+                    'data_barangs.harga_grosir'
+                )
                 ->where('kode_toko', $user->kode_toko)
                 ->whereColumn('jumlah', '!=', 'terjual')
                 ->orderByDesc('kode_toko')
                 ->get();
         } else {
             $stock_toko = StockToko::leftJoin('data_barangs', 'stock_tokos.kode_barang', '=', 'data_barangs.kode')
-                ->select('stock_tokos.*', 'data_barangs.jenis_barang', 'data_barangs.harga_beli', 'data_barangs.harga_jual', 'data_barangs.harga_grosir')
-                ->where('stock_tokos.nama_barang', 'like', '%' . $key1 . '%')
-                ->where('stock_tokos.nama_barang', 'like', '%' . $key2 . '%')
+                ->select(
+                    'stock_tokos.*',
+                    DB::raw('COALESCE(data_barangs.nama_barang, stock_tokos.nama_barang) as nama_barang'),
+                    'data_barangs.jenis_barang',
+                    'data_barangs.harga_beli',
+                    'data_barangs.harga_jual',
+                    'data_barangs.harga_grosir'
+                )
+                ->where(function ($q) use ($key1, $key2) {
+                    $q->where(function ($sq) use ($key1, $key2) {
+                        $sq->where('stock_tokos.nama_barang', 'like', '%' . $key1 . '%')
+                           ->where('stock_tokos.nama_barang', 'like', '%' . $key2 . '%');
+                    })->orWhere(function ($sq) use ($key1, $key2) {
+                        $sq->where('data_barangs.nama_barang', 'like', '%' . $key1 . '%')
+                           ->where('data_barangs.nama_barang', 'like', '%' . $key2 . '%');
+                    });
+                })
                 ->where('kode_toko', $user->kode_toko)
                 ->whereColumn('jumlah', '!=', 'terjual')
                 ->orderByDesc('kode_toko')
@@ -110,6 +132,30 @@ class TransaksiController extends Controller
                 $productCodes = array_column($data, 'nomor_paket');
                 $dataBarangs = DataBarang::whereIn('kode', $productCodes)->get()->keyBy('kode');
 
+                // Bulk prefetch StockToko models to validate available stocks (O(1))
+                $stocks = StockToko::where('kode_toko', $user->kode_toko)
+                    ->whereIn('kode_barang', $productCodes)
+                    ->get()
+                    ->keyBy('kode_barang');
+
+                // Validate all items' stock first to prevent race conditions atomically
+                foreach ($data as $d) {
+                    $stock = $stocks->get($d['nomor_paket']);
+                    if (!$stock) {
+                        return response()->json([
+                            'icon' => 'error',
+                            'cek_data' => 'Barang ' . $d['nama_barang'] . ' tidak terdaftar di toko ini!'
+                        ]);
+                    }
+                    $available = $stock->jumlah - $stock->terjual;
+                    if ($available < intval($d['jumlah_barang'])) {
+                        return response()->json([
+                            'icon' => 'error',
+                            'cek_data' => 'Stok barang ' . $d['nama_barang'] . ' tidak mencukupi! Sisa stok saat ini: ' . $available
+                        ]);
+                    }
+                }
+
                 foreach ($data as $d) {
                     $dataBarang = $dataBarangs->get($d['nomor_paket']);
                     $hargaBeliMentah = $dataBarang ? $dataBarang->harga_beli : 0;
@@ -141,6 +187,18 @@ class TransaksiController extends Controller
                     'kembalian' => $kembali
                 ];
                 Pembayaran::create($data_pembayaran);
+
+                // Trigger real-time updates via Firebase
+                FirebaseService::triggerUpdate('updates/sales', ['toko' => $user->kode_toko]);
+
+                // Also trigger updates for any active stock opname session in this shop
+                $activeSessions = \App\Models\StockOpname::where('kode_toko', $user->kode_toko)
+                    ->whereIn('status', ['Counting', 'Recount'])
+                    ->pluck('id');
+                foreach ($activeSessions as $sessionId) {
+                    FirebaseService::triggerUpdate('updates/opname_session_' . $sessionId);
+                }
+
                 $icon = 'success';
                 $cek_data = 'Pembayaran diterima';
             } else {

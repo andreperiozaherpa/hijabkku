@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Services\FirebaseService;
 
 class StockOpnameController extends Controller
 {
@@ -121,6 +122,8 @@ class StockOpnameController extends Controller
             'notes' => $request->notes,
         ]);
 
+        FirebaseService::triggerUpdate('updates/opname_list');
+
         return response()->json([
             'success' => true,
             'message' => 'Sesi Stock Opname berhasil dibuat!',
@@ -145,6 +148,8 @@ class StockOpnameController extends Controller
             $session->audits()->delete();
             $session->delete();
         });
+
+        FirebaseService::triggerUpdate('updates/opname_list');
 
         return response()->json([
             'success' => true,
@@ -318,6 +323,9 @@ class StockOpnameController extends Controller
             }
         });
 
+        FirebaseService::triggerUpdate('updates/opname_list');
+        FirebaseService::triggerUpdate('updates/opname_session_' . $session->id);
+
         return response()->json([
             'success' => true,
             'message' => 'Snapshot Stock Opname berhasil dibuat dan proses counting dimulai!'
@@ -392,6 +400,8 @@ class StockOpnameController extends Controller
             return $item;
         });
 
+        FirebaseService::triggerUpdate('updates/opname_session_' . $session->id);
+
         return response()->json([
             'success' => true,
             'message' => $barang->nama_barang . ' +1',
@@ -444,6 +454,8 @@ class StockOpnameController extends Controller
                 'action' => 'Manual Edit',
             ]);
         });
+
+        FirebaseService::triggerUpdate('updates/opname_session_' . $session->id);
 
         return response()->json([
             'success' => true,
@@ -549,6 +561,9 @@ class StockOpnameController extends Controller
             ]);
         }
 
+        FirebaseService::triggerUpdate('updates/opname_list');
+        FirebaseService::triggerUpdate('updates/opname_session_' . $session->id);
+
         return response()->json([
             'success' => true,
             'message' => 'Daftar Recount untuk ' . $result . ' berhasil dibuat! Item yang selisih siap dihitung kembali.'
@@ -613,6 +628,9 @@ class StockOpnameController extends Controller
             }
         });
 
+        FirebaseService::triggerUpdate('updates/opname_list');
+        FirebaseService::triggerUpdate('updates/opname_session_' . $session->id);
+
         return response()->json([
             'success' => true,
             'message' => 'Sesi disetujui! Laporan masuk ke tahap Review untuk supervisor dengan kuantitas yang tersinkronisasi.'
@@ -676,6 +694,9 @@ class StockOpnameController extends Controller
                 }
             }
         });
+
+        FirebaseService::triggerUpdate('updates/opname_list');
+        FirebaseService::triggerUpdate('updates/opname_session_' . $session->id);
 
         return response()->json([
             'success' => true,
@@ -847,6 +868,8 @@ class StockOpnameController extends Controller
             'difference_value' => -$snapshotQty * $harga_beli,
             'status' => 'Match',
         ]);
+
+        FirebaseService::triggerUpdate('updates/opname_session_' . $session->id);
 
         return response()->json(['success' => true, 'message' => 'Barang berhasil ditambahkan ke list stock opname!']);
     }

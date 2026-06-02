@@ -53,13 +53,14 @@
         /* ── Phone Optimization (Small Screens) ── */
         @media (max-width: 767.98px) {
             .pos-container {
-                flex-direction: column;
+                flex-direction: column-reverse;
             }
 
             .pos-right {
                 width: 100%;
                 position: static;
                 max-height: none;
+                margin-bottom: 1.5rem;
             }
         }
 
@@ -566,6 +567,7 @@
                     }
                 });
             }
+            window.ajaxQuery = ajaxQuery;
 
             function simpan(res) {
                 if (res.icon === 'success') {
@@ -1182,6 +1184,44 @@
                 recalculatePosTotal();
                 saveCartToStorage();
             });
+        });
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "{{ env('FIREBASE_API_KEY') }}",
+            authDomain: "{{ env('FIREBASE_AUTH_DOMAIN') }}",
+            databaseURL: "{{ env('FIREBASE_DATABASE_URL') }}",
+            projectId: "{{ env('FIREBASE_PROJECT_ID') }}",
+            storageBucket: "{{ env('FIREBASE_STORAGE_BUCKET') }}",
+            messagingSenderId: "{{ env('FIREBASE_MESSAGING_SENDER_ID') }}",
+            appId: "{{ env('FIREBASE_APP_ID') }}"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const updatesRef = ref(db, 'hijabkku/updates/sales');
+        let isInitialLoad = true;
+
+        onValue(updatesRef, (snapshot) => {
+            if (isInitialLoad) {
+                isInitialLoad = false;
+                return;
+            }
+            const data = snapshot.val();
+            if (data && data.toko === "{{ Auth::user()->kode_toko }}") {
+                // Trigger Ajax reload preserving current search criteria
+                if (typeof window.ajaxQuery === 'function') {
+                    window.ajaxQuery('get', '/transaksi/penjualan/create', {
+                        key1: $('input[name=cariProduk]').val(),
+                        key2: $('input[name=cariProdukOptional]').val()
+                    });
+                }
+            }
         });
     </script>
 @endpush
