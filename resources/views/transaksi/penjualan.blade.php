@@ -253,6 +253,7 @@
             width: 100% !important;
             display: block !important;
         }
+
         .pos-search-wrapper input.form-control {
             border-radius: 0.75rem !important;
             font-size: 0.9rem !important;
@@ -264,11 +265,13 @@
             box-shadow: none !important;
             width: 100% !important;
         }
+
         .pos-search-wrapper input.form-control:focus {
             border-color: var(--primary) !important;
             box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12) !important;
             background: var(--foreground) !important;
         }
+
         .pos-search-wrapper .search-magnifier-icon {
             position: absolute !important;
             left: 1rem !important;
@@ -480,21 +483,48 @@
                         <!-- Real POS Checkout Form -->
                         <form id="formValid" class="tooltip-label-end" novalidate>
                             <div class="mb-2">
-                                <label class="form-label small text-muted mb-1">Jumlah Uang Diterima</label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light fw-bold text-muted">Rp</span>
-                                    <input id="jumlahUang" type="text" class="form-control payment-input" placeholder="0"
-                                        required>
-                                    <button class="btn btn-outline-secondary fw-semibold" type="button"
-                                        id="button_pas">Pas</button>
+                                <label class="form-label small text-muted mb-1">Metode Pembayaran</label>
+                                <select class="form-select form-select-sm" id="metodePembayaran" required>
+                                    <option value="TUNAI" selected>Tunai / Cash</option>
+                                    <option value="QRIS">QRIS</option>
+                                    <option value="VA">Virtual Account (VA)</option>
+                                    <option value="EWALLET">E-Wallet (OVO, DANA, dll)</option>
+                                </select>
+                            </div>
+                            <div id="tunaiInputContainer">
+                                <div class="mb-2">
+                                    <label class="form-label small text-muted mb-1">Jumlah Uang Diterima</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-light fw-bold text-muted">Rp</span>
+                                        <input id="jumlahUang" type="text" class="form-control payment-input"
+                                            placeholder="0" required>
+                                        <button class="btn btn-outline-secondary fw-semibold" type="button"
+                                            id="button_pas">Pas</button>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted mb-1">Uang Kembalian</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-light fw-bold text-muted">Rp</span>
+                                        <input id="kembalian" type="text" class="form-control change-input"
+                                            placeholder="0" readonly>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label small text-muted mb-1">Uang Kembalian</label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light fw-bold text-muted">Rp</span>
-                                    <input id="kembalian" type="text" class="form-control change-input" placeholder="0"
-                                        readonly>
+                            <div id="digitalPaymentInfo" class="d-none mb-3 p-2 bg-light rounded border border-info">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="small text-muted">Subtotal:</span>
+                                    <span class="small fw-bold" id="digitalSubtotal">Rp 0</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="small text-muted">Fee+Tax:</span>
+                                    <span class="small fw-bold text-danger" id="digitalFee">Rp 0</span>
+                                </div>
+                                <hr class="my-1 border-secondary">
+                                <div class="d-flex justify-content-between">
+                                    <span class="small text-muted fw-bold">Total Tagihan:</span>
+                                    <span class="small fw-bold text-primary" id="digitalGrandTotal"
+                                        style="font-size:1.1em;">Rp 0</span>
                                 </div>
                             </div>
                         </form>
@@ -643,22 +673,22 @@
                     recalculatePosTotal();
                     return;
                 }
-                
+
                 var cartItems = [];
                 try {
                     cartItems = JSON.parse(stored);
-                } catch(e) {
+                } catch (e) {
                     console.error("Failed to parse cart storage", e);
                 }
-                
+
                 if (!Array.isArray(cartItems) || cartItems.length === 0) {
                     recalculatePosTotal();
                     return;
                 }
-                
+
                 $('.transaksi tbody').html('');
                 $('#cartVisualList').html('');
-                
+
                 $.each(cartItems, function(idx, item) {
                     var kode_barang = item.kode_barang;
                     var nama_barang = item.nama_barang;
@@ -666,18 +696,19 @@
                     var method = item.method || 'umum';
                     var harga_jual_retail = item.priceRetail;
                     var harga_grosir = item.priceGrosir;
-                    
+
                     var unitPrice = method === 'grosir' ? harga_grosir : harga_jual_retail;
                     var totalJual = unitPrice * qty;
-                    
+
                     var productBtn = $('button.selected[data-kode_barang="' + kode_barang + '"]');
                     if (productBtn.length) {
                         var el = productBtn.find('.sisaStock');
                         var originalStock = parseInt(el.attr('data-jumlah')) || 0;
                         var newSisa = originalStock - qty;
-                        
+
                         el.attr('data-jumlah', newSisa).text(getStockText(newSisa));
-                        productBtn.closest('.product-card').removeClass('stock-ok stock-low stock-empty').addClass(stockClass(newSisa));
+                        productBtn.closest('.product-card').removeClass('stock-ok stock-low stock-empty')
+                            .addClass(stockClass(newSisa));
                         if (newSisa <= 0) {
                             productBtn.prop('disabled', true).css({
                                 'opacity': '0.5',
@@ -685,7 +716,7 @@
                             });
                         }
                     }
-                    
+
                     $('.transaksi tbody').append(`
                     <tr id="transaksi_${kode_barang}">
                         <td class="col-4 namaBarangLabel">${nama_barang}</td>
@@ -697,7 +728,7 @@
                             <button type="button" data-kode_barang="${kode_barang}" class="kurangi"></button>
                         </td>
                     </tr>`);
-                    
+
                     $('#cartVisualList').append(`
                     <div class="cart-item-row" id="visual_transaksi_${kode_barang}"
                          data-harga_jual="${harga_jual_retail}"
@@ -730,11 +761,11 @@
                         </div>
                     </div>`);
                 });
-                
+
                 if (typeof AcornIcons !== 'undefined') {
                     new AcornIcons().replace();
                 }
-                
+
                 recalculatePosTotal();
             }
 
@@ -834,6 +865,8 @@
                         $('#kembalian').val('kurang').addClass('kurang');
                     }
                 }
+
+                $('#metodePembayaran').trigger('change');
 
                 // Cart Count update
                 var totalItems = 0;
@@ -1048,22 +1081,60 @@
                 });
             });
 
+            $('#metodePembayaran').change(function() {
+                var method = $(this).val();
+                var total = parseInt($('.totals .totalRupiah').text()) || 0;
+
+                if (method === 'TUNAI') {
+                    $('#tunaiInputContainer').removeClass('d-none');
+                    $('#digitalPaymentInfo').addClass('d-none');
+                    $('#jumlahUang').prop('required', true);
+                } else {
+                    $('#tunaiInputContainer').addClass('d-none');
+                    $('#digitalPaymentInfo').removeClass('d-none');
+                    $('#jumlahUang').prop('required', false);
+
+                    var fee = 0;
+                    var grandTotal = total;
+                    if (total > 0) {
+                        if (method === 'QRIS') {
+                            var qrisRate = 0.007; // 0.7% flat
+                            grandTotal = Math.ceil(total / (1 - qrisRate));
+                            fee = grandTotal - total;
+                        } else if (method === 'VA') {
+                            var vaFeeFlat = 4500;
+                            var ppnRate = 0.12; // 12% PPN
+                            fee = vaFeeFlat + (vaFeeFlat * ppnRate);
+                            grandTotal = total + fee;
+                        } else if (method === 'EWALLET') {
+                            var ewalletRate = 0.015; // 1.5%
+                            var ppnRateOfFee = 0.11; // 11% PPN on top of fee
+                            var effectiveRate = ewalletRate * (1 + ppnRateOfFee); // 1.665%
+                            grandTotal = Math.ceil(total / (1 - effectiveRate));
+                            fee = grandTotal - total;
+                        }
+                    }
+
+                    $('#digitalSubtotal').text('Rp ' + rupiah(total));
+                    $('#digitalFee').text('Rp ' + rupiah(fee));
+                    $('#digitalGrandTotal').text('Rp ' + rupiah(grandTotal));
+                }
+            });
+
+            // Need to update the digital fee every time cart changes
+            function updateDigitalPaymentInfo() {
+                if ($('#metodePembayaran').val() !== 'TUNAI') {
+                    $('#metodePembayaran').trigger('change');
+                }
+            }
+
             $('.simpan').click(function(e) {
                 e.preventDefault();
                 if (!$('#formValid').valid()) return;
-                var kembalianCek = $('#kembalian').val();
-                if (kembalianCek == 'kurang') {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Pastikan Uang Cukup',
-                        timer: 2500
-                    });
-                    return;
-                }
+
+                var method = $('#metodePembayaran').val();
                 var trCheck = $('.transaksi tbody tr');
                 var invoice = $('#invoiceLabel').text();
-                var kembali = $('#kembalian').val().replaceAll('.', '');
-                var pembayaran = $('#jumlahUang').val().replaceAll('.', '');
                 var total_harga = $('.totals .totalRupiah').text();
 
                 var arr = {};
@@ -1087,43 +1158,158 @@
                     return;
                 }
 
-                Swal.fire({
-                    title: 'Konfirmasi Pembayaran',
-                    html: `
-                        <div class="text-start fs-7 p-2 rounded bg-light border" style="font-family: inherit;">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Total Belanja:</span>
-                                <strong class="text-body">Rp ${rupiah(total_harga)}</strong>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Uang Diterima:</span>
-                                <strong class="text-success">Rp ${rupiah(pembayaran)}</strong>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span>Kembalian:</span>
-                                <strong class="text-primary">Rp ${rupiah(kembali)}</strong>
-                            </div>
-                        </div>
-                        <p class="mt-3 mb-0 text-center fw-bold text-muted" style="font-size:0.82rem;">Apakah data pembayaran sudah benar?</p>
-                    `,
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#10b981',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Ya, Bayar Sekarang',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $(".simpan").attr("disabled", true);
-                        ajaxQuery('post', '/transaksi/penjualan/store', {
-                            invoice,
-                            kembali,
-                            pembayaran,
-                            total_harga,
-                            data: arr
+                if (method === 'TUNAI') {
+                    var kembalianCek = $('#kembalian').val();
+                    if (kembalianCek == 'kurang') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Pastikan Uang Cukup',
+                            timer: 2500
                         });
+                        return;
                     }
-                });
+                    var kembali = $('#kembalian').val().replaceAll('.', '');
+                    var pembayaran = $('#jumlahUang').val().replaceAll('.', '');
+
+                    Swal.fire({
+                        title: 'Konfirmasi Pembayaran',
+                        html: `
+                            <div class="text-start fs-7 p-2 rounded bg-light border" style="font-family: inherit;">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Total Belanja:</span>
+                                    <strong class="text-body">Rp ${rupiah(total_harga)}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Uang Diterima:</span>
+                                    <strong class="text-success">Rp ${rupiah(pembayaran)}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Kembalian:</span>
+                                    <strong class="text-primary">Rp ${rupiah(kembali)}</strong>
+                                </div>
+                            </div>
+                            <p class="mt-3 mb-0 text-center fw-bold text-muted" style="font-size:0.82rem;">Apakah data pembayaran sudah benar?</p>
+                        `,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#10b981',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Ya, Bayar Sekarang',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $(".simpan").attr("disabled", true);
+                            ajaxQuery('post', '/transaksi/penjualan/store', {
+                                invoice,
+                                kembali,
+                                pembayaran,
+                                total_harga,
+                                data: arr
+                            });
+                        }
+                    });
+                } else {
+                    // Gateway Payment (QRIS, VA, E-WALLET)
+                    var grandTotal = $('#digitalGrandTotal').text().replace('Rp ', '').replaceAll('.', '');
+                    var fee = $('#digitalFee').text().replace('Rp ', '').replaceAll('.', '');
+
+                    Swal.fire({
+                        title: 'Konfirmasi ' + method,
+                        html: `
+                            <div class="text-start fs-7 p-2 rounded bg-light border" style="font-family: inherit;">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Total Belanja:</span>
+                                    <strong class="text-body">Rp ${rupiah(total_harga)}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Fee+Tax:</span>
+                                    <strong class="text-danger">+ Rp ${rupiah(fee)}</strong>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <span>Total Tagihan:</span>
+                                    <strong class="text-primary fs-6">Rp ${rupiah(grandTotal)}</strong>
+                                </div>
+                            </div>
+                            <p class="mt-3 mb-0 text-center fw-bold text-muted" style="font-size:0.82rem;">Buat tagihan Xendit sekarang?</p>
+                        `,
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonColor: '#0ea5e9',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Ya, Buat Tagihan',
+                        cancelButtonText: 'Batal',
+                        showLoaderOnConfirm: true,
+                        preConfirm: () => {
+                            return $.ajax({
+                                url: '/transaksi/penjualan/xendit/create',
+                                type: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
+                                        'content')
+                                },
+                                data: {
+                                    invoice: invoice,
+                                    total_harga: total_harga,
+                                    pembayaran: method,
+                                    data: arr
+                                }
+                            }).catch(error => {
+                                Swal.showValidationMessage('Gagal membuat tagihan: ' +
+                                    error.responseJSON?.message);
+                            });
+                        },
+                        allowOutsideClick: () => !Swal.isLoading()
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            var resp = result.value;
+                            if (resp.success) {
+                                // Show Checkout URL Iframe or QR code
+                                Swal.fire({
+                                    title: 'Selesaikan Pembayaran',
+                                    html: `
+                                        <div class="mb-2 text-center text-muted fs-7">Silahkan selesaikan pembayaran. Pop-up ini akan tertutup otomatis jika berhasil dibayar.</div>
+                                        <div style="height: 400px; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
+                                            <iframe src="${resp.checkout_url}" style="width: 100%; height: 100%; border: none;"></iframe>
+                                        </div>
+                                    `,
+                                    showConfirmButton: false,
+                                    allowOutsideClick: false,
+                                    allowEscapeKey: false,
+                                    width: '450px'
+                                });
+
+                                // Start listening to Firebase for Payment Success
+                                window.listenToPaymentSuccess(invoice, function(status, data) {
+                                    if (status === 'PAID') {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Pembayaran Berhasil!',
+                                            text: 'Transaksi telah lunas dan stok diperbarui.',
+                                            timer: 3000,
+                                            showConfirmButton: false
+                                        }).then(() => {
+                                            localStorage.removeItem(
+                                                'hijabkku_pos_cart');
+                                            location.reload();
+                                        });
+                                    } else if (status === 'EXPIRED') {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Waktu Pembayaran Habis!',
+                                            text: 'Tagihan ini telah dibatalkan karena melewati batas waktu pembayaran.',
+                                            confirmButtonText: 'Tutup'
+                                        }).then(() => {
+                                            location.reload();
+                                        });
+                                    }
+                                });
+                            } else {
+                                Swal.fire('Error', resp.message, 'error');
+                            }
+                        }
+                    });
+                }
             });
 
             var jumlahUangMask = IMask(document.getElementById('jumlahUang'), {
@@ -1200,8 +1386,14 @@
     </script>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import {
+            initializeApp
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import {
+            getDatabase,
+            ref,
+            onValue
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "{{ env('FIREBASE_API_KEY') }}",
@@ -1235,5 +1427,15 @@
                 }
             }
         });
+
+        window.listenToPaymentSuccess = function(invoice, callback) {
+            const paymentRef = ref(db, 'hijabkku/updates/payment_success_' + invoice);
+            onValue(paymentRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data && (data.status === 'PAID' || data.status === 'EXPIRED')) {
+                    callback(data.status, data);
+                }
+            });
+        };
     </script>
 @endpush

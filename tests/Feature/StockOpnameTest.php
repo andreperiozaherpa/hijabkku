@@ -851,4 +851,169 @@ class StockOpnameTest extends TestCase
             'qty_after' => 3,
         ]);
     }
+
+    public function test_admin_can_edit_qty_in_review_mode()
+    {
+        \Illuminate\Support\Facades\Http::fake();
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        
+        $barang = DataBarang::create([
+            'kode' => 'BRG_REVIEW_EDIT',
+            'nama_barang' => 'Test Review Product',
+            'harga_beli' => '10000',
+            'harga_jual' => '15000',
+            'harga_grosir' => '12000',
+            'jenis_barang' => 'Hijab',
+        ]);
+
+        $so = StockOpname::create([
+            'nomor_so' => 'SO-REVIEW-EDIT',
+            'kode_toko' => 'TK_001',
+            'status' => 'Review',
+            'petugas_id' => $admin->id,
+        ]);
+
+        $item = StockOpnameItem::create([
+            'stock_opname_id' => $so->id,
+            'kode_barang' => 'BRG_REVIEW_EDIT',
+            'snapshot_qty' => 10,
+            'round_1_qty' => 8,
+            'final_qty' => 8,
+        ]);
+
+        $response = $this->actingAs($admin)->post('/laporan/opname/update-qty-manual', [
+            'item_id' => $item->id,
+            'qty' => 12,
+            'round' => 'final',
+        ]);
+
+        $response->assertJson([
+            'success' => true,
+            'message' => 'Kuantitas berhasil diperbarui!',
+        ]);
+
+        $item->refresh();
+        $this->assertEquals(12, $item->final_qty);
+        
+        // Verify log action
+        $this->assertDatabaseHas('stock_opname_audits', [
+            'stock_opname_id' => $so->id,
+            'stock_opname_item_id' => $item->id,
+            'action' => 'Review Manual Adjust',
+            'qty_before' => 8,
+            'qty_after' => 12,
+        ]);
+    }
+
+    public function test_non_admin_cannot_edit_qty_in_review_mode()
+    {
+        \Illuminate\Support\Facades\Http::fake();
+
+        $nonAdmin = User::factory()->create(['role' => 'gudang']);
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $barang = DataBarang::create([
+            'kode' => 'BRG_REVIEW_FAIL',
+            'nama_barang' => 'Test Fail Product',
+            'harga_beli' => '10000',
+            'harga_jual' => '15000',
+            'harga_grosir' => '12000',
+            'jenis_barang' => 'Hijab',
+        ]);
+
+        $so = StockOpname::create([
+            'nomor_so' => 'SO-REVIEW-FAIL',
+            'kode_toko' => 'TK_001',
+            'status' => 'Review',
+            'petugas_id' => $admin->id,
+            'supervisor_id' => $nonAdmin->id, // Even if nonAdmin is the assigned supervisor
+        ]);
+
+        $item = StockOpnameItem::create([
+            'stock_opname_id' => $so->id,
+            'kode_barang' => 'BRG_REVIEW_FAIL',
+            'snapshot_qty' => 10,
+            'round_1_qty' => 8,
+            'final_qty' => 8,
+        ]);
+
+        $response = $this->actingAs($nonAdmin)->post('/laporan/opname/update-qty-manual', [
+            'item_id' => $item->id,
+            'qty' => 12,
+            'round' => 'final',
+        ]);
+
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Hanya Admin yang berhak melakukan manual adjustment pada mode Review!',
+        ]);
+    }
+
+    public function test_round_3_carry_over_and_variance_filtering()
+    {
+        $so = StockOpname::create([
+            'nomor_so' => 'SO-R3-TEST',
+            'kode_toko' => 'TK_001',
+            'status' => 'Recount',
+            'petugas_id' => $this->admin->id,
+        ]);
+
+        // Item 1: Had difference in Round 1, status 'Need Recount', not resolved in Round 2
+        $item1 = StockOpnameItem::create([
+            'stock_opname_id' => $so->id,
+            'kode_barang' => '88888888',
+            'snapshot_qty' => 10,
+            'round_1_qty' => 8,
+            'round_2_qty' => 8,
+            'final_qty' => 8,
+            'status' => 'Need Recount',
+            'difference' => -2,
+        ]);
+
+        // Item 2: Matched in Round 2 (difference is 0, status 'Match')
+        $item2 = StockOpnameItem::create([
+            'stock_opname_id' => $so->id,
+            'kode_barang' => '99999999',
+            'snapshot_qty' => 5,
+            'round_1_qty' => 5,
+            'round_2_qty' => 5,
+            'final_qty' => 5,
+            'status' => 'Match',
+            'difference' => 0,
+        ]);
+
+        // Transition from Round 2 (Recount) to Round 3 (Recount with round_3_qty populated)
+        $response = $this->actingAs($this->admin)->post('/laporan/opname/generate-recount', [
+            'stock_opname_id' => $so->id,
+        ]);
+
+        $response->assertJson([
+            'success' => true,
+        ]);
+
+        // Both items should have round_3_qty carried over from round_2_qty
+        $this->assertDatabaseHas('stock_opname_items', [
+            'id' => $item1->id,
+            'round_3_qty' => 8,
+            'status' => 'Need Recount',
+        ]);
+
+        $this->assertDatabaseHas('stock_opname_items', [
+            'id' => $item2->id,
+            'round_3_qty' => 5,
+            'status' => 'Match',
+        ]);
+
+        // Verify DataTables list returns data correctly and filters by variance
+        $dtResponse = $this->actingAs($this->admin)->get('/laporan/opname/items-data/' . $so->id . '?variance_only=true');
+        $dtResponse->assertStatus(200);
+        
+        $data = $dtResponse->json()['data'];
+        $ids = collect($data)->pluck('id')->toArray();
+
+        // item1 has difference != 0, item2 has difference == 0
+        $this->assertTrue(in_array($item1->id, $ids));
+        $this->assertFalse(in_array($item2->id, $ids));
+    }
 }

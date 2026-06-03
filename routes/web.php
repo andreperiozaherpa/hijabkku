@@ -46,6 +46,7 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
             Route::get('/', [TransaksiController::class, 'index'])->name('transaksi.penjualan');
             Route::get('/create', [TransaksiController::class, 'create']);
             Route::post('/store', [TransaksiController::class, 'store']);
+            Route::post('/xendit/create', [\App\Http\Controllers\Api\XenditController::class, 'createInvoice']);
         });
 
         Route::prefix('/daftar')->middleware('permission:lihat_daftar_penjualan')->group(function () {

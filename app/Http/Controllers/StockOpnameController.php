@@ -229,7 +229,7 @@ class StockOpnameController extends Controller
         }
 
         if ($request->filled('variance_only') && $request->variance_only == 'true') {
-            $query->whereRaw('snapshot_qty != final_qty');
+            $query->where('difference', '!=', 0);
         }
 
         if ($request->filled('uncounted_only') && $request->uncounted_only == 'true') {
@@ -418,17 +418,30 @@ class StockOpnameController extends Controller
             return response()->json(['success' => false, 'message' => 'Status sesi ini tidak mengizinkan pengubahan kuantitas!']);
         }
 
-        $round = intval($request->round);
+        $user = Auth::user();
+        if ($session->status === 'Review' && $user->role !== 'admin') {
+            return response()->json(['success' => false, 'message' => 'Hanya Admin yang berhak melakukan manual adjustment pada mode Review!']);
+        }
+
+        $roundParam = $request->round;
         $qty = intval($request->qty);
 
         $barang = DataBarang::where('kode', $item->kode_barang)->first();
         $harga_beli = $barang ? floatval(str_replace('.', '', $barang->harga_beli)) : 0;
 
-        DB::transaction(function () use ($item, $round, $qty, $harga_beli, $session) {
-            $qtyCol = 'round_' . $round . '_qty';
-            $qtyBefore = $item->$qtyCol;
+        DB::transaction(function () use ($item, $roundParam, $qty, $harga_beli, $session, $user) {
+            // Determine column to edit
+            if ($session->status === 'Review' || $roundParam === 'final' || intval($roundParam) === 0) {
+                $qtyCol = 'final_qty';
+                $logRound = 'final';
+            } else {
+                $qtyCol = 'round_' . intval($roundParam) . '_qty';
+                $logRound = intval($roundParam);
+            }
 
+            $qtyBefore = $item->$qtyCol;
             $item->$qtyCol = $qty;
+
             $sales = DB::table('transaksis')
                 ->where('kode_toko', $session->kode_toko)
                 ->where('kode_barang', $item->kode_barang)
@@ -447,11 +460,11 @@ class StockOpnameController extends Controller
             StockOpnameAudit::create([
                 'stock_opname_id' => $session->id,
                 'stock_opname_item_id' => $item->id,
-                'user_id' => Auth::user()->id,
-                'round' => $round,
+                'user_id' => $user->id,
+                'round' => $logRound,
                 'qty_before' => $qtyBefore,
                 'qty_after' => $qty,
-                'action' => 'Manual Edit',
+                'action' => $session->status === 'Review' ? 'Review Manual Adjust' : 'Manual Edit',
             ]);
         });
 
@@ -523,18 +536,23 @@ class StockOpnameController extends Controller
 
             // If the session status is already Recount, we are transitioning Round 2 -> Round 3
             if ($session->status === 'Recount') {
-                // Find all items that needed recount in Round 2
-                $recountItems = $allItems->where('status', 'Need Recount');
-
                 $hasStillVariance = false;
-                foreach ($recountItems as $item) {
+                foreach ($allItems as $item) {
                     $sales = $salesData[$item->kode_barang] ?? 0;
                     $adjustedSnapshot = max(0, $item->snapshot_qty - $sales);
 
-                    // Update dynamic fields
-                    $item->difference = ($item->round_2_qty ?? 0) - $adjustedSnapshot;
                     $rawPrice = $prices[$item->kode_barang] ?? '0';
                     $harga_beli = floatval(str_replace('.', '', $rawPrice));
+
+                    if ($item->status !== 'Need Recount') {
+                        // Carry over matched items
+                        $item->round_3_qty = $item->round_2_qty ?? 0;
+                        $item->save();
+                        continue;
+                    }
+
+                    // Process recount items
+                    $item->difference = ($item->round_2_qty ?? 0) - $adjustedSnapshot;
                     $item->difference_value = $item->difference * $harga_beli;
 
                     if ($adjustedSnapshot == ($item->round_2_qty ?? 0)) {

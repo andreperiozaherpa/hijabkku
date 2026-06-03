@@ -546,6 +546,8 @@
         $(document).ready(function() {
             const sessionId = "{{ $session->id }}";
             let activeRound = @json($active_round);
+            const isAdmin = @json(Auth::user()->role === 'admin');
+            const isSupervisor = @json(Auth::user()->id === $session->supervisor_id);
 
             // Initialize dynamic audit trail logs
             loadAuditTrail();
@@ -588,15 +590,17 @@
                             else if (activeRound === 3) qty = row.round_3_qty;
                             else qty = row.final_qty;
 
-                            // Allow editing inline only if counting/recount is active
+                            // Allow editing inline only if counting/recount is active, or if in Review mode for Admin/Supervisor
                             const sessionStatus = $('#sessionStatusLabel').text().trim();
-                            const isCounting = (sessionStatus === 'Counting' || sessionStatus ===
-                                'Recount');
+                            const isCounting = (sessionStatus === 'Counting' || sessionStatus === 'Recount');
+                            const isReview = (sessionStatus === 'Review');
 
                             if (isCounting && activeRound !== 'final') {
                                 if (activeRound === serverRound) {
                                     return `<span class="badge bg-outline-primary py-1 px-2 border-dashed cursor-pointer edit-qty-trigger font-weight-bold" data-id="${row.id}">${qty !== null ? qty : '-'}</span>`;
                                 }
+                            } else if (isReview && activeRound === 'final' && isAdmin) {
+                                return `<span class="badge bg-outline-primary py-1 px-2 border-dashed cursor-pointer edit-qty-trigger font-weight-bold" data-id="${row.id}">${qty !== null ? qty : '-'}</span>`;
                             }
                             return qty !== null ? qty : '-';
                         }
