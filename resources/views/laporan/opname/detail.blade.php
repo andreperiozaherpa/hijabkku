@@ -205,11 +205,28 @@
                 </div>
                 @if (Auth::user()->role == 'admin')
                     <div class="col-12 col-lg-4">
-                        <div class="card h-100 border-0 shadow-sm card-stat bg-outline-danger">
+                        @php
+                            $cardClass = 'bg-light';
+                            $textClass = 'text-muted';
+                            if ($variance_value > 0) {
+                                $cardClass = 'bg-outline-success border border-success';
+                                $textClass = 'text-success';
+                            } elseif ($variance_value < 0) {
+                                $cardClass = 'bg-outline-danger border border-danger';
+                                $textClass = 'text-danger';
+                            }
+                        @endphp
+                        <div class="card h-100 border-0 shadow-sm card-stat {{ $cardClass }}" id="cardVarianceValueContainer">
                             <div class="card-body py-3">
                                 <div class="text-muted small text-uppercase font-weight-bold">Nilai Selisih Estimasi</div>
-                                <div class="fs-3 font-weight-bold text-danger" id="cardVarianceValue">
-                                    Rp. {{ number_format($variance_value, 0, ',', '.') }}
+                                <div class="fs-3 font-weight-bold {{ $textClass }}" id="cardVarianceValue">
+                                    @if ($variance_value > 0)
+                                        +Rp. {{ number_format($variance_value, 0, ',', '.') }}
+                                    @elseif ($variance_value < 0)
+                                        -Rp. {{ number_format(abs($variance_value), 0, ',', '.') }}
+                                    @else
+                                        Rp. 0
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -1121,6 +1138,18 @@
                     $('#cardRemaining').text(parsed.find('#cardRemaining').text().trim());
                     $('#cardVarianceItems').text(parsed.find('#cardVarianceItems').text().trim());
                     $('#cardVarianceValue').html(parsed.find('#cardVarianceValue').html().trim());
+
+                    // Dynamically update container card classes (bg color / outline)
+                    const newContainer = parsed.find('#cardVarianceValueContainer');
+                    if (newContainer.length > 0) {
+                        $('#cardVarianceValueContainer').attr('class', newContainer.attr('class'));
+                    }
+
+                    // Dynamically update text element classes (text color)
+                    const newTextEl = parsed.find('#cardVarianceValue');
+                    if (newTextEl.length > 0) {
+                        $('#cardVarianceValue').attr('class', newTextEl.attr('class'));
+                    }
                 });
             }
 

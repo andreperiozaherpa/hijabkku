@@ -165,9 +165,9 @@ class StockOpnameController extends Controller
         $summary = StockOpnameItem::where('stock_opname_id', $id)
             ->selectRaw('
                 COUNT(*) as total_sku,
-                COUNT(CASE WHEN round_1_qty IS NOT NULL THEN 1 END) as counted,
-                COUNT(CASE WHEN round_1_qty IS NOT NULL AND difference != 0 THEN 1 END) as variance_items,
-                SUM(CASE WHEN round_1_qty IS NOT NULL THEN difference_value ELSE 0 END) as variance_value
+                COUNT(CASE WHEN COALESCE(round_1_qty, round_2_qty, round_3_qty, final_qty) IS NOT NULL THEN 1 END) as counted,
+                COUNT(CASE WHEN COALESCE(round_1_qty, round_2_qty, round_3_qty, final_qty) IS NOT NULL AND difference != 0 THEN 1 END) as variance_items,
+                SUM(CASE WHEN COALESCE(round_1_qty, round_2_qty, round_3_qty, final_qty) IS NOT NULL THEN difference_value ELSE 0 END) as variance_value
             ')
             ->first();
 
