@@ -433,7 +433,7 @@ class StockOpnameController extends Controller
             // Determine column to edit
             if ($session->status === 'Review' || $roundParam === 'final' || intval($roundParam) === 0) {
                 $qtyCol = 'final_qty';
-                $logRound = 'final';
+                $logRound = 0;
             } else {
                 $qtyCol = 'round_' . intval($roundParam) . '_qty';
                 $logRound = intval($roundParam);
@@ -789,7 +789,7 @@ class StockOpnameController extends Controller
                     'action' => $log->action,
                     'qty_before' => $log->qty_before,
                     'qty_after' => $log->qty_after,
-                    'round' => $log->round,
+                    'round' => $log->round == 0 ? 'Final' : $log->round,
                     'time' => Carbon::parse($log->created_at)->diffForHumans(),
                     'product_name' => $barangName,
                     'sku' => $log->item ? $log->item->kode_barang : '-',

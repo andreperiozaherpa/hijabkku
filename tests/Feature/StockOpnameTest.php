@@ -903,6 +903,7 @@ class StockOpnameTest extends TestCase
             'action' => 'Review Manual Adjust',
             'qty_before' => 8,
             'qty_after' => 12,
+            'round' => 0,
         ]);
     }
 
