@@ -204,14 +204,14 @@
                         setiap saat. Karena kecantikan sejati berasal dari hati yang nyaman.
                     </p>
                     <div class="d-flex align-items-center mb-4">
-                        <div class="me-4 text-center">
+                        {{-- <div class="me-4 text-center">
                             <h3 class="fw-bold text-gold mb-0">10k+</h3>
                             <span class="small text-muted">Pelanggan Setia</span>
                         </div>
                         <div class="text-center">
                             <h3 class="fw-bold text-gold mb-0">50+</h3>
                             <span class="small text-muted">Varian Warna</span>
-                        </div>
+                        </div> --}}
                     </div>
                     <a href="{{ route('about') }}" class="btn btn-gold px-4 py-2.5 rounded-pill text-uppercase small"
                         style="font-size: 0.8rem; letter-spacing: 0.5px;">Selengkapnya</a>
@@ -264,7 +264,7 @@
                             <li class="d-flex align-items-center">
                                 <span class="me-3 text-gold"><i data-acorn-icon="clock"
                                         style="width: 16px; height: 16px;"></i></span>
-                                <span>Operasional: Senin – Sabtu, 08.00 – 20.00 WIB</span>
+                                <span>Operasional: Senin – Minggu, 08.00 – 20.00 WIB</span>
                             </li>
                         </ul>
                     </div>

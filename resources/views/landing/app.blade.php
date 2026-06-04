@@ -7,11 +7,13 @@
     <title>@yield('title', 'Hijabkku - Elegansi dalam Berhijab')</title>
 
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Hijabkku menyediakan koleksi hijab premium terbaik dengan warna pastel lembut untuk wanita Muslimah anggun. Dapatkan pashmina silk, Bella Square, dan khimar premium di outlet terdekat kami." />
+    <meta name="description"
+        content="Hijabkku menyediakan koleksi hijab premium terbaik dengan warna pastel lembut untuk wanita Muslimah anggun. Dapatkan pashmina silk, Bella Square, dan khimar premium di outlet terdekat kami." />
     <meta name="keywords" content="hijab, pashmina, bella square, khimar, hijab premium, hijab pastel, hijabkku" />
     <meta name="author" content="Hijabkku" />
     <meta property="og:title" content="Hijabkku - Elegansi dalam Berhijab" />
-    <meta property="og:description" content="Koleksi hijab premium dengan sentuhan warna pastel yang lembut, didesain khusus untuk menemani setiap momen spesial Anda." />
+    <meta property="og:description"
+        content="Koleksi hijab premium dengan sentuhan warna pastel yang lembut, didesain khusus untuk menemani setiap momen spesial Anda." />
     <meta property="og:image" content="/img/logo.png" />
     <meta property="og:type" content="website" />
     @yield('meta')
@@ -91,7 +93,7 @@
             color: #2c2c2c !important;
             transition: all 0.2s ease-in-out;
         }
-        
+
         .nav-link-cart:hover {
             background-color: rgba(0, 0, 0, 0.05);
             color: #D4AF37 !important;
@@ -113,7 +115,8 @@
             justify-content: center;
             border: 2px solid #ffffff;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-            pointer-events: none; /* Make sure clicking badge clicks button */
+            pointer-events: none;
+            /* Make sure clicking badge clicks button */
             z-index: 1;
         }
 
@@ -294,8 +297,8 @@
                 <img src="/img/logo.png" alt="Hijabku Logo" style="height: 40px; border-radius: 5px;" class="me-2">
                 HIJABKU
             </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -309,18 +312,17 @@
                             href="/catalog">Katalog</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link px-3 {{ Request::is('about') ? 'active text-gold' : '' }}" 
+                        <a class="nav-link px-3 {{ Request::is('about') ? 'active text-gold' : '' }}"
                             href="{{ route('about') }}">Tentang Kami</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link px-3 {{ Request::is('contact') ? 'active text-gold' : '' }}" 
+                        <a class="nav-link px-3 {{ Request::is('contact') ? 'active text-gold' : '' }}"
                             href="{{ route('contact') }}">Hubungi Kami</a>
                     </li>
                     @if (request()->routeIs('catalog'))
                         <li class="nav-item me-lg-3 mt-3 mt-lg-0 d-flex align-items-center">
-                            <button class="nav-link nav-link-cart position-relative p-0 border-0 bg-transparent" data-bs-toggle="offcanvas"
-                                data-bs-target="#cartOffcanvas"
-                                title="Keranjang Belanja"
+                            <button class="nav-link nav-link-cart position-relative p-0 border-0 bg-transparent"
+                                data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" title="Keranjang Belanja"
                                 style="cursor: pointer; outline: none; box-shadow: none;">
                                 <i data-acorn-icon="cart" style="font-size: 20px; position: relative; z-index: 2;"></i>
                                 <span id="cart-badge" class="cart-badge">0</span>
@@ -346,17 +348,23 @@
             <div class="row g-4 mb-5 text-center text-md-start">
                 <!-- Column 1: Brand Info -->
                 <div class="col-lg-4 mb-3 mb-lg-0">
-                    <a class="navbar-brand d-flex align-items-center justify-content-center justify-content-md-start mb-3" href="/">
-                        <img src="/img/logo.png" alt="Hijabku Logo" style="height: 40px; border-radius: 5px;" class="me-2">
+                    <a class="navbar-brand d-flex align-items-center justify-content-center justify-content-md-start mb-3"
+                        href="/">
+                        <img src="/img/logo.png" alt="Hijabku Logo" style="height: 40px; border-radius: 5px;"
+                            class="me-2">
                         HIJABKU
                     </a>
                     <p class="text-muted pe-lg-4 small" style="line-height: 1.6;">
-                        Menebar kebaikan dan kecantikan melalui balutan hijab yang elegan dengan sentuhan warna pastel lembut terbaik.
+                        Menebar kebaikan dan kecantikan melalui balutan hijab yang elegan dengan sentuhan warna.
                     </p>
                     <div class="d-flex justify-content-center justify-content-md-start gap-2 mt-3">
-                        <a href="https://instagram.com/hijabkku" target="_blank" class="btn btn-outline-dark btn-sm rounded-circle d-flex align-items-center justify-content-center text-dark hover-gold" style="width: 36px; height: 36px; border-color: #dcdcdc;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-instagram" viewBox="0 0 16 16">
-                                <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.444-.048-3.298c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.92.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334"/>
+                        <a href="https://instagram.com/hijabkku" target="_blank"
+                            class="btn btn-outline-dark btn-sm rounded-circle d-flex align-items-center justify-content-center text-dark hover-gold"
+                            style="width: 36px; height: 36px; border-color: #dcdcdc;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                fill="currentColor" class="bi bi-instagram" viewBox="0 0 16 16">
+                                <path
+                                    d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.444-.048-3.298c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.92.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334" />
                             </svg>
                         </a>
                     </div>
@@ -366,10 +374,14 @@
                 <div class="col-6 col-md-3 col-lg-2">
                     <h6 class="fw-bold text-dark font-serif mb-4" style="letter-spacing: 0.5px;">Tautan Cepat</h6>
                     <ul class="list-unstyled mb-0">
-                        <li class="mb-2"><a href="/" class="text-muted text-decoration-none hover-gold small">Beranda</a></li>
-                        <li class="mb-2"><a href="{{ route('catalog') }}" class="text-muted text-decoration-none hover-gold small">Katalog Hijab</a></li>
-                        <li class="mb-2"><a href="{{ route('about') }}" class="text-muted text-decoration-none hover-gold small">Tentang Kami</a></li>
-                        <li class="mb-0"><a href="{{ route('contact') }}" class="text-muted text-decoration-none hover-gold small">Hubungi Kami</a></li>
+                        <li class="mb-2"><a href="/"
+                                class="text-muted text-decoration-none hover-gold small">Beranda</a></li>
+                        <li class="mb-2"><a href="{{ route('catalog') }}"
+                                class="text-muted text-decoration-none hover-gold small">Katalog Hijab</a></li>
+                        <li class="mb-2"><a href="{{ route('about') }}"
+                                class="text-muted text-decoration-none hover-gold small">Tentang Kami</a></li>
+                        <li class="mb-0"><a href="{{ route('contact') }}"
+                                class="text-muted text-decoration-none hover-gold small">Hubungi Kami</a></li>
                     </ul>
                 </div>
 
@@ -377,30 +389,41 @@
                 <div class="col-6 col-md-3 col-lg-2">
                     <h6 class="fw-bold text-dark font-serif mb-4" style="letter-spacing: 0.5px;">Kebijakan Usaha</h6>
                     <ul class="list-unstyled mb-0">
-                        <li class="mb-2"><a href="{{ route('privacy-policy') }}" class="text-muted text-decoration-none hover-gold small">Kebijakan Privasi</a></li>
-                        <li class="mb-2"><a href="{{ route('terms') }}" class="text-muted text-decoration-none hover-gold small">Syarat & Ketentuan</a></li>
-                        <li class="mb-0"><a href="{{ route('refund-policy') }}" class="text-muted text-decoration-none hover-gold small">Kebijakan Refund</a></li>
+                        <li class="mb-2"><a href="{{ route('privacy-policy') }}"
+                                class="text-muted text-decoration-none hover-gold small">Kebijakan Privasi</a></li>
+                        <li class="mb-2"><a href="{{ route('terms') }}"
+                                class="text-muted text-decoration-none hover-gold small">Syarat & Ketentuan</a></li>
+                        <li class="mb-0"><a href="{{ route('refund-policy') }}"
+                                class="text-muted text-decoration-none hover-gold small">Kebijakan Refund</a></li>
                     </ul>
                 </div>
 
                 <!-- Column 4: Contact Support Details -->
                 <div class="col-md-6 col-lg-4">
-                    <h6 class="fw-bold text-dark font-serif mb-4" style="letter-spacing: 0.5px;">Kontak & Jam Operasional</h6>
+                    <h6 class="fw-bold text-dark font-serif mb-4" style="letter-spacing: 0.5px;">Kontak & Jam
+                        Operasional</h6>
                     <ul class="list-unstyled mb-0 small text-muted">
                         <li class="mb-2 d-flex align-items-start justify-content-center justify-content-md-start">
-                            <span class="me-2 text-gold"><i data-acorn-icon="shop" style="width: 14px; height: 14px;"></i></span>
-                            <span>Kel. Panaragan Jaya, Kec. Tulang Bawang Tengah, Kab. Tulang Bawang Barat, Lampung (Depan Masjid Baitul Sobur)</span>
+                            <span class="me-2 text-gold"><i data-acorn-icon="shop"
+                                    style="width: 14px; height: 14px;"></i></span>
+                            <span>Kel. Panaragan Jaya, Kec. Tulang Bawang Tengah, Kab. Tulang Bawang Barat, Lampung
+                                (Depan Masjid Baitul Sobur)</span>
                         </li>
                         <li class="mb-2 d-flex align-items-center justify-content-center justify-content-md-start">
-                            <span class="me-2 text-gold"><i data-acorn-icon="email" style="width: 14px; height: 14px;"></i></span>
-                            <a href="mailto:andreperiozaherpa@gmail.com" class="text-muted text-decoration-none hover-gold">andreperiozaherpa@gmail.com</a>
+                            <span class="me-2 text-gold"><i data-acorn-icon="email"
+                                    style="width: 14px; height: 14px;"></i></span>
+                            <a href="mailto:andreperiozaherpa@gmail.com"
+                                class="text-muted text-decoration-none hover-gold">andreperiozaherpa@gmail.com</a>
                         </li>
                         <li class="mb-2 d-flex align-items-center justify-content-center justify-content-md-start">
-                            <span class="me-2 text-gold"><i data-acorn-icon="phone" style="width: 14px; height: 14px;"></i></span>
-                            <a href="https://wa.me/6282280783843" target="_blank" class="text-muted text-decoration-none hover-gold">0822 8078 3843 (WhatsApp)</a>
+                            <span class="me-2 text-gold"><i data-acorn-icon="phone"
+                                    style="width: 14px; height: 14px;"></i></span>
+                            <a href="https://wa.me/6282280783843" target="_blank"
+                                class="text-muted text-decoration-none hover-gold">0822 8078 3843 (WhatsApp)</a>
                         </li>
                         <li class="d-flex align-items-center justify-content-center justify-content-md-start">
-                            <span class="me-2 text-gold"><i data-acorn-icon="clock" style="width: 14px; height: 14px;"></i></span>
+                            <span class="me-2 text-gold"><i data-acorn-icon="clock"
+                                    style="width: 14px; height: 14px;"></i></span>
                             <span>Senin – Sabtu: 08.00 – 20.00 WIB</span>
                         </li>
                     </ul>
@@ -414,7 +437,8 @@
                 </div>
                 <div class="col-md-6 text-md-end">
                     <p class="small text-muted mb-0">
-                        <a href="{{ route('login') }}" class="text-muted text-decoration-none hover-gold">Login Sistem POS</a>
+                        <a href="{{ route('login') }}" class="text-muted text-decoration-none hover-gold">Login
+                            Sistem POS</a>
                     </p>
                 </div>
             </div>
