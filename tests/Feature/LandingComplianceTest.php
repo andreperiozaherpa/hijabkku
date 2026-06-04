@@ -57,7 +57,7 @@ class LandingComplianceTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Syarat & Ketentuan');
         $response->assertSee('Store Pickup');
-        $response->assertSee('Xendit');
+        $response->assertSee('payment gateway');
     }
 
     /**
