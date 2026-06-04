@@ -112,11 +112,10 @@
             color: var(--body);
             line-height: 1.4;
             margin-bottom: 0.5rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            height: 2.6em;
+            display: block;
+            overflow: visible;
+            height: auto;
+            white-space: normal;
         }
 
         .product-card .price-badges {
@@ -378,7 +377,17 @@
                             <div class="pos-info-icon"><i data-acorn-icon="shop" data-acorn-size="18"></i></div>
                             <div>
                                 <div class="pos-info-label">Toko / Cabang</div>
-                                <div class="pos-info-val">{{ $data_toko->nama_toko }}</div>
+                                @if(Auth::user()->role === 'admin')
+                                    <select class="form-select form-select-sm mt-1" id="switchToko" style="min-width: 150px; font-weight: 700; color: var(--body);">
+                                        @foreach($all_tokos as $t)
+                                            <option value="{{ $t->kode }}" {{ $data_toko->kode == $t->kode ? 'selected' : '' }}>
+                                                {{ $t->nama_toko }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <div class="pos-info-val">{{ $data_toko->nama_toko }}</div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -820,14 +829,22 @@
             }
 
             ajaxQuery('get', '/transaksi/penjualan/create', {
-                param: 'all'
+                param: 'all',
+                kode_toko: '{{ $data_toko->kode }}'
             });
 
             $('input[name=cariProduk], input[name=cariProdukOptional]').on('keyup', function() {
                 ajaxQuery('get', '/transaksi/penjualan/create', {
                     key1: $('input[name=cariProduk]').val(),
-                    key2: $('input[name=cariProdukOptional]').val()
+                    key2: $('input[name=cariProdukOptional]').val(),
+                    kode_toko: '{{ $data_toko->kode }}'
                 });
+            });
+
+            $('#switchToko').on('change', function() {
+                var selectedToko = $(this).val();
+                localStorage.removeItem('hijabkku_pos_cart');
+                window.location.href = '/transaksi/penjualan?kode_toko=' + selectedToko;
             });
 
             var c = 1;
@@ -1204,7 +1221,8 @@
                                 kembali,
                                 pembayaran,
                                 total_harga,
-                                data: arr
+                                data: arr,
+                                kode_toko: '{{ $data_toko->kode }}'
                             });
                         }
                     });
@@ -1252,7 +1270,8 @@
                                     invoice: invoice,
                                     total_harga: total_harga,
                                     pembayaran: method,
-                                    data: arr
+                                    data: arr,
+                                    kode_toko: '{{ $data_toko->kode }}'
                                 }
                             }).catch(error => {
                                 Swal.showValidationMessage('Gagal membuat tagihan: ' +
@@ -1417,12 +1436,13 @@
                 return;
             }
             const data = snapshot.val();
-            if (data && data.toko === "{{ Auth::user()->kode_toko }}") {
+            if (data && data.toko === "{{ $data_toko->kode }}") {
                 // Trigger Ajax reload preserving current search criteria
                 if (typeof window.ajaxQuery === 'function') {
                     window.ajaxQuery('get', '/transaksi/penjualan/create', {
                         key1: $('input[name=cariProduk]').val(),
-                        key2: $('input[name=cariProdukOptional]').val()
+                        key2: $('input[name=cariProdukOptional]').val(),
+                        kode_toko: '{{ $data_toko->kode }}'
                     });
                 }
             }

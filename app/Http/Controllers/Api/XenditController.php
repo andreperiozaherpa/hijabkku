@@ -20,6 +20,10 @@ class XenditController extends Controller
         $total_harga = $request->total_harga;
         $method = $request->pembayaran;
         $user = Auth::user();
+        $kode_toko = $user->kode_toko;
+        if ($user->role === 'admin' && $request->filled('kode_toko')) {
+            $kode_toko = $request->kode_toko;
+        }
         $data = $request->data; // cart array
 
         if (!$data || !is_array($data) || count($data) === 0) {
@@ -28,7 +32,7 @@ class XenditController extends Controller
 
         // Verify stock available before creating invoice to prevent paying for out of stock items
         $productCodes = array_column($data, 'nomor_paket');
-        $stocks = StockToko::where('kode_toko', $user->kode_toko)
+        $stocks = StockToko::where('kode_toko', $kode_toko)
             ->whereIn('kode_barang', $productCodes)
             ->get()
             ->keyBy('kode_barang');
@@ -104,7 +108,7 @@ class XenditController extends Controller
             
             PendingTransaction::create([
                 'kode_invoice' => $invoice,
-                'kode_toko' => $user->kode_toko,
+                'kode_toko' => $kode_toko,
                 'user_id' => $user->id,
                 'user_name' => $user->name,
                 'total_harga' => $total_harga,

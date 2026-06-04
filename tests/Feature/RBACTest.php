@@ -110,4 +110,34 @@ class RBACTest extends TestCase
         $response2 = $this->actingAs($kasir)->get('/laporan/opname');
         $response2->assertStatus(200);
     }
+
+    public function test_admin_can_switch_stores_on_pos_page()
+    {
+        // Create another Toko
+        $toko2 = new \App\Models\Toko();
+        $toko2->kode = 'TK_other';
+        $toko2->nama_toko = 'Other Store';
+        $toko2->save();
+
+        $admin = User::factory()->create([
+            'status' => 'on',
+            'role' => 'admin',
+            'kode_toko' => 'TK_test',
+            'shift' => 0,
+        ]);
+
+        // Access POS without param (uses TK_test)
+        $response = $this->actingAs($admin)->get('/transaksi/penjualan');
+        $response->assertStatus(200);
+        $response->assertViewHas('data_toko', function($toko) {
+            return $toko->kode === 'TK_test';
+        });
+
+        // Access POS with custom store (uses TK_other)
+        $responseWithToko = $this->actingAs($admin)->get('/transaksi/penjualan?kode_toko=TK_other');
+        $responseWithToko->assertStatus(200);
+        $responseWithToko->assertViewHas('data_toko', function($toko) {
+            return $toko->kode === 'TK_other';
+        });
+    }
 }

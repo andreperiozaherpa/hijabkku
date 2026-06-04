@@ -403,7 +403,7 @@
                                             </p>
 
                                             @if ($avail > 0)
-                                                <span class="d-block small text-gold mt-2 fw-bold"
+                                                <span class="d-none small text-gold mt-2 fw-bold"
                                                     style="font-size: 0.8rem; font-family: 'Montserrat', sans-serif;">
                                                     Tersedia: {{ $avail }} pcs
                                                 </span>
@@ -670,7 +670,7 @@
                     <h4 id="modal-product-price" class="text-gold fw-bold mb-3"
                         style="font-family: 'Montserrat', sans-serif; font-size: 1.3rem;"></h4>
 
-                    <div class="mb-3 p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
+                    <div class="mb-3 p-3 bg-light rounded-3 d-flex align-items-center justify-content-between d-none">
                         <span class="small text-muted"><i class="bi bi-shop me-1"></i> Stok Cabang Tersedia:</span>
                         <strong id="modal-product-stock" class="text-dark"></strong>
                     </div>

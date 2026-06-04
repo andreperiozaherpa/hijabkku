@@ -20,12 +20,23 @@ class TransaksiController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         $data_toko = $user->toko;
+        if ($user->role === 'admin' && $request->filled('kode_toko')) {
+            $toko = Toko::where('kode', $request->kode_toko)->first();
+            if ($toko) {
+                $data_toko = $toko;
+            }
+        }
+        $all_tokos = [];
+        if ($user->role === 'admin') {
+            $all_tokos = Toko::whereNotIn('nama_toko', ['stock hilang', 'Online Shop'])->get();
+        }
         return view('transaksi.penjualan', [
             'data_toko' => $data_toko,
+            'all_tokos' => $all_tokos,
         ]);
     }
 
@@ -56,6 +67,11 @@ class TransaksiController extends Controller
     public function create(Request $request)
     {
         $user = Auth::user();
+        $kode_toko = $user->kode_toko;
+        if ($user->role === 'admin' && $request->filled('kode_toko')) {
+            $kode_toko = $request->kode_toko;
+        }
+
         $key1 = $request->key1;
         $key2 = $request->key2;
         $param = $request->param;
@@ -69,7 +85,7 @@ class TransaksiController extends Controller
                     'data_barangs.harga_jual',
                     'data_barangs.harga_grosir'
                 )
-                ->where('kode_toko', $user->kode_toko)
+                ->where('kode_toko', $kode_toko)
                 ->whereColumn('jumlah', '!=', 'terjual')
                 ->orderByDesc('kode_toko')
                 ->get();
@@ -92,7 +108,7 @@ class TransaksiController extends Controller
                            ->where('data_barangs.nama_barang', 'like', '%' . $key2 . '%');
                     });
                 })
-                ->where('kode_toko', $user->kode_toko)
+                ->where('kode_toko', $kode_toko)
                 ->whereColumn('jumlah', '!=', 'terjual')
                 ->orderByDesc('kode_toko')
                 ->get();
@@ -100,7 +116,7 @@ class TransaksiController extends Controller
 
         $hideStock = false;
         if ($user->role !== 'admin') {
-            $hideStock = \App\Models\StockOpname::where('kode_toko', $user->kode_toko)
+            $hideStock = \App\Models\StockOpname::where('kode_toko', $kode_toko)
                 ->whereIn('status', ['Draft', 'Counting', 'Recount', 'Review'])
                 ->exists();
         }
@@ -121,6 +137,11 @@ class TransaksiController extends Controller
         $pembayaran = $request->pembayaran;
         $kembali = $request->kembali;
         $user = Auth::user();
+        $kode_toko = $user->kode_toko;
+        if ($user->role === 'admin' && $request->filled('kode_toko')) {
+            $kode_toko = $request->kode_toko;
+        }
+
         $data = $request->data;
         $cek_transaksi = Pembayaran::where('kode_invoice', $invoice)->count();
 
@@ -142,7 +163,7 @@ class TransaksiController extends Controller
                 $dataBarangs = DataBarang::whereIn('kode', $productCodes)->get()->keyBy('kode');
 
                 // Bulk prefetch StockToko models to validate available stocks (O(1))
-                $stocks = StockToko::where('kode_toko', $user->kode_toko)
+                $stocks = StockToko::where('kode_toko', $kode_toko)
                     ->whereIn('kode_barang', $productCodes)
                     ->get()
                     ->keyBy('kode_barang');
@@ -171,7 +192,7 @@ class TransaksiController extends Controller
 
                     $arr = [
                         'kode_invoice' => $invoice,
-                        'kode_toko' => $user->kode_toko,
+                        'kode_toko' => $kode_toko,
                         'kode_barang' => $d['nomor_paket'],
                         'nama_barang' => $d['nama_barang'],
                         'metode' => $d['method'],
@@ -183,7 +204,7 @@ class TransaksiController extends Controller
                     Transaksi::create($arr);
 
                     // Use atomic increment query to avoid concurrency race conditions and separate select query (O(1) instead of N+1)
-                    StockToko::where('kode_toko', $user->kode_toko)
+                    StockToko::where('kode_toko', $kode_toko)
                         ->where('kode_barang', $d['nomor_paket'])
                         ->increment('terjual', $d['jumlah_barang']);
                 }
@@ -198,10 +219,10 @@ class TransaksiController extends Controller
                 Pembayaran::create($data_pembayaran);
 
                 // Trigger real-time updates via Firebase
-                FirebaseService::triggerUpdate('updates/sales', ['toko' => $user->kode_toko]);
+                FirebaseService::triggerUpdate('updates/sales', ['toko' => $kode_toko]);
 
                 // Also trigger updates and auto-adjust counted quantities for any active stock opname session in this shop
-                $activeSessions = \App\Models\StockOpname::where('kode_toko', $user->kode_toko)
+                $activeSessions = \App\Models\StockOpname::where('kode_toko', $kode_toko)
                     ->whereIn('status', ['Counting', 'Recount'])
                     ->get();
 
