@@ -71,6 +71,42 @@
             color: #D4AF37 !important;
         }
 
+        .nav-link-cart {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: #2c2c2c !important;
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .nav-link-cart:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            color: #D4AF37 !important;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #e05260;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            pointer-events: none; /* Make sure clicking badge clicks button */
+            z-index: 1;
+        }
+
         .text-gold {
             color: #D4AF37;
         }
@@ -247,10 +283,21 @@
                     <li class="nav-item">
                         <a class="nav-link px-3" href="/#tentang">Cerita Kami</a>
                     </li>
+                    @if (request()->routeIs('catalog'))
+                        <li class="nav-item me-lg-3 mt-3 mt-lg-0 d-flex align-items-center">
+                            <button class="nav-link nav-link-cart position-relative p-0 border-0 bg-transparent" data-bs-toggle="offcanvas"
+                                data-bs-target="#cartOffcanvas"
+                                title="Keranjang Belanja"
+                                style="cursor: pointer; outline: none; box-shadow: none;">
+                                <i data-acorn-icon="cart" style="font-size: 20px; position: relative; z-index: 2;"></i>
+                                <span id="cart-badge" class="cart-badge">0</span>
+                            </button>
+                        </li>
+                    @endif
                     <li class="nav-item ms-lg-4 mt-3 mt-lg-0">
                         <a class="btn btn-outline-secondary rounded-pill px-4" style="border-color: #dcdcdc;"
                             href="{{ route('login') }}">
-                            <i data-acorn-icon="user" class="me-2" style="font-size: 14px;"></i>Login
+                            Login
                         </a>
                     </li>
                 </ul>
@@ -314,6 +361,10 @@
     <script src="/vendor/acorn/icon/acorn-icons.js"></script>
     <script src="/vendor/acorn/icon/acorn-icons-interface.js"></script>
     <script src="/vendor/acorn/icon/acorn-icons-commerce.js"></script>
+
+    @if (request()->routeIs('catalog'))
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @endif
 
     @yield('scripts')
 </body>

@@ -650,8 +650,8 @@
                     var total_jual = $(this).find('.totalJual').text().replaceAll('.', '');
 
                     var visualRow = $('#visual_transaksi_' + kode_barang);
-                    var priceRetail = visualRow.attr('data-harga_jual') || harga_jual;
-                    var priceGrosir = visualRow.attr('data-harga_grosir') || harga_jual;
+                    var priceRetail = (visualRow.attr('data-harga_jual') || harga_jual).toString().replaceAll('.', '');
+                    var priceGrosir = (visualRow.attr('data-harga_grosir') || harga_jual).toString().replaceAll('.', '');
 
                     cartItems.push({
                         kode_barang: kode_barang,
@@ -694,8 +694,8 @@
                     var nama_barang = item.nama_barang;
                     var qty = item.qty;
                     var method = item.method || 'umum';
-                    var harga_jual_retail = item.priceRetail;
-                    var harga_grosir = item.priceGrosir;
+                    var harga_jual_retail = parseInt((item.priceRetail || '0').toString().replaceAll('.', '')) || 0;
+                    var harga_grosir = parseInt((item.priceGrosir || '0').toString().replaceAll('.', '')) || 0;
 
                     var unitPrice = method === 'grosir' ? harga_grosir : harga_jual_retail;
                     var totalJual = unitPrice * qty;
@@ -889,8 +889,8 @@
                 var kode_barang = $(this).attr('data-kode_barang');
                 var sisaStock = parseInt($(this).find('.sisaStock').attr('data-jumlah'));
                 var exists = $('.transaksi #transaksi_' + kode_barang).length;
-                var harga_jual_retail = $(this).attr('data-harga_jual');
-                var harga_grosir = $(this).attr('data-harga_grosir');
+                var harga_jual_retail = parseInt(($(this).attr('data-harga_jual') || '0').toString().replaceAll('.', '')) || 0;
+                var harga_grosir = parseInt(($(this).attr('data-harga_grosir') || '0').toString().replaceAll('.', '')) || 0;
 
                 var metode = 'umum';
                 if (exists >= 1) {
@@ -996,8 +996,8 @@
                 var newMethod = $(this).val();
 
                 var visualRow = $('#visual_transaksi_' + kode_barang);
-                var priceRetail = parseInt(visualRow.attr('data-harga_jual').replaceAll('.', ''));
-                var priceGrosir = parseInt(visualRow.attr('data-harga_grosir').replaceAll('.', ''));
+                var priceRetail = parseInt((visualRow.attr('data-harga_jual') || '0').toString().replaceAll('.', ''));
+                var priceGrosir = parseInt((visualRow.attr('data-harga_grosir') || '0').toString().replaceAll('.', ''));
 
                 var newUnitPrice = newMethod === 'grosir' ? priceGrosir : priceRetail;
                 var count = parseInt(visualRow.find('.visual-counter').text());

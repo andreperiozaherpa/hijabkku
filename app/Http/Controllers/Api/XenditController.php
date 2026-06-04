@@ -94,7 +94,9 @@ class XenditController extends Controller
                 'payer_email' => 'customer@hijabkku.com',
                 'description' => 'Pembayaran Tagihan ' . $invoice,
                 'payment_methods' => $payment_methods,
-                'currency' => 'IDR'
+                'currency' => 'IDR',
+                'success_redirect_url' => url('/transaksi/penjualan?payment_status=success&invoice=' . $invoice),
+                'failure_redirect_url' => url('/transaksi/penjualan?payment_status=failure&invoice=' . $invoice),
             ]);
 
         if ($response->successful()) {

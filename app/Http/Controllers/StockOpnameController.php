@@ -208,11 +208,16 @@ class StockOpnameController extends Controller
         $query = StockOpnameItem::with('barang')
             ->select('stock_opname_items.*')
             ->selectSub(function ($q) use ($session_kode_toko, $session_created_at) {
-                $q->selectRaw('COALESCE(SUM(jumlah), 0)')
+                $q->selectRaw('COALESCE(SUM(transaksis.jumlah), 0)')
                     ->from('transaksis')
+                    ->leftJoin('pesanan_pickups', 'transaksis.kode_invoice', '=', 'pesanan_pickups.kode_invoice')
                     ->whereColumn('transaksis.kode_barang', 'stock_opname_items.kode_barang')
                     ->where('transaksis.kode_toko', $session_kode_toko)
-                    ->where('transaksis.created_at', '>=', $session_created_at);
+                    ->where('transaksis.created_at', '>=', $session_created_at)
+                    ->where(function ($sub) {
+                        $sub->whereNull('pesanan_pickups.id')
+                            ->orWhere('pesanan_pickups.status_pengambilan', '!=', 'Belum Diambil');
+                    });
             }, 'sales_during_opname')
             ->where('stock_opname_items.stock_opname_id', $id);
 
@@ -261,8 +266,11 @@ class StockOpnameController extends Controller
             ->addColumn('sales_during_opname', function ($row) {
                 return $row->sales_during_opname ?? 0;
             })
+            ->addColumn('belum_diambil_qty', function ($row) {
+                return $row->belum_diambil_qty ?? 0;
+            })
             ->addColumn('adjusted_snapshot', function ($row) {
-                return max(0, $row->snapshot_qty - ($row->sales_during_opname ?? 0));
+                return max(0, ($row->snapshot_qty + $row->belum_diambil_qty) - ($row->sales_during_opname ?? 0));
             })
             ->addColumn('status_badge', function ($row) {
                 $classes = [
@@ -294,11 +302,23 @@ class StockOpnameController extends Controller
             // Perform snapshot / freeze stock from stock_tokos table where available stock != 0
             $stocks = StockToko::where('kode_toko', $session->kode_toko)->get();
 
+            // Query all booking (belum diambil) stock at this store
+            $bookingQuantities = DB::table('transaksis')
+                ->join('pesanan_pickups', 'transaksis.kode_invoice', '=', 'pesanan_pickups.kode_invoice')
+                ->where('transaksis.kode_toko', $session->kode_toko)
+                ->where('pesanan_pickups.status_pengambilan', 'Belum Diambil')
+                ->groupBy('transaksis.kode_barang')
+                ->select('transaksis.kode_barang', DB::raw('SUM(transaksis.jumlah) as total'))
+                ->pluck('total', 'kode_barang');
+
             $insertData = [];
             foreach ($stocks as $stock) {
                 $availableQty = $stock->jumlah - $stock->terjual;
-                if ($availableQty == 0) {
-                    continue; // Skip items with 0 available stock to keep stock opname efficient
+                $belumDiambil = intval($bookingQuantities->get($stock->kode_barang, 0));
+                $expectedPhysical = $availableQty + $belumDiambil;
+
+                if ($expectedPhysical == 0) {
+                    continue; // Skip items with 0 total physical expected stock to keep stock opname efficient
                 }
 
                 $barang = DataBarang::where('kode', $stock->kode_barang)->first();
@@ -308,9 +328,10 @@ class StockOpnameController extends Controller
                     'stock_opname_id' => $session->id,
                     'kode_barang' => $stock->kode_barang,
                     'snapshot_qty' => $availableQty, // Available stock in store
+                    'belum_diambil_qty' => $belumDiambil,
                     'final_qty' => 0,
-                    'difference' => -$availableQty,
-                    'difference_value' => -$availableQty * $harga_beli,
+                    'difference' => -$expectedPhysical,
+                    'difference_value' => -$expectedPhysical * $harga_beli,
                     'status' => 'Match',
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -374,12 +395,17 @@ class StockOpnameController extends Controller
 
             // Recalculate Final Qty & Variance taking real-time sales into account
             $sales = DB::table('transaksis')
-                ->where('kode_toko', $session->kode_toko)
-                ->where('kode_barang', $barcode)
-                ->where('created_at', '>=', $session->created_at)
-                ->sum('jumlah');
+                ->leftJoin('pesanan_pickups', 'transaksis.kode_invoice', '=', 'pesanan_pickups.kode_invoice')
+                ->where('transaksis.kode_toko', $session->kode_toko)
+                ->where('transaksis.kode_barang', $barcode)
+                ->where('transaksis.created_at', '>=', $session->created_at)
+                ->where(function ($sub) {
+                    $sub->whereNull('pesanan_pickups.id')
+                        ->orWhere('pesanan_pickups.status_pengambilan', '!=', 'Belum Diambil');
+                })
+                ->sum('transaksis.jumlah');
 
-            $adjustedSnapshot = max(0, $item->snapshot_qty - $sales);
+            $adjustedSnapshot = max(0, ($item->snapshot_qty + $item->belum_diambil_qty) - $sales);
 
             $item->final_qty = $qtyAfter;
             $item->difference = $item->final_qty - $adjustedSnapshot;
@@ -443,12 +469,17 @@ class StockOpnameController extends Controller
             $item->$qtyCol = $qty;
 
             $sales = DB::table('transaksis')
-                ->where('kode_toko', $session->kode_toko)
-                ->where('kode_barang', $item->kode_barang)
-                ->where('created_at', '>=', $session->created_at)
-                ->sum('jumlah');
+                ->leftJoin('pesanan_pickups', 'transaksis.kode_invoice', '=', 'pesanan_pickups.kode_invoice')
+                ->where('transaksis.kode_toko', $session->kode_toko)
+                ->where('transaksis.kode_barang', $item->kode_barang)
+                ->where('transaksis.created_at', '>=', $session->created_at)
+                ->where(function ($sub) {
+                    $sub->whereNull('pesanan_pickups.id')
+                        ->orWhere('pesanan_pickups.status_pengambilan', '!=', 'Belum Diambil');
+                })
+                ->sum('transaksis.jumlah');
 
-            $adjustedSnapshot = max(0, $item->snapshot_qty - $sales);
+            $adjustedSnapshot = max(0, ($item->snapshot_qty + $item->belum_diambil_qty) - $sales);
 
             $item->final_qty = $qty;
             $item->difference = $item->final_qty - $adjustedSnapshot;
@@ -492,11 +523,16 @@ class StockOpnameController extends Controller
         $result = DB::transaction(function () use ($session) {
             // Bulk prefetch sales during opname for this shop
             $salesData = DB::table('transaksis')
-                ->where('kode_toko', $session->kode_toko)
-                ->where('created_at', '>=', $session->created_at)
-                ->groupBy('kode_barang')
-                ->select('kode_barang', DB::raw('SUM(jumlah) as total_sales'))
-                ->pluck('total_sales', 'kode_barang')
+                ->leftJoin('pesanan_pickups', 'transaksis.kode_invoice', '=', 'pesanan_pickups.kode_invoice')
+                ->where('transaksis.kode_toko', $session->kode_toko)
+                ->where('transaksis.created_at', '>=', $session->created_at)
+                ->where(function ($sub) {
+                    $sub->whereNull('pesanan_pickups.id')
+                        ->orWhere('pesanan_pickups.status_pengambilan', '!=', 'Belum Diambil');
+                })
+                ->groupBy('transaksis.kode_barang')
+                ->select('transaksis.kode_barang', DB::raw('SUM(transaksis.jumlah) as total_sales'))
+                ->pluck('total_sales', 'transaksis.kode_barang')
                 ->toArray();
 
             // Fetch all items to optimize price fetching in bulk
@@ -515,7 +551,7 @@ class StockOpnameController extends Controller
 
                 foreach ($allItems as $item) {
                     $sales = $salesData[$item->kode_barang] ?? 0;
-                    $adjustedSnapshot = max(0, $item->snapshot_qty - $sales);
+                    $adjustedSnapshot = max(0, ($item->snapshot_qty + $item->belum_diambil_qty) - $sales);
 
                     // Update dynamic fields
                     $item->difference = ($item->round_1_qty ?? 0) - $adjustedSnapshot;
@@ -539,7 +575,7 @@ class StockOpnameController extends Controller
                 $hasStillVariance = false;
                 foreach ($allItems as $item) {
                     $sales = $salesData[$item->kode_barang] ?? 0;
-                    $adjustedSnapshot = max(0, $item->snapshot_qty - $sales);
+                    $adjustedSnapshot = max(0, ($item->snapshot_qty + $item->belum_diambil_qty) - $sales);
 
                     $rawPrice = $prices[$item->kode_barang] ?? '0';
                     $harga_beli = floatval(str_replace('.', '', $rawPrice));
@@ -607,11 +643,16 @@ class StockOpnameController extends Controller
 
             // Bulk prefetch sales during opname for this shop
             $salesData = DB::table('transaksis')
-                ->where('kode_toko', $session->kode_toko)
-                ->where('created_at', '>=', $session->created_at)
-                ->groupBy('kode_barang')
-                ->select('kode_barang', DB::raw('SUM(jumlah) as total_sales'))
-                ->pluck('total_sales', 'kode_barang')
+                ->leftJoin('pesanan_pickups', 'transaksis.kode_invoice', '=', 'pesanan_pickups.kode_invoice')
+                ->where('transaksis.kode_toko', $session->kode_toko)
+                ->where('transaksis.created_at', '>=', $session->created_at)
+                ->where(function ($sub) {
+                    $sub->whereNull('pesanan_pickups.id')
+                        ->orWhere('pesanan_pickups.status_pengambilan', '!=', 'Belum Diambil');
+                })
+                ->groupBy('transaksis.kode_barang')
+                ->select('transaksis.kode_barang', DB::raw('SUM(transaksis.jumlah) as total_sales'))
+                ->pluck('total_sales', 'transaksis.kode_barang')
                 ->toArray();
 
             // Fetch all items to optimize price fetching in bulk
@@ -637,7 +678,7 @@ class StockOpnameController extends Controller
                 }
 
                 $sales = $salesData[$item->kode_barang] ?? 0;
-                $adjustedSnapshot = max(0, $item->snapshot_qty - $sales);
+                $adjustedSnapshot = max(0, ($item->snapshot_qty + $item->belum_diambil_qty) - $sales);
 
                 $item->difference = $item->final_qty - $adjustedSnapshot;
                 $item->difference_value = $item->difference * $harga_beli;

@@ -162,8 +162,8 @@
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            if (typeof acorn !== 'undefined' && acorn.Icons) {
-                acorn.Icons.replace();
+            if (typeof AcornIcons !== 'undefined') {
+                new AcornIcons().replace();
             }
         });
     </script>

@@ -390,6 +390,7 @@
                                             <th class="border-0 text-end">Harga Ecer</th>
                                             @if (Auth::user()->role == 'admin')
                                                 <th class="border-0 text-end">Snapshot Awal</th>
+                                                <th class="border-0 text-end text-warning">Belum Diambil</th>
                                                 <th class="border-0 text-end text-danger">Penjualan (Sales)</th>
                                                 <th class="border-0 text-end text-success">Stok Ekspektasi</th>
                                             @endif
@@ -637,6 +638,9 @@
                         {
                             data: 'snapshot_qty',
                             className: 'text-end font-weight-bold text-muted'
+                        }, {
+                            data: 'belum_diambil_qty',
+                            className: 'text-end font-weight-bold text-warning'
                         }, {
                             data: 'sales_during_opname',
                             className: 'text-end font-weight-bold text-danger'

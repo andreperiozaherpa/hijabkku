@@ -38,7 +38,8 @@ class XenditWebhookService
             $pending->status = 'PAID';
             $pending->save();
 
-            $cart = json_decode($pending->cart_payload, true);
+            $payloadData = json_decode($pending->cart_payload, true);
+            $cart = isset($payloadData['items']) ? $payloadData['items'] : $payloadData;
             $this->processSale($pending, $cart);
 
             DB::commit();
@@ -134,5 +135,21 @@ class XenditWebhookService
             'pembayaran' => $pending->grand_total,
             'kembalian' => 0,
         ]);
+
+        // If it's an online checkout (contains customer info), create a pickup order record
+        $payloadData = json_decode($pending->cart_payload, true);
+        if (isset($payloadData['customer'])) {
+            $customer = $payloadData['customer'];
+            DB::table('pesanan_pickups')->insert([
+                'kode_invoice' => $pending->kode_invoice,
+                'kode_toko' => $pending->kode_toko,
+                'customer_name' => $customer['name'],
+                'customer_email' => $customer['email'] ?? null,
+                'customer_phone' => $customer['phone'],
+                'status_pengambilan' => 'Belum Diambil',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ]);
+        }
     }
 }

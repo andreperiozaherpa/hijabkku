@@ -19,3 +19,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::post('/xendit/webhook', [\App\Http\Controllers\Api\XenditWebhookController::class, 'handleInvoicePayment']);
+Route::post('/landing/checkout', [\App\Http\Controllers\Api\LandingCheckoutController::class, 'createInvoice']);
