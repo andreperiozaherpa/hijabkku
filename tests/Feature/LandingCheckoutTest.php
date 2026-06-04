@@ -251,4 +251,125 @@ class LandingCheckoutTest extends TestCase
             'message' => 'Verifikasi reCAPTCHA gagal. Silakan coba lagi!'
         ]);
     }
+
+    public function test_guest_checkout_succeeds_without_saving_transaction_if_xendit_simulation_mode_is_active()
+    {
+        // Turn on simulation mode
+        \App\Models\SystemSetting::setByKey('xendit_simulation_mode', 'true');
+
+        Http::fake([
+            'api.xendit.co/v2/invoices' => Http::response([
+                'id' => 'inv_guest_sim_123',
+                'invoice_url' => 'https://checkout.xendit.co/web/inv_guest_sim_123'
+            ], 200),
+        ]);
+
+        $response = $this->postJson('/api/landing/checkout', [
+            'kode_toko' => 'T001',
+            'customer_name' => 'Alice Guest',
+            'customer_phone' => '081234567890',
+            'customer_email' => 'alice@example.com',
+            'payment_method' => 'QRIS',
+            'cart' => [
+                [
+                    'kode_barang' => 'BRG001',
+                    'jumlah' => 2
+                ]
+            ]
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'checkout_url' => 'https://checkout.xendit.co/web/inv_guest_sim_123'
+        ]);
+
+        // Assert pending transaction DOES NOT exist in db
+        $this->assertDatabaseMissing('pending_transactions', [
+            'kode_toko' => 'T001',
+            'user_name' => 'Guest (Alice Guest)'
+        ]);
+    }
+
+    public function test_local_redirect_auto_completes_pending_transaction()
+    {
+        // Setup a pending transaction
+        $pending = PendingTransaction::create([
+            'kode_invoice' => 'INV-OL-TEST-123',
+            'kode_toko' => 'T001',
+            'user_id' => 0,
+            'user_name' => 'Guest (Bob)',
+            'total_harga' => 20000,
+            'fee' => 0,
+            'grand_total' => 20000,
+            'payment_method' => 'QRIS',
+            'xendit_id' => 'inv_test_xnd_123',
+            'checkout_url' => 'https://checkout.xendit.co/web/inv_test_xnd_123',
+            'cart_payload' => json_encode([
+                'items' => [
+                    [
+                        'nomor_paket' => 'BRG001',
+                        'nama_barang' => 'Hijab Bella',
+                        'jumlah_barang' => 1,
+                        'harga_item' => 20000,
+                        'harga_jual' => 20000,
+                        'method' => 'umum'
+                    ]
+                ],
+                'customer' => [
+                    'name' => 'Bob',
+                    'email' => 'bob@example.com',
+                    'phone' => '081234567890'
+                ]
+            ]),
+            'status' => 'PENDING'
+        ]);
+
+        // Ensure env is local in testing config
+        config(['app.env' => 'local']);
+
+        // Visit redirect success URL
+        $response = $this->get('/catalog?payment_status=success&invoice=INV-OL-TEST-123');
+
+        $response->assertStatus(200);
+
+        // Assert pending transaction is updated to PAID
+        $this->assertDatabaseHas('pending_transactions', [
+            'kode_invoice' => 'INV-OL-TEST-123',
+            'status' => 'PAID'
+        ]);
+
+        // Assert payment is created
+        $this->assertDatabaseHas('pembayarans', [
+            'kode_invoice' => 'INV-OL-TEST-123',
+            'user_name' => 'Guest (Bob)'
+        ]);
+
+        // Assert pickup order is created
+        $this->assertDatabaseHas('pesanan_pickups', [
+            'kode_invoice' => 'INV-OL-TEST-123',
+            'customer_name' => 'Bob'
+        ]);
+    }
+
+    public function test_guest_checkout_fails_with_invalid_email_format()
+    {
+        $response = $this->postJson('/api/landing/checkout', [
+            'kode_toko' => 'T001',
+            'customer_name' => 'Alice Guest',
+            'customer_phone' => '081234567890',
+            'customer_email' => 'ands@g.c', // 1-char TLD which is invalid
+            'payment_method' => 'QRIS',
+            'cart' => [
+                [
+                    'kode_barang' => 'BRG001',
+                    'jumlah' => 2
+                ]
+            ]
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['customer_email']);
+    }
 }
+

@@ -289,6 +289,11 @@
                                 </a>
                             </li>
                             <li>
+                                <a href="/user/pengaturan">
+                                    <span class="label">Pengaturan Sistem</span>
+                                </a>
+                            </li>
+                            <li>
                                 <a href="#">
                                     <span class="label">Data Log</span>
                                 </a>

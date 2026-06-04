@@ -362,6 +362,9 @@
     <script src="/vendor/acorn/icon/acorn-icons-interface.js"></script>
     <script src="/vendor/acorn/icon/acorn-icons-commerce.js"></script>
 
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     @if (request()->routeIs('catalog'))
         <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     @endif

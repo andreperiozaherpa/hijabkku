@@ -19,7 +19,7 @@ class LandingCheckoutController extends Controller
             'kode_toko' => 'required|string',
             'customer_name' => 'required|string|max:255',
             'customer_phone' => 'required|string|max:20',
-            'customer_email' => 'nullable|email|max:255',
+            'customer_email' => ['nullable', 'email', 'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', 'max:255'],
             'payment_method' => 'required|string|in:QRIS,VA,EWALLET',
             'cart' => 'required|array|min:1',
             'cart.*.kode_barang' => 'required|string',
@@ -31,7 +31,10 @@ class LandingCheckoutController extends Controller
             $rules['g-recaptcha-response'] = 'required|string';
         }
 
-        $request->validate($rules);
+        $request->validate($rules, [
+            'customer_email.regex' => 'Format email tidak valid (Top-Level Domain harus minimal 2 karakter, contoh: .com, .co.id).',
+            'customer_email.email' => 'Format email tidak valid.',
+        ]);
 
         if (!empty($recaptchaSecret)) {
             $recaptchaResponse = $request->input('g-recaptcha-response');
@@ -123,42 +126,50 @@ class LandingCheckoutController extends Controller
             return response()->json(['success' => false, 'message' => 'Xendit Secret Key is not configured.'], 500);
         }
 
+        $payload = [
+            'external_id' => $invoice,
+            'amount' => $grand_total,
+            'description' => 'Pembayaran Pesanan Online ' . $invoice,
+            'payment_methods' => $payment_methods,
+            'currency' => 'IDR',
+            'success_redirect_url' => request()->schemeAndHttpHost() . '/catalog?payment_status=success&invoice=' . $invoice,
+            'failure_redirect_url' => request()->schemeAndHttpHost() . '/catalog?payment_status=failure&invoice=' . $invoice
+        ];
+
+        if ($customer_email) {
+            $payload['payer_email'] = $customer_email;
+        }
+
         $response = Http::withBasicAuth($secret_key, '')
-            ->post('https://api.xendit.co/v2/invoices', [
-                'external_id' => $invoice,
-                'amount' => $grand_total,
-                'payer_email' => $customer_email ?? 'customer@hijabkku.com',
-                'description' => 'Pembayaran Pesanan Online ' . $invoice,
-                'payment_methods' => $payment_methods,
-                'currency' => 'IDR',
-                'success_redirect_url' => url('/catalog?payment_status=success&invoice=' . $invoice),
-                'failure_redirect_url' => url('/catalog?payment_status=failure&invoice=' . $invoice)
-            ]);
+            ->post('https://api.xendit.co/v2/invoices', $payload);
 
         if ($response->successful()) {
             $xenditData = $response->json();
-            
-            PendingTransaction::create([
-                'kode_invoice' => $invoice,
-                'kode_toko' => $kode_toko,
-                'user_id' => 0,
-                'user_name' => 'Guest (' . $customer_name . ')',
-                'total_harga' => $total_harga,
-                'fee' => $fee,
-                'grand_total' => $grand_total,
-                'payment_method' => $method,
-                'xendit_id' => $xenditData['id'],
-                'checkout_url' => $xenditData['invoice_url'],
-                'cart_payload' => json_encode([
-                    'items' => $formattedCartData,
-                    'customer' => [
-                        'name' => $customer_name,
-                        'email' => $customer_email,
-                        'phone' => $customer_phone
-                    ]
-                ]),
-                'status' => 'PENDING'
-            ]);
+
+            $isSimulation = \App\Models\SystemSetting::getByKey('xendit_simulation_mode', 'false');
+            if ($isSimulation !== 'true') {
+                PendingTransaction::create([
+                    'kode_invoice' => $invoice,
+                    'kode_toko' => $kode_toko,
+                    'user_id' => 0,
+                    'user_name' => 'Guest (' . $customer_name . ')',
+                    'total_harga' => $total_harga,
+                    'fee' => $fee,
+                    'grand_total' => $grand_total,
+                    'payment_method' => $method,
+                    'xendit_id' => $xenditData['id'],
+                    'checkout_url' => $xenditData['invoice_url'],
+                    'cart_payload' => json_encode([
+                        'items' => $formattedCartData,
+                        'customer' => [
+                            'name' => $customer_name,
+                            'email' => $customer_email,
+                            'phone' => $customer_phone
+                        ]
+                    ]),
+                    'status' => 'PENDING'
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
@@ -171,7 +182,7 @@ class LandingCheckoutController extends Controller
         }
 
         return response()->json([
-            'success' => false, 
+            'success' => false,
             'message' => 'Gagal membuat tagihan Xendit. ' . $response->body()
         ], 400);
     }

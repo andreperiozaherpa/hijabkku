@@ -22,6 +22,33 @@ class LandingController extends Controller
      */
     public function catalog(Request $request)
     {
+        $paymentStatus = $request->query('payment_status');
+        $invoiceCode = $request->query('invoice');
+
+        if ($paymentStatus === 'success' && $invoiceCode) {
+            if (config('app.env') === 'local' || config('app.env') === 'testing') {
+                $pending = \App\Models\PendingTransaction::where('kode_invoice', $invoiceCode)->first();
+                if ($pending && $pending->status === 'PENDING') {
+                    $webhookService = app(\App\Services\XenditWebhookService::class);
+                    try {
+                        $webhookService->handleInvoicePaid([
+                            'external_id' => $invoiceCode,
+                            'status' => 'PAID'
+                        ]);
+                        session()->flash('payment_success', 'Pembayaran berhasil dan pesanan Anda telah tercatat!');
+                    } catch (\Exception $e) {
+                        session()->flash('payment_error', 'Gagal memproses pembayaran secara otomatis: ' . $e->getMessage());
+                    }
+                } elseif ($pending && $pending->status === 'PAID') {
+                    session()->flash('payment_success', 'Pembayaran berhasil dan pesanan Anda telah tercatat!');
+                }
+            } else {
+                session()->flash('payment_success', 'Pembayaran sedang diproses, mohon tunggu beberapa saat.');
+            }
+        } elseif ($paymentStatus === 'failure') {
+            session()->flash('payment_error', 'Pembayaran gagal atau dibatalkan.');
+        }
+
         $tokos = Toko::whereNotIn('nama_toko', ['stock hilang', 'Online Shop'])->get();
         $selectedTokoKode = $request->query('toko');
 
@@ -51,11 +78,14 @@ class LandingController extends Controller
             $stocks = $query->paginate(8)->onEachSide(0)->withQueryString();
         }
 
+        $xenditSimulationMode = \App\Models\SystemSetting::getByKey('xendit_simulation_mode', 'false');
+
         return view('landing.catalog', [
             'tokos' => $tokos,
             'selectedTokoKode' => $selectedTokoKode,
             'selectedToko' => $selectedToko,
-            'stocks' => $stocks
+            'stocks' => $stocks,
+            'xenditSimulationMode' => $xenditSimulationMode
         ]);
     }
 }

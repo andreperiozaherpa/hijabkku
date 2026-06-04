@@ -95,8 +95,8 @@ class XenditController extends Controller
                 'description' => 'Pembayaran Tagihan ' . $invoice,
                 'payment_methods' => $payment_methods,
                 'currency' => 'IDR',
-                'success_redirect_url' => url('/transaksi/penjualan?payment_status=success&invoice=' . $invoice),
-                'failure_redirect_url' => url('/transaksi/penjualan?payment_status=failure&invoice=' . $invoice),
+                'success_redirect_url' => request()->schemeAndHttpHost() . '/transaksi/penjualan?payment_status=success&invoice=' . $invoice,
+                'failure_redirect_url' => request()->schemeAndHttpHost() . '/transaksi/penjualan?payment_status=failure&invoice=' . $invoice,
             ]);
 
         if ($response->successful()) {

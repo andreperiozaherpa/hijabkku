@@ -120,19 +120,19 @@
             position: relative;
             background: white;
         }
-        
+
         .payment-card-label:hover {
             border-color: #ffd1dc;
             transform: translateY(-2px);
         }
-        
-        .btn-check:checked + .payment-card-label {
+
+        .btn-check:checked+.payment-card-label {
             border-color: #D4AF37 !important;
             background-color: #faf6f0 !important;
             box-shadow: 0 5px 15px rgba(212, 175, 55, 0.1) !important;
         }
 
-        .btn-check:checked + .payment-card-label .text-muted {
+        .btn-check:checked+.payment-card-label .text-muted {
             color: #D4AF37 !important;
         }
 
@@ -140,18 +140,26 @@
         .shimmer-pulse {
             animation: pulse-shimmer 1.5s ease-in-out infinite;
         }
-        
+
         @keyframes pulse-shimmer {
-            0% { opacity: 0.4; }
-            50% { opacity: 0.75; }
-            100% { opacity: 0.4; }
+            0% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 0.75;
+            }
+
+            100% {
+                opacity: 0.4;
+            }
         }
 
         /* Custom Toast CSS */
         #toast-container {
             z-index: 9999 !important;
         }
-        
+
         .toast-item {
             min-width: 280px;
             max-width: 380px;
@@ -166,35 +174,37 @@
             animation: toastSlideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             transition: all 0.3s ease;
         }
-        
+
         .toast-item.toast-danger {
             border-left-color: #dc3545 !important;
         }
-        
+
         .toast-item.toast-warning {
             border-left-color: #ffc107 !important;
         }
-        
+
         .toast-item.toast-success {
             border-left-color: #28a745 !important;
         }
-        
+
         @keyframes toastSlideIn {
             from {
                 transform: translateX(120%) translateY(-10px);
                 opacity: 0;
             }
+
             to {
                 transform: translateX(0) translateY(0);
                 opacity: 1;
             }
         }
-        
+
         @keyframes toastSlideOut {
             from {
                 transform: translateX(0);
                 opacity: 1;
             }
+
             to {
                 transform: translateX(120%);
                 opacity: 0;
@@ -203,11 +213,19 @@
 
         /* Floating badge animation */
         @keyframes badgePulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.3); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.3);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
-        
+
         .badge-updated {
             animation: badgePulse 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
@@ -366,7 +384,8 @@
                                 @endphp
 
                                 <div class="col-6 col-md-4 col-lg-3 product-card-wrapper">
-                                    <div class="card product-card h-100 position-relative {{ $avail <= 0 ? 'out-of-stock' : '' }}" style="cursor: pointer;"
+                                    <div class="card product-card h-100 position-relative {{ $avail <= 0 ? 'out-of-stock' : '' }}"
+                                        style="cursor: pointer;"
                                         onclick="showProductDetail('{{ $stock->kode_barang }}', '{{ addslashes($stock->data_barang->nama_barang ?? 'Hijab') }}', {{ (int) str_replace('.', '', $stock->data_barang->harga_jual ?? '0') }}, '{{ $imgUrl }}', {{ $avail }}, '{{ addslashes($stock->data_barang->jenis_barang ?? 'Hijab') }}', '{{ $tag }}')">
                                         <div class="badge-tag tag-{{ strtolower(str_replace(' ', '-', $tag)) }}">
                                             {{ $tag }}</div>
@@ -382,13 +401,15 @@
                                             <p class="text-muted mb-0 mt-auto" style="font-size: 0.95rem;">Rp
                                                 {{ number_format((int) str_replace('.', '', $stock->data_barang->harga_jual ?? '0'), 0, ',', '.') }}
                                             </p>
-                                            
+
                                             @if ($avail > 0)
-                                                <span class="d-block small text-gold mt-2 fw-bold" style="font-size: 0.8rem; font-family: 'Montserrat', sans-serif;">
+                                                <span class="d-block small text-gold mt-2 fw-bold"
+                                                    style="font-size: 0.8rem; font-family: 'Montserrat', sans-serif;">
                                                     Tersedia: {{ $avail }} pcs
                                                 </span>
                                             @else
-                                                <span class="d-block small text-danger mt-2 fw-bold" style="font-size: 0.8rem; font-family: 'Montserrat', sans-serif;">
+                                                <span class="d-block small text-danger mt-2 fw-bold"
+                                                    style="font-size: 0.8rem; font-family: 'Montserrat', sans-serif;">
                                                     Stok Habis
                                                 </span>
                                             @endif
@@ -580,9 +601,11 @@
 
 
     <!-- Cart Offcanvas Drawer -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel" style="border-top-left-radius: 20px; border-bottom-left-radius: 20px; width: 450px; max-width: 100%;">
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel"
+        style="border-top-left-radius: 20px; border-bottom-left-radius: 20px; width: 450px; max-width: 100%;">
         <div class="offcanvas-header border-bottom py-3">
-            <h5 class="offcanvas-title fw-bold font-serif" id="cartOffcanvasLabel"><i data-acorn-icon="cart" class="text-gold me-2"></i>Keranjang Belanja</h5>
+            <h5 class="offcanvas-title fw-bold font-serif" id="cartOffcanvasLabel"><i data-acorn-icon="cart"
+                    class="text-gold me-2"></i>Keranjang Belanja</h5>
             <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body d-flex flex-column">
@@ -599,12 +622,13 @@
             <div id="cart-items-container" class="flex-grow-1 overflow-auto pe-1">
                 <!-- Dynamic Cart Items here -->
             </div>
-            
+
             <!-- Cart Empty State -->
             <div id="cart-empty-state" class="text-center py-5 my-5">
                 <i data-acorn-icon="cart" class="text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
                 <p class="text-muted fw-bold">Keranjang belanja Anda kosong</p>
-                <button class="btn btn-outline-gold rounded-pill px-4 btn-sm" data-bs-dismiss="offcanvas">Mulai Belanja</button>
+                <button class="btn btn-outline-gold rounded-pill px-4 btn-sm" data-bs-dismiss="offcanvas">Mulai
+                    Belanja</button>
             </div>
 
             <!-- Cart Footer -->
@@ -613,7 +637,8 @@
                     <span class="text-muted font-weight-bold">Subtotal</span>
                     <span id="cart-subtotal" class="fw-bold fs-5 text-gold">Rp 0</span>
                 </div>
-                <button class="btn btn-gold w-100 py-3 text-uppercase font-weight-bold" style="letter-spacing: 1px;" onclick="openCheckoutModal()">Lanjutkan ke Pembayaran</button>
+                <button class="btn btn-gold w-100 py-3 text-uppercase font-weight-bold" style="letter-spacing: 1px;"
+                    onclick="openCheckoutModal()">Lanjutkan ke Pembayaran</button>
             </div>
         </div>
     </div>
@@ -623,29 +648,38 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0" style="border-radius: 20px; overflow: hidden; background: #ffffff;">
                 <div class="position-relative">
-                    <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close" style="top: 20px; right: 20px; z-index: 10; background-color: rgba(255,255,255,0.85); padding: 10px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: none;"></button>
-                    <div class="product-modal-img-wrapper" style="aspect-ratio: 4/3; overflow: hidden; background: #fdfbf7;">
-                        <img id="modal-product-img" src="" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                    <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal"
+                        aria-label="Close"
+                        style="top: 20px; right: 20px; z-index: 10; background-color: rgba(255,255,255,0.85); padding: 10px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: none;"></button>
+                    <div class="product-modal-img-wrapper"
+                        style="aspect-ratio: 4/3; overflow: hidden; background: #fdfbf7;">
+                        <img id="modal-product-img" src="" alt=""
+                            style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
                 </div>
                 <div class="modal-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span id="modal-product-badge" class="badge-tag position-static px-3 py-1 font-serif text-uppercase" style="font-size: 0.65rem; border-radius: 20px;"></span>
-                        <span class="small text-muted">Kategori: <strong id="modal-product-category" class="text-dark"></strong></span>
+                        <span id="modal-product-badge"
+                            class="badge-tag position-static px-3 py-1 font-serif text-uppercase"
+                            style="font-size: 0.65rem; border-radius: 20px;"></span>
+                        <span class="small text-muted">Kategori: <strong id="modal-product-category"
+                                class="text-dark"></strong></span>
                     </div>
-                    <h3 id="modal-product-title" class="fw-bold font-serif mb-2 text-dark" style="font-size: 1.5rem; text-transform: uppercase; letter-spacing: 1px;"></h3>
-                    <h4 id="modal-product-price" class="text-gold fw-bold mb-3" style="font-family: 'Montserrat', sans-serif; font-size: 1.3rem;"></h4>
-                    
+                    <h3 id="modal-product-title" class="fw-bold font-serif mb-2 text-dark"
+                        style="font-size: 1.5rem; text-transform: uppercase; letter-spacing: 1px;"></h3>
+                    <h4 id="modal-product-price" class="text-gold fw-bold mb-3"
+                        style="font-family: 'Montserrat', sans-serif; font-size: 1.3rem;"></h4>
+
                     <div class="mb-3 p-3 bg-light rounded-3 d-flex align-items-center justify-content-between">
                         <span class="small text-muted"><i class="bi bi-shop me-1"></i> Stok Cabang Tersedia:</span>
                         <strong id="modal-product-stock" class="text-dark"></strong>
                     </div>
-                    
+
                     <div class="border-top border-light pt-3 mb-4">
                         <h6 class="fw-bold text-dark font-serif mb-2" style="letter-spacing: 0.5px;">Deskripsi Produk</h6>
                         <p id="modal-product-desc" class="text-muted small mb-0" style="line-height: 1.6;"></p>
                     </div>
-                    
+
                     <div id="modal-action-wrapper">
                         <!-- Dynamic add to cart button -->
                     </div>
@@ -663,12 +697,35 @@
                     <div class="col-lg-7 p-4 p-md-5 bg-white">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h4 class="fw-bold font-serif mb-0">Detail Store Pickup & Pembayaran</h4>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
                         </div>
 
-                        <div class="alert alert-warning rounded-3 border-0 bg-light p-3 mb-4" style="color: #856404; font-size: 0.85rem;">
-                            <h6 class="fw-bold mb-1"><i data-acorn-icon="warning-hexagon" class="me-2 text-gold"></i> Catatan Store Pickup:</h6>
-                            <p class="mb-0">Pesanan ini wajib diambil sendiri oleh pembeli di cabang toko terpilih setelah status pembayaran lunas.
+                        @if (($xenditSimulationMode ?? 'false') === 'true')
+                            <div class="alert alert-info rounded-3 border-0 p-3 mb-4 d-flex align-items-start"
+                                style="color: #0c5460; background-color: #d1ecf1; border-color: #bee5eb; font-size: 0.85rem;">
+                                <div class="me-2 mt-0.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                        fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                        <path
+                                            d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Mode Simulasi Pembayaran Aktif</h6>
+                                    <p class="mb-0">Aplikasi saat ini berjalan dalam mode simulasi pembayaran.
+                                        Checkout/pembayaran tidak akan diproses ke sistem ril.</p>
+                                </div>
+                            </div>
+                        @endif
+
+                        <div class="alert alert-warning rounded-3 border-0 bg-light p-3 mb-4"
+                            style="color: #856404; font-size: 0.85rem;">
+                            <h6 class="fw-bold mb-1"><i data-acorn-icon="warning-hexagon" class="me-2 text-gold"></i>
+                                Catatan Store Pickup:</h6>
+                            <p class="mb-0">Pesanan ini wajib diambil sendiri oleh pembeli di cabang toko terpilih
+                                setelah status pembayaran lunas.
                             </p>
                         </div>
 
@@ -677,39 +734,55 @@
                             <div class="row g-3 mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted">Nama Lengkap</label>
-                                    <input type="text" id="cust-name" class="form-control form-control-lg rounded-3" style="font-size: 0.9rem;" placeholder="Masukkan nama lengkap" required>
+                                    <input type="text" id="cust-name" class="form-control form-control-lg rounded-3"
+                                        style="font-size: 0.9rem;" placeholder="Masukkan nama lengkap" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted">Nomor WhatsApp/HP</label>
-                                    <input type="tel" id="cust-phone" class="form-control form-control-lg rounded-3" style="font-size: 0.9rem;" placeholder="Contoh: 081234567890" required>
+                                    <input type="tel" id="cust-phone" class="form-control form-control-lg rounded-3"
+                                        style="font-size: 0.9rem;" placeholder="Contoh: 081234567890" required>
                                 </div>
                             </div>
                             <div class="mb-4">
                                 <label class="form-label small fw-bold text-muted">Alamat Email (Opsional)</label>
-                                <input type="email" id="cust-email" class="form-control form-control-lg rounded-3" style="font-size: 0.9rem;" placeholder="customer@email.com">
-                                <div class="form-text text-muted small">Email digunakan untuk menerima link invoice pembayaran resmi.</div>
+                                <input type="email" id="cust-email" class="form-control form-control-lg rounded-3"
+                                    style="font-size: 0.9rem;" placeholder="customer@email.com">
+                                <div class="form-text text-muted small">Email digunakan untuk menerima link invoice
+                                    pembayaran resmi.</div>
                             </div>
 
                             <h6 class="fw-bold mb-3 text-gold">Metode Pembayaran (Xendit Gateway)</h6>
                             <div class="row g-2 mb-4">
                                 <div class="col-4">
-                                    <input type="radio" class="btn-check" name="payment_method" id="pay-qris" value="QRIS" checked onchange="updatePaymentFees()">
-                                    <label class="payment-card-label w-100 py-3 px-2 d-flex flex-column align-items-center justify-content-center h-100" for="pay-qris">
-                                        <span class="fw-bold mb-1" style="font-size: 1.05rem; font-family: 'Montserrat', sans-serif; color: #2c2c2c;">QRIS</span>
+                                    <input type="radio" class="btn-check" name="payment_method" id="pay-qris"
+                                        value="QRIS" checked onchange="updatePaymentFees()">
+                                    <label
+                                        class="payment-card-label w-100 py-3 px-2 d-flex flex-column align-items-center justify-content-center h-100"
+                                        for="pay-qris">
+                                        <span class="fw-bold mb-1"
+                                            style="font-size: 1.05rem; font-family: 'Montserrat', sans-serif; color: #2c2c2c;">QRIS</span>
                                         <span class="text-muted" style="font-size: 0.65rem;">Fee 0.7%</span>
                                     </label>
                                 </div>
                                 <div class="col-4">
-                                    <input type="radio" class="btn-check" name="payment_method" id="pay-va" value="VA" onchange="updatePaymentFees()">
-                                    <label class="payment-card-label w-100 py-3 px-2 d-flex flex-column align-items-center justify-content-center h-100" for="pay-va">
-                                        <span class="fw-bold mb-1" style="font-size: 1.05rem; font-family: 'Montserrat', sans-serif; color: #2c2c2c;">VA</span>
+                                    <input type="radio" class="btn-check" name="payment_method" id="pay-va"
+                                        value="VA" onchange="updatePaymentFees()">
+                                    <label
+                                        class="payment-card-label w-100 py-3 px-2 d-flex flex-column align-items-center justify-content-center h-100"
+                                        for="pay-va">
+                                        <span class="fw-bold mb-1"
+                                            style="font-size: 1.05rem; font-family: 'Montserrat', sans-serif; color: #2c2c2c;">VA</span>
                                         <span class="text-muted" style="font-size: 0.65rem;">Fee Rp. 5.040</span>
                                     </label>
                                 </div>
                                 <div class="col-4">
-                                    <input type="radio" class="btn-check" name="payment_method" id="pay-ewallet" value="EWALLET" onchange="updatePaymentFees()">
-                                    <label class="payment-card-label w-100 py-3 px-2 d-flex flex-column align-items-center justify-content-center h-100" for="pay-ewallet">
-                                        <span class="fw-bold mb-1" style="font-size: 1.05rem; font-family: 'Montserrat', sans-serif; color: #2c2c2c;">E-Wallet</span>
+                                    <input type="radio" class="btn-check" name="payment_method" id="pay-ewallet"
+                                        value="EWALLET" onchange="updatePaymentFees()">
+                                    <label
+                                        class="payment-card-label w-100 py-3 px-2 d-flex flex-column align-items-center justify-content-center h-100"
+                                        for="pay-ewallet">
+                                        <span class="fw-bold mb-1"
+                                            style="font-size: 1.05rem; font-family: 'Montserrat', sans-serif; color: #2c2c2c;">E-Wallet</span>
                                         <span class="text-muted" style="font-size: 0.65rem;">Fee 1.665%</span>
                                     </label>
                                 </div>
@@ -717,10 +790,12 @@
 
                             <!-- Google reCAPTCHA v2 Checkbox -->
                             <div class="mb-3 mt-4 d-flex justify-content-center">
-                                <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                                <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}">
+                                </div>
                             </div>
 
-                            <button type="submit" id="btn-submit-checkout" class="btn btn-gold w-100 mt-4 py-3 text-uppercase fw-bold" style="letter-spacing: 1px;">
+                            <button type="submit" id="btn-submit-checkout"
+                                class="btn btn-gold w-100 mt-4 py-3 text-uppercase fw-bold" style="letter-spacing: 1px;">
                                 Bayar Sekarang
                             </button>
                         </form>
@@ -746,7 +821,8 @@
                             <strong id="checkout-subtotal" class="text-dark">Rp 0</strong>
                         </div>
                         <div class="d-flex justify-content-between mb-2 small">
-                            <span class="text-muted font-weight-bold">Biaya Transaksi (<span id="fee-type-label">QRIS</span>)</span>
+                            <span class="text-muted font-weight-bold">Biaya Transaksi (<span
+                                    id="fee-type-label">QRIS</span>)</span>
                             <strong id="checkout-fee" class="text-dark">Rp 0</strong>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-light">
@@ -907,7 +983,7 @@
 
             const toast = document.createElement('div');
             toast.className = `toast-item toast-${type} d-flex align-items-center`;
-            
+
             let iconSvg = '';
             if (type === 'success') {
                 iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#28a745" class="bi bi-check-circle-fill me-3" viewBox="0 0 16 16" style="flex-shrink: 0;">
@@ -989,7 +1065,8 @@
 
             // Open the cart offcanvas drawer automatically to show addition feedback
             const cartOffcanvasEl = document.getElementById('cartOffcanvas');
-            const bsOffcanvas = bootstrap.Offcanvas.getInstance(cartOffcanvasEl) || new bootstrap.Offcanvas(cartOffcanvasEl);
+            const bsOffcanvas = bootstrap.Offcanvas.getInstance(cartOffcanvasEl) || new bootstrap.Offcanvas(
+            cartOffcanvasEl);
             bsOffcanvas.show();
         }
 
@@ -1096,15 +1173,16 @@
         function showProductDetail(kode, name, price, img, maxStock, category, tag) {
             document.getElementById('modal-product-img').src = img;
             document.getElementById('modal-product-img').alt = name;
-            
+
             const badgeEl = document.getElementById('modal-product-badge');
             badgeEl.innerText = tag;
-            badgeEl.className = 'badge-tag position-static px-3 py-1 font-serif text-uppercase tag-' + tag.toLowerCase().replace(' ', '-');
-            
+            badgeEl.className = 'badge-tag position-static px-3 py-1 font-serif text-uppercase tag-' + tag.toLowerCase()
+                .replace(' ', '-');
+
             document.getElementById('modal-product-category').innerText = category || 'Hijab';
             document.getElementById('modal-product-title').innerText = name;
             document.getElementById('modal-product-price').innerText = 'Rp ' + price.toLocaleString('id-ID');
-            
+
             const stockEl = document.getElementById('modal-product-stock');
             if (maxStock > 0) {
                 stockEl.innerText = maxStock + ' pcs';
@@ -1113,21 +1191,25 @@
                 stockEl.innerText = 'Habis';
                 stockEl.className = 'text-danger fw-bold';
             }
-            
+
             // Dynamic description generator based on product attributes
             let desc = '';
             const lowerName = name.toLowerCase();
             if (lowerName.includes('bella') || lowerName.includes('square')) {
-                desc = 'Hijab Bella Square premium berbahan double hycon bertekstur lembut, adem, tidak licin, mudah diatur, dan jatuh dengan cantik saat dikenakan. Sangat cocok digunakan untuk aktivitas sehari-hari maupun acara semiformal Anda.';
+                desc =
+                    'Hijab Bella Square premium berbahan double hycon bertekstur lembut, adem, tidak licin, mudah diatur, dan jatuh dengan cantik saat dikenakan. Sangat cocok digunakan untuk aktivitas sehari-hari maupun acara semiformal Anda.';
             } else if (lowerName.includes('paris')) {
-                desc = 'Hijab Paris premium kualitas terbaik yang tipis namun tetap tegak sempurna di dahi. Memiliki karakteristik bahan yang adem, lembut, tidak menerawang ketika dilipat dua, serta sangat populer sebagai hijab harian yang simpel dan elegan.';
+                desc =
+                    'Hijab Paris premium kualitas terbaik yang tipis namun tetap tegak sempurna di dahi. Memiliki karakteristik bahan yang adem, lembut, tidak menerawang ketika dilipat dua, serta sangat populer sebagai hijab harian yang simpel dan elegan.';
             } else if (lowerName.includes('khimar') || lowerName.includes('syari') || lowerName.includes('syar\'i')) {
-                desc = 'Khimar Syar\'i anggun berdesain menutup dada dengan sempurna. Menggunakan bahan ceruty/crepe premium ganda (double layer) yang jatuh dengan anggun, adem, serta nyaman digunakan sepanjang hari.';
+                desc =
+                    'Khimar Syar\'i anggun berdesain menutup dada dengan sempurna. Menggunakan bahan ceruty/crepe premium ganda (double layer) yang jatuh dengan anggun, adem, serta nyaman digunakan sepanjang hari.';
             } else {
-                desc = 'Hijab eksklusif edisi terbatas dari Hijabku. Menghadirkan kenyamanan maksimal dengan bahan premium pilihan yang lembut di kulit, sejuk, mudah dibentuk, serta hadir dalam variasi warna pastel yang mewah untuk melengkapi penampilan Anda.';
+                desc =
+                    'Hijab eksklusif edisi terbatas dari Hijabku. Menghadirkan kenyamanan maksimal dengan bahan premium pilihan yang lembut di kulit, sejuk, mudah dibentuk, serta hadir dalam variasi warna pastel yang mewah untuk melengkapi penampilan Anda.';
             }
             document.getElementById('modal-product-desc').innerText = desc;
-            
+
             const actionWrapper = document.getElementById('modal-action-wrapper');
             if (maxStock > 0) {
                 actionWrapper.innerHTML = `
@@ -1142,7 +1224,7 @@
                     </button>
                 `;
             }
-            
+
             const detailModal = new bootstrap.Modal(document.getElementById('productDetailModal'));
             detailModal.show();
         }
@@ -1155,7 +1237,7 @@
             if (bsModal) {
                 bsModal.hide();
             }
-            
+
             // Add to cart
             addToCart(kode, name, price, img, maxStock);
         }
@@ -1198,7 +1280,7 @@
 
             itemsContainer.innerHTML = html;
             document.getElementById('checkout-subtotal').innerText = 'Rp ' + subtotal.toLocaleString('id-ID');
-            
+
             // Recalculate payment fees & grand total
             updatePaymentFees();
 
@@ -1246,77 +1328,165 @@
         function submitCheckout(e) {
             e.preventDefault();
 
-            const name = document.getElementById('cust-name').value.trim();
-            const phone = document.getElementById('cust-phone').value.trim();
-            const email = document.getElementById('cust-email').value.trim();
-            const method = document.querySelector('input[name="payment_method"]:checked').value;
-            const branch = document.getElementById('toko-selector').value;
+            try {
+                const nameEl = document.getElementById('cust-name');
+                const name = nameEl ? nameEl.value.trim() : '';
 
-            if (!name || !phone) {
-                showToast('Mohon lengkapi data Nama Lengkap dan Nomor WhatsApp/HP!', 'warning');
-                return;
-            }
+                const phoneEl = document.getElementById('cust-phone');
+                const phone = phoneEl ? phoneEl.value.trim() : '';
 
-            // Google reCAPTCHA Check
-            const recaptchaResponse = typeof grecaptcha !== 'undefined' ? grecaptcha.getResponse() : '';
-            if (document.querySelector('.g-recaptcha') && !recaptchaResponse) {
-                showToast('Harap verifikasi bahwa Anda bukan robot!', 'warning');
-                return;
-            }
+                const emailEl = document.getElementById('cust-email');
+                const email = emailEl ? emailEl.value.trim() : '';
 
-            const btn = document.getElementById('btn-submit-checkout');
-            const originalBtnText = btn.innerHTML;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Memproses Tagihan Pembayaran...';
-            btn.disabled = true;
+                const methodEl = document.querySelector('input[name="payment_method"]:checked');
+                const method = methodEl ? methodEl.value : 'QRIS';
 
-            const cartPayload = cart.map(item => {
-                return {
-                    kode_barang: item.kode_barang,
-                    jumlah: item.jumlah
-                };
-            });
+                const branchEl = document.getElementById('toko-selector');
+                const branch = branchEl ? branchEl.value : '';
 
-            // Send AJAX call to backend checkout API
-            fetch('/api/landing/checkout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    kode_toko: branch,
-                    customer_name: name,
-                    customer_phone: phone,
-                    customer_email: email || null,
-                    payment_method: method,
-                    cart: cartPayload,
-                    'g-recaptcha-response': recaptchaResponse
-                })
-            })
-            .then(response => response.json().then(data => ({ status: response.status, body: data })))
-            .then(res => {
-                if (res.status === 200 && res.body.success) {
-                    // Success! Empty cart & redirect to checkout URL
-                    cart = [];
-                    localStorage.setItem('hijabkku_cart', JSON.stringify(cart));
-                    updateCartUI();
-
-                    // Redirect to Xendit Invoice checkout page
-                    window.location.href = res.body.checkout_url;
-                } else {
-                    showToast('Gagal memproses Checkout: ' + (res.body.message || 'Kesalahan sistem tidak dikenal.'), 'danger');
-                    btn.innerHTML = originalBtnText;
-                    btn.disabled = false;
-                    if (typeof grecaptcha !== 'undefined') grecaptcha.reset();
+                if (!name || !phone) {
+                    showToast('Mohon lengkapi data Nama Lengkap dan Nomor WhatsApp/HP!', 'warning');
+                    return;
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                showToast('Terjadi kesalahan koneksi saat memproses checkout. Silakan coba kembali.', 'danger');
+
+                // Google reCAPTCHA Check
+                let recaptchaResponse = '';
+                if (typeof grecaptcha !== 'undefined' && typeof grecaptcha.getResponse === 'function') {
+                    try {
+                        recaptchaResponse = grecaptcha.getResponse();
+                    } catch (recaptchaErr) {
+                        console.warn("grecaptcha.getResponse error:", recaptchaErr);
+                    }
+                }
+
+                if (document.querySelector('.g-recaptcha') && !recaptchaResponse) {
+                    showToast('Harap verifikasi bahwa Anda bukan robot!', 'warning');
+                    return;
+                }
+
+                const btn = document.getElementById('btn-submit-checkout');
+                if (!btn) {
+                    console.error("Button btn-submit-checkout not found!");
+                    return;
+                }
+                const originalBtnText = btn.innerHTML;
+
+                const isSimulation = "{{ $xenditSimulationMode ?? 'false' }}";
+                if (isSimulation === 'true') {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Mode Simulasi Pembayaran',
+                            text: 'Ini adalah simulasi bayar dan belum aktif sepenuhnya. Lanjutkan pembuatan tagihan simulasi?',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#f59e0b',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: 'Lanjutkan',
+                            cancelButtonText: 'Batal'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                proceedWithCheckout(btn, originalBtnText, branch, name, phone, email, method,
+                                    recaptchaResponse);
+                            }
+                        });
+                    } else {
+                        if (confirm(
+                                'Mode Simulasi Pembayaran: Ini adalah simulasi bayar dan belum aktif sepenuhnya. Lanjutkan pembuatan tagihan simulasi?'
+                                )) {
+                            proceedWithCheckout(btn, originalBtnText, branch, name, phone, email, method,
+                            recaptchaResponse);
+                        }
+                    }
+                } else {
+                    proceedWithCheckout(btn, originalBtnText, branch, name, phone, email, method, recaptchaResponse);
+                }
+            } catch (err) {
+                console.error("Error in submitCheckout handler:", err);
+                alert("Kesalahan script checkout: " + err.message);
+            }
+        }
+
+        function proceedWithCheckout(btn, originalBtnText, branch, name, phone, email, method, recaptchaResponse) {
+            try {
+                btn.innerHTML =
+                    '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Memproses Tagihan Pembayaran...';
+                btn.disabled = true;
+
+                const cartPayload = cart.map(item => {
+                    return {
+                        kode_barang: item.kode_barang,
+                        jumlah: item.jumlah
+                    };
+                });
+
+                // Send AJAX call to backend checkout API
+                fetch('/api/landing/checkout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            kode_toko: branch,
+                            customer_name: name,
+                            customer_phone: phone,
+                            customer_email: email || null,
+                            payment_method: method,
+                            cart: cartPayload,
+                            'g-recaptcha-response': recaptchaResponse
+                        })
+                    })
+                    .then(response => response.json().then(data => ({
+                        status: response.status,
+                        body: data
+                    })))
+                    .then(res => {
+                        if (res.status === 200 && res.body.success) {
+                            // Success! Empty cart & redirect to checkout URL
+                            cart = [];
+                            localStorage.setItem('hijabkku_cart', JSON.stringify(cart));
+                            updateCartUI();
+
+                            // Close checkout modal
+                            const checkoutModalEl = document.getElementById('checkoutModal');
+                            if (checkoutModalEl) {
+                                const checkoutModal = bootstrap.Modal.getInstance(checkoutModalEl);
+                                if (checkoutModal) {
+                                    checkoutModal.hide();
+                                }
+                            }
+
+                            // Redirect to Xendit Invoice checkout page
+                            window.location.href = res.body.checkout_url;
+                        } else {
+                            showToast('Gagal memproses Checkout: ' + (res.body.message ||
+                                'Kesalahan sistem tidak dikenal.'), 'danger');
+                            btn.innerHTML = originalBtnText;
+                            btn.disabled = false;
+                            if (typeof grecaptcha !== 'undefined' && typeof grecaptcha.reset === 'function') {
+                                try {
+                                    grecaptcha.reset();
+                                } catch (e) {}
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        showToast('Terjadi kesalahan koneksi saat memproses checkout. Silakan coba kembali.', 'danger');
+                        btn.innerHTML = originalBtnText;
+                        btn.disabled = false;
+                        if (typeof grecaptcha !== 'undefined' && typeof grecaptcha.reset === 'function') {
+                            try {
+                                grecaptcha.reset();
+                            } catch (e) {}
+                        }
+                    });
+            } catch (err) {
+                console.error("Error in proceedWithCheckout:", err);
+                alert("Kesalahan saat memproses checkout: " + err.message);
                 btn.innerHTML = originalBtnText;
                 btn.disabled = false;
-                if (typeof grecaptcha !== 'undefined') grecaptcha.reset();
-            });
+            }
         }
     </script>
 @endsection

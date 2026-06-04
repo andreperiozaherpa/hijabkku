@@ -19,6 +19,7 @@ use App\Http\Controllers\TokoController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\UkuranBarangController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\VariasiBarangController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\landing\LandingController;
@@ -217,6 +218,8 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
         Route::post('/toggle-status', [UserController::class, 'toggleStatus']);
         Route::get('/rbac', [UserController::class, 'rbacIndex'])->name('user.rbac');
         Route::post('/rbac/update', [UserController::class, 'rbacUpdate'])->name('user.rbac.update');
+        Route::get('/pengaturan', [SystemSettingController::class, 'index'])->name('user.pengaturan');
+        Route::post('/pengaturan/update', [SystemSettingController::class, 'update'])->name('user.pengaturan.update');
     });
 });
 
