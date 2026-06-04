@@ -319,16 +319,14 @@
                         <a class="nav-link px-3 {{ Request::is('contact') ? 'active text-gold' : '' }}"
                             href="{{ route('contact') }}">Hubungi Kami</a>
                     </li>
-                    @if (request()->routeIs('catalog'))
-                        <li class="nav-item me-lg-3 mt-3 mt-lg-0 d-flex align-items-center">
-                            <button class="nav-link nav-link-cart position-relative p-0 border-0 bg-transparent"
-                                data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" title="Keranjang Belanja"
-                                style="cursor: pointer; outline: none; box-shadow: none;">
-                                <i data-acorn-icon="cart" style="font-size: 20px; position: relative; z-index: 2;"></i>
-                                <span id="cart-badge" class="cart-badge">0</span>
-                            </button>
-                        </li>
-                    @endif
+                    <li class="nav-item me-lg-3 mt-3 mt-lg-0 d-flex align-items-center">
+                        <button class="nav-link nav-link-cart position-relative p-0 border-0 bg-transparent"
+                            data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" title="Keranjang Belanja"
+                            style="cursor: pointer; outline: none; box-shadow: none;">
+                            <i data-acorn-icon="cart" style="font-size: 20px; position: relative; z-index: 2;"></i>
+                            <span id="cart-badge" class="cart-badge">0</span>
+                        </button>
+                    </li>
                     <li class="nav-item ms-lg-4 mt-3 mt-lg-0">
                         <a class="btn btn-outline-secondary rounded-pill px-4" style="border-color: #dcdcdc;"
                             href="{{ route('login') }}">
