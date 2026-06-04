@@ -38,6 +38,11 @@ use App\Http\Controllers\landing\LandingController;
 
 Route::get('/', [LandingController::class, 'index']);
 Route::get('/catalog', [LandingController::class, 'catalog'])->name('catalog');
+Route::get('/about', [LandingController::class, 'about'])->name('about');
+Route::get('/contact', [LandingController::class, 'contact'])->name('contact');
+Route::get('/privacy-policy', [LandingController::class, 'privacyPolicy'])->name('privacy-policy');
+Route::get('/terms', [LandingController::class, 'terms'])->name('terms');
+Route::get('/refund-policy', [LandingController::class, 'refundPolicy'])->name('refund-policy');
 
 Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('permission:lihat_dashboard')->name('dashboard');

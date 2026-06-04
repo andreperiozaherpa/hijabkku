@@ -6,6 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>@yield('title', 'Hijabkku - Elegansi dalam Berhijab')</title>
 
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Hijabkku menyediakan koleksi hijab premium terbaik dengan warna pastel lembut untuk wanita Muslimah anggun. Dapatkan pashmina silk, Bella Square, dan khimar premium di outlet terdekat kami." />
+    <meta name="keywords" content="hijab, pashmina, bella square, khimar, hijab premium, hijab pastel, hijabkku" />
+    <meta name="author" content="Hijabkku" />
+    <meta property="og:title" content="Hijabkku - Elegansi dalam Berhijab" />
+    <meta property="og:description" content="Koleksi hijab premium dengan sentuhan warna pastel yang lembut, didesain khusus untuk menemani setiap momen spesial Anda." />
+    <meta property="og:image" content="/img/logo.png" />
+    <meta property="og:type" content="website" />
+    @yield('meta')
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/img/logo.png" />
     <link rel="apple-touch-icon" href="/img/logo.png" />
@@ -167,11 +177,29 @@
             color: #ffb6c1;
         }
 
+        /* Hero Section style definition */
+        .hero-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
+            min-height: 500px;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero-title span {
+            color: #D4AF37;
+        }
+
         .footer {
             background-color: #faf9f6;
-            padding: 60px 0 40px 0;
+            padding: 70px 0 40px 0;
             margin-top: 80px;
             border-top: 1px solid #f0eee9;
+        }
+
+        .hover-gold:hover {
+            color: #D4AF37 !important;
+            transition: color 0.2s ease-in-out;
         }
 
         /* Custom Select2 Styling */
@@ -267,7 +295,7 @@
                 HIJABKU
             </a>
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarNav">
+                data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -281,7 +309,12 @@
                             href="/catalog">Katalog</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link px-3" href="/#tentang">Cerita Kami</a>
+                        <a class="nav-link px-3 {{ Request::is('about') ? 'active text-gold' : '' }}" 
+                            href="{{ route('about') }}">Tentang Kami</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 {{ Request::is('contact') ? 'active text-gold' : '' }}" 
+                            href="{{ route('contact') }}">Hubungi Kami</a>
                     </li>
                     @if (request()->routeIs('catalog'))
                         <li class="nav-item me-lg-3 mt-3 mt-lg-0 d-flex align-items-center">
@@ -310,45 +343,77 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <div class="row mb-5">
-                <div class="col-lg-4 mb-4 mb-lg-0 text-center text-lg-start">
-                    <a class="navbar-brand d-flex align-items-center justify-content-center justify-content-lg-start mb-3"
-                        href="/">
-                        <img src="/img/logo.png" alt="Hijabku Logo" style="height: 40px; border-radius: 5px;"
-                            class="me-2">
+            <div class="row g-4 mb-5 text-center text-md-start">
+                <!-- Column 1: Brand Info -->
+                <div class="col-lg-4 mb-3 mb-lg-0">
+                    <a class="navbar-brand d-flex align-items-center justify-content-center justify-content-md-start mb-3" href="/">
+                        <img src="/img/logo.png" alt="Hijabku Logo" style="height: 40px; border-radius: 5px;" class="me-2">
                         HIJABKU
                     </a>
-                    <p class="text-muted pe-lg-4">Menebar kebaikan dan kecantikan melalui balutan hijab yang elegan
-                        dengan sentuhan warna pastel.</p>
+                    <p class="text-muted pe-lg-4 small" style="line-height: 1.6;">
+                        Menebar kebaikan dan kecantikan melalui balutan hijab yang elegan dengan sentuhan warna pastel lembut terbaik.
+                    </p>
+                    <div class="d-flex justify-content-center justify-content-md-start gap-2 mt-3">
+                        <a href="https://instagram.com/hijabkku" target="_blank" class="btn btn-outline-dark btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                            <i data-acorn-icon="instagram" style="font-size: 16px;"></i>
+                        </a>
+                    </div>
                 </div>
-                <div class="col-lg-4 mb-4 mb-lg-0 text-center">
-                    <h5 class="fw-bold mb-4">Tautan Cepat</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><a href="{{ route('catalog') }}"
-                                class="text-muted text-decoration-none hover-gold">Koleksi Terlaris</a></li>
-                        <li class="mb-2"><a href="/#tentang"
-                                class="text-muted text-decoration-none hover-gold">Tentang Kami</a></li>
-                        <li class="mb-2"><a href="https://instagram.com/hijabkku"
-                                class="text-muted text-decoration-none hover-gold">Cara Pemesanan</a></li>
+
+                <!-- Column 2: Quick Links -->
+                <div class="col-6 col-md-3 col-lg-2">
+                    <h6 class="fw-bold text-dark font-serif mb-4" style="letter-spacing: 0.5px;">Tautan Cepat</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><a href="/" class="text-muted text-decoration-none hover-gold small">Beranda</a></li>
+                        <li class="mb-2"><a href="{{ route('catalog') }}" class="text-muted text-decoration-none hover-gold small">Katalog Hijab</a></li>
+                        <li class="mb-2"><a href="{{ route('about') }}" class="text-muted text-decoration-none hover-gold small">Tentang Kami</a></li>
+                        <li class="mb-0"><a href="{{ route('contact') }}" class="text-muted text-decoration-none hover-gold small">Hubungi Kami</a></li>
                     </ul>
                 </div>
-                <div class="col-lg-4 text-center text-lg-end">
-                    <h5 class="fw-bold mb-4">Ikuti Kami</h5>
-                    <p class="text-muted mb-2">Pesan via Instagram:</p>
-                    <a href="https://instagram.com/hijabkku" target="_blank"
-                        class="btn btn-outline-dark rounded-pill px-4">
-                        <i data-acorn-icon="instagram" class="me-2"></i>@hijabkku
-                    </a>
+
+                <!-- Column 3: Legal/Policies (KYC Compliant) -->
+                <div class="col-6 col-md-3 col-lg-2">
+                    <h6 class="fw-bold text-dark font-serif mb-4" style="letter-spacing: 0.5px;">Kebijakan Usaha</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><a href="{{ route('privacy-policy') }}" class="text-muted text-decoration-none hover-gold small">Kebijakan Privasi</a></li>
+                        <li class="mb-2"><a href="{{ route('terms') }}" class="text-muted text-decoration-none hover-gold small">Syarat & Ketentuan</a></li>
+                        <li class="mb-0"><a href="{{ route('refund-policy') }}" class="text-muted text-decoration-none hover-gold small">Kebijakan Refund</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 4: Contact Support Details -->
+                <div class="col-md-6 col-lg-4">
+                    <h6 class="fw-bold text-dark font-serif mb-4" style="letter-spacing: 0.5px;">Kontak & Jam Operasional</h6>
+                    <ul class="list-unstyled mb-0 small text-muted">
+                        <li class="mb-2 d-flex align-items-start justify-content-center justify-content-md-start">
+                            <span class="me-2 text-gold"><i data-acorn-icon="shop" style="width: 14px; height: 14px;"></i></span>
+                            <span>Kel. Panaragan Jaya, Kec. Tulang Bawang Tengah, Kab. Tulang Bawang Barat, Lampung (Depan Masjid Baitul Sobur)</span>
+                        </li>
+                        <li class="mb-2 d-flex align-items-center justify-content-center justify-content-md-start">
+                            <span class="me-2 text-gold"><i data-acorn-icon="email" style="width: 14px; height: 14px;"></i></span>
+                            <a href="mailto:andreperiozaherpa@gmail.com" class="text-muted text-decoration-none hover-gold">andreperiozaherpa@gmail.com</a>
+                        </li>
+                        <li class="mb-2 d-flex align-items-center justify-content-center justify-content-md-start">
+                            <span class="me-2 text-gold"><i data-acorn-icon="phone" style="width: 14px; height: 14px;"></i></span>
+                            <a href="https://wa.me/6282280783843" target="_blank" class="text-muted text-decoration-none hover-gold">0822 8078 3843 (WhatsApp)</a>
+                        </li>
+                        <li class="d-flex align-items-center justify-content-center justify-content-md-start">
+                            <span class="me-2 text-gold"><i data-acorn-icon="clock" style="width: 14px; height: 14px;"></i></span>
+                            <span>Senin – Sabtu: 08.00 – 20.00 WIB</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
-            <div class="row border-top pt-4 border-light">
-                <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
+            <!-- Footer Bottom -->
+            <div class="row border-top pt-4 border-light text-center text-md-start">
+                <div class="col-md-6 mb-2 mb-md-0">
                     <p class="small text-muted mb-0">&copy; {{ date('Y') }} Hijabkku. Hak Cipta Dilindungi.</p>
                 </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <p class="small text-muted mb-0"><a href="{{ route('login') }}"
-                            class="text-muted text-decoration-none">Login Sistem POS</a></p>
+                <div class="col-md-6 text-md-end">
+                    <p class="small text-muted mb-0">
+                        <a href="{{ route('login') }}" class="text-muted text-decoration-none hover-gold">Login Sistem POS</a>
+                    </p>
                 </div>
             </div>
         </div>

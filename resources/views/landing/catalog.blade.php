@@ -346,7 +346,7 @@
                                 <h3 class="fw-bold mb-2">Stok Sedang Kosong</h3>
                                 <p class="text-muted mb-4">Maaf, persediaan hijab di cabang
                                     {{ $selectedToko->nama_toko ?? '' }} sedang kosong atau dalam pembaruan.</p>
-                                <a href="https://wa.me/6281234567890" target="_blank"
+                                <a href="https://wa.me/6282280783843" target="_blank"
                                     class="btn btn-gold rounded-pill px-4">Hubungi Admin via WhatsApp</a>
                             </div>
                         </div>
@@ -563,36 +563,36 @@
     <section id="kebijakan" class="py-5 bg-white">
         <div class="container">
             <div class="text-center mb-5">
-                <h2 class="fw-bold">Kebijakan & Ketentuan Layanan</h2>
+                <h2 class="fw-bold font-serif text-dark">Kebijakan & Ketentuan Layanan</h2>
                 <p class="text-muted">Kebijakan operasional toko online Hijabkku</p>
+                <div class="mx-auto mt-2" style="width: 50px; height: 2px; background-color: #D4AF37;"></div>
             </div>
 
             <div class="row g-4">
                 <div class="col-md-6">
-                    <div class="policy-section h-100">
-                        <h4 class="fw-bold text-gold mb-3"><i data-acorn-icon="check" class="me-2"></i>Syarat &
-                            Ketentuan</h4>
-                        <p class="text-muted small">
-                            1. Seluruh pemesanan produk dilakukan secara langsung melalui kontak resmi toko kami
-                            (WhatsApp/Instagram @hijabkku).<br>
-                            2. Pembayaran dapat dilakukan menggunakan metode transfer bank atau e-wallet resmi yang
-                            disediakan saat invoice diterbitkan.<br>
-                            3. Harga produk yang tertera di website adalah harga mutlak dan belum termasuk ongkos kirim
-                            dari kota pengiriman kami.
+                    <div class="policy-section h-100 p-4 rounded-3 bg-light border border-light">
+                        <h4 class="fw-bold text-gold mb-3 font-serif"><i data-acorn-icon="check" class="me-2"></i>Syarat & Ketentuan</h4>
+                        <p class="text-muted small mb-3">
+                            1. Seluruh pemesanan produk dilakukan secara langsung melalui kontak resmi toko kami atau via website dengan metode Store Pickup.<br>
+                            2. Pembayaran dapat dilakukan menggunakan QRIS, Virtual Account, atau E-Wallet melalui payment gateway terintegrasi.<br>
+                            3. Harga produk yang tertera di website adalah harga mutlak dan sudah terverifikasi.
                         </p>
+                        <a href="{{ route('terms') }}" class="text-gold small fw-bold text-decoration-none hover-gold">
+                            Baca Syarat & Ketentuan Selengkapnya <i data-acorn-icon="arrow-right" class="ms-1" style="width: 12px; height: 12px;"></i>
+                        </a>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="policy-section h-100">
-                        <h4 class="fw-bold text-gold mb-3"><i data-acorn-icon="multiply" class="me-2"></i>Kebijakan
-                            Pengembalian (Refund)</h4>
-                        <p class="text-muted small">
-                            1. Kami menjamin kualitas terbaik. Jika barang yang diterima cacat produksi atau salah kirim
-                            variasi, Anda berhak mengajukan retur dalam 2x24 jam sejak barang diterima.<br>
-                            2. Wajib menyertakan video unboxing utuh tanpa jeda sebagai syarat utama pengajuan
-                            pengembalian barang atau dana.<br>
+                    <div class="policy-section h-100 p-4 rounded-3 bg-light border border-light">
+                        <h4 class="fw-bold text-gold mb-3 font-serif"><i data-acorn-icon="multiply" class="me-2"></i>Kebijakan Pengembalian (Refund)</h4>
+                        <p class="text-muted small mb-3">
+                            1. Kami menjamin kualitas terbaik. Jika barang yang diterima cacat produksi atau salah kirim, Anda berhak mengajukan retur dalam 2x24 jam.<br>
+                            2. Wajib menyertakan video unboxing utuh tanpa jeda sebagai syarat utama pengajuan retur.<br>
                             3. Dana refund akan dikembalikan secara penuh 100% apabila stok pengganti kosong.
                         </p>
+                        <a href="{{ route('refund-policy') }}" class="text-gold small fw-bold text-decoration-none hover-gold">
+                            Baca Kebijakan Refund Selengkapnya <i data-acorn-icon="arrow-right" class="ms-1" style="width: 12px; height: 12px;"></i>
+                        </a>
                     </div>
                 </div>
             </div>

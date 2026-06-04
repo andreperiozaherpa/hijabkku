@@ -14,7 +14,7 @@ class LandingController extends Controller
      */
     public function index()
     {
-        return view('landing.welcome');
+        return view('landing.home');
     }
 
     /**
@@ -87,5 +87,45 @@ class LandingController extends Controller
             'stocks' => $stocks,
             'xenditSimulationMode' => $xenditSimulationMode
         ]);
+    }
+
+    /**
+     * Display the About Us page.
+     */
+    public function about()
+    {
+        return view('landing.about');
+    }
+
+    /**
+     * Display the Contact Us page.
+     */
+    public function contact()
+    {
+        return view('landing.contact');
+    }
+
+    /**
+     * Display the Privacy Policy page.
+     */
+    public function privacyPolicy()
+    {
+        return view('landing.privacy-policy');
+    }
+
+    /**
+     * Display the Terms & Conditions page.
+     */
+    public function terms()
+    {
+        return view('landing.terms');
+    }
+
+    /**
+     * Display the Return & Refund Policy page.
+     */
+    public function refundPolicy()
+    {
+        return view('landing.refund-policy');
     }
 }
