@@ -10,11 +10,11 @@
             <div class="row align-items-center g-5">
                 <div class="col-lg-6 mb-5 mb-lg-0 pe-lg-5">
                     <span class="text-gold fw-bold tracking-wide text-uppercase"
-                        style="letter-spacing: 2px; font-size: 0.9rem;">KOLEKSI PASTEL PREMIUM</span>
+                        style="letter-spacing: 2px; font-size: 0.9rem;">KOLEKSI HIJAB PREMIUM</span>
                     <h1 class="display-4 fw-bold mb-4 hero-title mt-2 font-serif text-dark" style="line-height: 1.2;">Tampil
                         Anggun, <br>Lebih <span class="text-gold">Percaya Diri</span></h1>
                     <p class="lead mb-4 text-muted" style="font-size: 1.1rem; line-height: 1.8;">
-                        Temukan koleksi hijab premium dengan sentuhan warna pastel yang lembut,
+                        Temukan koleksi hijab dengan berbagai macam varian,
                         didesain khusus untuk menemani setiap momen spesial di hari-harimu.
                     </p>
                     <div class="d-flex flex-wrap justify-content-center justify-content-lg-start gap-3">
@@ -95,63 +95,113 @@
             </div>
 
             <div class="row g-4">
-                <!-- Product 1 -->
-                <div class="col-6 col-md-4">
-                    <a href="{{ route('catalog') }}" class="text-decoration-none text-dark">
-                        <div class="card product-card h-100 position-relative">
-                            <div class="badge-tag"
-                                style="position: absolute; top: 15px; left: 15px; background-color: #D4AF37; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; z-index: 2;">
-                                BEST SELLER</div>
-                            <div class="product-img overflow-hidden">
-                                <img src="/img/product_1.png" alt="Pashmina Silk Gold"
-                                    style="width: 100%; height: 100%; object-fit: cover;">
+                @forelse ($featuredProducts as $index => $product)
+                    @php
+                        $itemName = strtolower($product->data_barang->nama_barang ?? '');
+                        $imgUrl = '/img/product_1.png'; // default fallback
+                        $tag = 'HIJAB';
+
+                        if (str_contains($itemName, 'bella') || str_contains($itemName, 'square')) {
+                            $imgUrl = '/img/product_2.png';
+                            $tag = 'BEST SELLER';
+                        } elseif (
+                            str_contains($itemName, 'khimar') ||
+                            str_contains($itemName, 'syari') ||
+                            str_contains($itemName, 'syar\'i')
+                        ) {
+                            $imgUrl = '/img/product_3.png';
+                            $tag = 'PREMIUM';
+                        } elseif (str_contains($itemName, 'paris')) {
+                            $imgUrl = '/img/product_4.png';
+                            $tag = 'NEW';
+                        }
+
+                        // For layout consistency: First two are col-6 col-md-4, third one is col-12 col-md-4
+                        $colClass = ($index == 2) ? 'col-12 col-md-4' : 'col-6 col-md-4';
+                    @endphp
+                    <div class="{{ $colClass }}">
+                        <a href="{{ route('catalog', ['search' => $product->data_barang->nama_barang]) }}" class="text-decoration-none text-dark">
+                            <div class="card product-card h-100 position-relative">
+                                @if($tag !== 'HIJAB')
+                                    <div class="badge-tag"
+                                        style="position: absolute; top: 15px; left: 15px; background-color: {{ $tag === 'BEST SELLER' ? '#D4AF37' : ($tag === 'NEW' ? '#ffb6c1' : '#a8d8ea') }}; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; z-index: 2;">
+                                        {{ $tag }}</div>
+                                @endif
+                                <div class="product-img overflow-hidden">
+                                    <img src="{{ $imgUrl }}" alt="{{ $product->data_barang->nama_barang ?? 'Hijab' }}"
+                                        style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                <div class="card-body p-3 d-flex flex-column text-center">
+                                    <h5 class="fw-bold mb-1 product-title font-serif text-uppercase"
+                                        style="font-size: 1rem; letter-spacing: 1px;">
+                                        {{ $product->data_barang->nama_barang ?? 'Hijab Premium' }}</h5>
+                                    <p class="text-muted mb-0 mt-auto" style="font-size: 0.95rem;">
+                                        Rp {{ number_format(floatval(str_replace('.', '', $product->data_barang->harga_jual ?? '0')), 0, ',', '.') }}
+                                    </p>
+                                </div>
                             </div>
-                            <div class="card-body p-3 d-flex flex-column text-center">
-                                <h5 class="fw-bold mb-1 product-title font-serif text-uppercase"
-                                    style="font-size: 1rem; letter-spacing: 1px;">
-                                    Pashmina Silk Gold</h5>
-                                <p class="text-muted mb-0 mt-auto" style="font-size: 0.95rem;">Rp 85.000</p>
+                        </a>
+                    </div>
+                @empty
+                    <!-- Fallback if database is empty -->
+                    <!-- Product 1 -->
+                    <div class="col-6 col-md-4">
+                        <a href="{{ route('catalog') }}" class="text-decoration-none text-dark">
+                            <div class="card product-card h-100 position-relative">
+                                <div class="badge-tag"
+                                    style="position: absolute; top: 15px; left: 15px; background-color: #D4AF37; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; z-index: 2;">
+                                    BEST SELLER</div>
+                                <div class="product-img overflow-hidden">
+                                    <img src="/img/product_1.png" alt="Pashmina Silk Gold"
+                                        style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                <div class="card-body p-3 d-flex flex-column text-center">
+                                    <h5 class="fw-bold mb-1 product-title font-serif text-uppercase"
+                                        style="font-size: 1rem; letter-spacing: 1px;">
+                                        Pashmina Silk Gold</h5>
+                                    <p class="text-muted mb-0 mt-auto" style="font-size: 0.95rem;">Rp 85.000</p>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
-                <!-- Product 2 -->
-                <div class="col-6 col-md-4">
-                    <a href="{{ route('catalog') }}" class="text-decoration-none text-dark">
-                        <div class="card product-card h-100 position-relative">
-                            <div class="badge-tag"
-                                style="position: absolute; top: 15px; left: 15px; background-color: #ffb6c1; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; z-index: 2;">
-                                NEW</div>
-                            <div class="product-img overflow-hidden">
-                                <img src="/img/product_2.png" alt="Bella Square Pink Pastel"
-                                    style="width: 100%; height: 100%; object-fit: cover;">
+                        </a>
+                    </div>
+                    <!-- Product 2 -->
+                    <div class="col-6 col-md-4">
+                        <a href="{{ route('catalog') }}" class="text-decoration-none text-dark">
+                            <div class="card product-card h-100 position-relative">
+                                <div class="badge-tag"
+                                    style="position: absolute; top: 15px; left: 15px; background-color: #ffb6c1; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; z-index: 2;">
+                                    NEW</div>
+                                <div class="product-img overflow-hidden">
+                                    <img src="/img/product_2.png" alt="Bella Square Pink Pastel"
+                                        style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                <div class="card-body p-3 d-flex flex-column text-center">
+                                    <h5 class="fw-bold mb-1 product-title font-serif text-uppercase"
+                                        style="font-size: 1rem; letter-spacing: 1px;">
+                                        Bella Square Pink Pastel</h5>
+                                    <p class="text-muted mb-0 mt-auto" style="font-size: 0.95rem;">Rp 45.000</p>
+                                </div>
                             </div>
-                            <div class="card-body p-3 d-flex flex-column text-center">
-                                <h5 class="fw-bold mb-1 product-title font-serif text-uppercase"
-                                    style="font-size: 1rem; letter-spacing: 1px;">
-                                    Bella Square Pink Pastel</h5>
-                                <p class="text-muted mb-0 mt-auto" style="font-size: 0.95rem;">Rp 45.000</p>
+                        </a>
+                    </div>
+                    <!-- Product 3 -->
+                    <div class="col-12 col-md-4">
+                        <a href="{{ route('catalog') }}" class="text-decoration-none text-dark">
+                            <div class="card product-card h-100 position-relative">
+                                <div class="product-img overflow-hidden">
+                                    <img src="/img/product_3.png" alt="Khimar Syar'i Rose"
+                                        style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                <div class="card-body p-3 d-flex flex-column text-center">
+                                    <h5 class="fw-bold mb-1 product-title font-serif text-uppercase"
+                                        style="font-size: 1rem; letter-spacing: 1px;">
+                                        Khimar Syar'i Rose</h5>
+                                    <p class="text-muted mb-0 mt-auto" style="font-size: 0.95rem;">Rp 120.000</p>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
-                <!-- Product 3 -->
-                <div class="col-12 col-md-4">
-                    <a href="{{ route('catalog') }}" class="text-decoration-none text-dark">
-                        <div class="card product-card h-100 position-relative">
-                            <div class="product-img overflow-hidden">
-                                <img src="/img/product_3.png" alt="Khimar Syar'i Rose"
-                                    style="width: 100%; height: 100%; object-fit: cover;">
-                            </div>
-                            <div class="card-body p-3 d-flex flex-column text-center">
-                                <h5 class="fw-bold mb-1 product-title font-serif text-uppercase"
-                                    style="font-size: 1rem; letter-spacing: 1px;">
-                                    Khimar Syar'i Rose</h5>
-                                <p class="text-muted mb-0 mt-auto" style="font-size: 0.95rem;">Rp 120.000</p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
+                        </a>
+                    </div>
+                @endforelse
             </div>
 
             <div class="text-center mt-5">

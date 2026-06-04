@@ -14,7 +14,18 @@ class LandingController extends Controller
      */
     public function index()
     {
-        return view('landing.home');
+        $featuredProducts = collect();
+        if (\Illuminate\Support\Facades\Schema::hasTable('stock_tokos')) {
+            $featuredProducts = \App\Models\StockToko::whereHas('data_barang')
+                ->with('data_barang')
+                ->whereRaw('jumlah > terjual')
+                ->latest('id')
+                ->get()
+                ->unique('kode_barang')
+                ->take(3);
+        }
+
+        return view('landing.home', compact('featuredProducts'));
     }
 
     /**
