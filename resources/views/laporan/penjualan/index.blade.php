@@ -7,21 +7,21 @@
                 /* Styling Tabs & Active states */
                 .filter-period-btn {
                     transition: all 0.2s ease-in-out;
-                    border-color: rgba(var(--primary-rgb), 0.25);
+                    border-color: var(--primary);
                     color: var(--primary);
                 }
 
                 .filter-period-btn:hover {
-                    background-color: var(--primary-light);
+                    background-color: var(--primary);
                     border-color: var(--primary);
-                    color: var(--primary-dark);
+                    color: #fff;
                 }
 
                 .filter-period-btn.active {
                     background-color: var(--primary) !important;
                     border-color: var(--primary) !important;
                     color: #fff !important;
-                    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3) !important;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
                 }
 
                 .btn-gradient-success {
@@ -204,7 +204,8 @@
                                                 @endforeach
                                             @else
                                                 <option value="{{ Auth::user()->kode_toko }}" selected>
-                                                    {{ Auth::user()->toko ? Auth::user()->toko->nama_toko : Auth::user()->kode_toko }}</option>
+                                                    {{ Auth::user()->toko ? Auth::user()->toko->nama_toko : Auth::user()->kode_toko }}
+                                                </option>
                                             @endif
                                         </select>
                                     </div>
@@ -255,9 +256,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="overlay-spinner spinner_card d-none" style="border-radius: 16px;">
-                            <div class="spinner-border text-primary" role="status"></div>
-                        </div>
+                        {{-- Spinner dikontrol oleh ajaxData(), tersembunyi di luar kartu filter --}}
                     </div>
 
                     <!-- KPI Cards Row -->
@@ -622,6 +621,8 @@
             return !!(val && val !== '');
         }
 
+        let isInitialLoad = true;
+
         function ajaxData(method, url, data, param, optional) {
             $.ajax({
                 type: method,
@@ -629,7 +630,11 @@
                 data: data,
                 cache: false,
                 beforeSend: function(response) {
-                    $('.spinner_card').removeClass('d-none');
+                    // Disable period buttons during load to prevent duplicate requests
+                    // (no card spinner needed — Acorn's global spinner handles initial page load)
+                    if (!isInitialLoad) {
+                        $('.filter-period-btn').attr('disabled', true);
+                    }
                 },
                 success: function(response) {
                     if (['hari', 'bulan', 'tahun'].includes(response.param)) {
@@ -638,10 +643,12 @@
                     if (response.param == 'change') {
                         getDataChange(response, optional);
                     }
-                    $('.spinner_card').addClass('d-none');
+                    $('.filter-period-btn').attr('disabled', false);
+                    isInitialLoad = false;
                 },
                 error: function(xhr) {
-                    $('.spinner_card').addClass('d-none');
+                    $('.filter-period-btn').attr('disabled', false);
+                    isInitialLoad = false;
                 },
             });
         }
@@ -669,13 +676,15 @@
                     labels.push(hourStr);
                 }
                 laporan.forEach(item => {
-                    let date = new Date(item.tanggal_data);
-                    let hourStr = date.getHours().toString().padStart(2, '0') + ':00';
-                    if (groupedData[hourStr]) {
-                        if (item.metode === 'umum') {
-                            groupedData[hourStr].umum += parseFloat(item.harga_total);
-                        } else {
-                            groupedData[hourStr].grosir += parseFloat(item.harga_total);
+                    if (item.tanggal_data) {
+                        let hourPart = item.tanggal_data.substring(11, 13);
+                        let hourStr = hourPart + ':00';
+                        if (groupedData[hourStr]) {
+                            if (item.metode === 'umum') {
+                                groupedData[hourStr].umum += parseFloat(item.harga_total);
+                            } else {
+                                groupedData[hourStr].grosir += parseFloat(item.harga_total);
+                            }
                         }
                     }
                 });
@@ -694,13 +703,15 @@
                     labels.push(dayStr);
                 }
                 laporan.forEach(item => {
-                    let date = new Date(item.tanggal_data);
-                    let dayStr = date.getDate().toString();
-                    if (groupedData[dayStr]) {
-                        if (item.metode === 'umum') {
-                            groupedData[dayStr].umum += parseFloat(item.harga_total);
-                        } else {
-                            groupedData[dayStr].grosir += parseFloat(item.harga_total);
+                    if (item.tanggal_data) {
+                        let dayPart = parseInt(item.tanggal_data.substring(8, 10), 10);
+                        let dayStr = dayPart.toString();
+                        if (groupedData[dayStr]) {
+                            if (item.metode === 'umum') {
+                                groupedData[dayStr].umum += parseFloat(item.harga_total);
+                            } else {
+                                groupedData[dayStr].grosir += parseFloat(item.harga_total);
+                            }
                         }
                     }
                 });
@@ -714,13 +725,15 @@
                     labels.push(m);
                 });
                 laporan.forEach(item => {
-                    let date = new Date(item.tanggal_data);
-                    let m = monthNames[date.getMonth()];
-                    if (groupedData[m]) {
-                        if (item.metode === 'umum') {
-                            groupedData[m].umum += parseFloat(item.harga_total);
-                        } else {
-                            groupedData[m].grosir += parseFloat(item.harga_total);
+                    if (item.tanggal_data) {
+                        let monthIdx = parseInt(item.tanggal_data.substring(5, 7), 10) - 1;
+                        let m = monthNames[monthIdx];
+                        if (groupedData[m]) {
+                            if (item.metode === 'umum') {
+                                groupedData[m].umum += parseFloat(item.harga_total);
+                            } else {
+                                groupedData[m].grosir += parseFloat(item.harga_total);
+                            }
                         }
                     }
                 });
@@ -795,8 +808,10 @@
             const totalModal = modalUmum + modalGrosir;
             const totalKeuntungan = totalGabungan - totalModal;
 
-            const countUmum = laporan.filter(item => item.metode === 'umum').length;
-            const countGrosir = laporan.filter(item => item.metode === 'grosir').length;
+            const countUmum = res.data.counts ? res.data.counts.umum : laporan.filter(item => item.metode === 'umum')
+                .length;
+            const countGrosir = res.data.counts ? res.data.counts.grosir : laporan.filter(item => item.metode === 'grosir')
+                .length;
 
             // 2. Set KPI content
             $('#kpiTotalUmum').html(formatRupiah(totalUmum));
@@ -817,9 +832,13 @@
                 $('#kpiSelectedPeriod').text('Laporan: ' + param.toUpperCase());
             }
 
-            // 3. Load DataTables using Server-Side pagination
-            loadLaporanTable('#table-umum', 'umum', param);
-            loadLaporanTable('#table-grosir', 'grosir', param);
+            // 3. Load DataTables using Server-Side pagination (only for the active tab)
+            const activeTabId = $('#laporanTabs .nav-link.active').attr('id');
+            if (activeTabId === 'umum-tab') {
+                loadLaporanTable('#table-umum', 'umum', param);
+            } else if (activeTabId === 'grosir-tab') {
+                loadLaporanTable('#table-grosir', 'grosir', param);
+            }
 
             // 4. Update visual chart trend dynamically
             updateChart(opt, res);
@@ -1051,6 +1070,18 @@
                     confirmButtonText: 'Tutup',
                     confirmButtonColor: 'var(--primary)'
                 });
+            });
+
+            // Event listener for tab switching to load data on-demand
+            $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+                const activeTabId = $(e.target).attr('id');
+                const param = $('.filter-period-btn.active').attr('id') || 'hari';
+
+                if (activeTabId === 'umum-tab') {
+                    loadLaporanTable('#table-umum', 'umum', param);
+                } else if (activeTabId === 'grosir-tab') {
+                    loadLaporanTable('#table-grosir', 'grosir', param);
+                }
             });
 
             // Automatically load today's report on load

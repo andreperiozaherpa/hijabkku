@@ -6,21 +6,21 @@
             <style>
                 .filter-period-btn {
                     transition: all 0.2s ease-in-out;
-                    border-color: rgba(var(--primary-rgb), 0.25);
+                    border-color: var(--primary);
                     color: var(--primary);
                 }
 
                 .filter-period-btn:hover {
-                    background-color: var(--primary-light);
+                    background-color: var(--primary);
                     border-color: var(--primary);
-                    color: var(--primary-dark);
+                    color: #fff;
                 }
 
                 .filter-period-btn.active {
                     background-color: var(--primary) !important;
                     border-color: var(--primary) !important;
                     color: #fff !important;
-                    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3) !important;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
                 }
 
                 .btn-gradient-success {

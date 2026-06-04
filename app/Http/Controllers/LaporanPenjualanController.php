@@ -118,28 +118,44 @@ class LaporanPenjualanController extends Controller
         $toko = $request->toko;
         $karyawan = $request->karyawan;
 
+        // Parse date bounds to enable high-efficiency index range scans (whereBetween) instead of un-indexed functions (whereDate/whereYear)
+        $startDate = null;
+        $endDate = null;
+        if ($param === 'hari') {
+            $startDate = $date . ' 00:00:00';
+            $endDate = $date . ' 23:59:59';
+        } elseif ($param === 'bulan') {
+            try {
+                $carbonDate = \Illuminate\Support\Carbon::parse($date . '-01');
+                $startDate = $carbonDate->startOfMonth()->toDateTimeString();
+                $endDate = $carbonDate->endOfMonth()->toDateTimeString();
+            } catch (\Exception $e) {
+                $startDate = $date . '-01 00:00:00';
+                $endDate = $date . '-31 23:59:59';
+            }
+        } elseif ($param === 'tahun') {
+            try {
+                $carbonDate = \Illuminate\Support\Carbon::parse($date . '-01-01');
+                $startDate = $carbonDate->startOfYear()->toDateTimeString();
+                $endDate = $carbonDate->endOfYear()->toDateTimeString();
+            } catch (\Exception $e) {
+                $startDate = $date . '-01-01 00:00:00';
+                $endDate = $date . '-12-31 23:59:59';
+            }
+        }
+
         // 1. DataTables Server-Side Pagination
         if ($request->has('draw')) {
             $metode = $request->input('metode', 'umum');
 
+            // Joins users table removed because user_name is already denormalized in pembayarans table!
             $query = DB::table('transaksis')
                 ->join('pembayarans', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice')
-                ->join('users', 'pembayarans.user_id', '=', 'users.id')
                 ->where('transaksis.metode', $metode);
 
-            // Filter tanggal
-            if ($param === 'hari') {
-                $query->whereDate('transaksis.created_at', $date);
-            } elseif ($param === 'bulan') {
-                $parts = explode('-', $date);
-                if (count($parts) === 2) {
-                    $query->whereYear('transaksis.created_at', $parts[0])
-                          ->whereMonth('transaksis.created_at', $parts[1]);
-                } else {
-                    $query->whereDate('transaksis.created_at', 'like', '%' . $date . '%');
-                }
-            } elseif ($param === 'tahun') {
-                $query->whereYear('transaksis.created_at', $date);
+            // Filter tanggal using optimized index range scan
+            if ($startDate && $endDate) {
+                $query->whereBetween('transaksis.created_at', [$startDate, $endDate]);
             }
 
             // Filter toko
@@ -167,12 +183,12 @@ class LaporanPenjualanController extends Controller
 
             $totalRecords = $query->count();
 
-            // Search filter
+            // Search filter using denormalized user_name column from pembayarans
             $searchValue = $request->input('search.value');
             if (!empty($searchValue)) {
                 $query->where(function($q) use ($searchValue) {
                     $q->where('transaksis.kode_invoice', 'like', '%' . $searchValue . '%')
-                      ->orWhere('users.name', 'like', '%' . $searchValue . '%')
+                      ->orWhere('pembayarans.user_name', 'like', '%' . $searchValue . '%')
                       ->orWhere('transaksis.nama_barang', 'like', '%' . $searchValue . '%');
                 });
             }
@@ -182,15 +198,15 @@ class LaporanPenjualanController extends Controller
             // Ordering
             $orderColumnIdx = $request->input('order.0.column', 0);
             $orderDir = $request->input('order.0.dir', 'desc');
-            $columns = ['transaksis.created_at', 'transaksis.kode_invoice', 'users.name', 'transaksis.nama_barang', 'transaksis.metode', 'transaksis.jumlah', 'transaksis.harga', 'transaksis.harga_total'];
+            $columns = ['transaksis.created_at', 'transaksis.kode_invoice', 'pembayarans.user_name', 'transaksis.nama_barang', 'transaksis.metode', 'transaksis.jumlah', 'transaksis.harga', 'transaksis.harga_total'];
             $orderColumn = isset($columns[$orderColumnIdx]) ? $columns[$orderColumnIdx] : 'transaksis.created_at';
-            
+
             $query->orderBy($orderColumn, $orderDir);
 
             // Pagination
             $start = $request->input('start', 0);
             $length = $request->input('length', 25);
-            
+
             if ($length != -1) {
                 $query->skip($start)->take($length);
             }
@@ -198,7 +214,7 @@ class LaporanPenjualanController extends Controller
             $items = $query->select(
                 'transaksis.created_at as tanggal_data',
                 'transaksis.kode_invoice',
-                'users.name as user_name',
+                'pembayarans.user_name as user_name',
                 'transaksis.nama_barang',
                 'transaksis.metode',
                 'transaksis.jumlah',
@@ -229,24 +245,14 @@ class LaporanPenjualanController extends Controller
 
         // 2. Summary Request (KPI & Chart) - Highly Optimized using aggregates!
         if (in_array($param, ['hari', 'bulan', 'tahun'])) {
-            
+
             // Build base totals query
             $totalsQuery = DB::table('transaksis')
                 ->join('pembayarans', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice');
 
-            // Apply date filters
-            if ($param === 'hari') {
-                $totalsQuery->whereDate('transaksis.created_at', $date);
-            } elseif ($param === 'bulan') {
-                $parts = explode('-', $date);
-                if (count($parts) === 2) {
-                    $totalsQuery->whereYear('transaksis.created_at', $parts[0])
-                                 ->whereMonth('transaksis.created_at', $parts[1]);
-                } else {
-                    $totalsQuery->whereDate('transaksis.created_at', 'like', '%' . $date . '%');
-                }
-            } elseif ($param === 'tahun') {
-                $totalsQuery->whereYear('transaksis.created_at', $date);
+            // Apply date filters using optimized index range scan
+            if ($startDate && $endDate) {
+                $totalsQuery->whereBetween('transaksis.created_at', [$startDate, $endDate]);
             }
 
             // Apply toko filters
@@ -276,6 +282,7 @@ class LaporanPenjualanController extends Controller
             $aggregated = (clone $totalsQuery)
                 ->select(
                     'transaksis.metode',
+                    DB::raw('COUNT(transaksis.id) as total_count'),
                     DB::raw('SUM(transaksis.harga_total) as total_omzet'),
                     DB::raw('SUM(transaksis.jumlah * transaksis.harga_beli) as total_modal')
                 )
@@ -284,29 +291,48 @@ class LaporanPenjualanController extends Controller
 
             $totalUmum = 0;
             $modalUmum = 0;
+            $countUmum = 0;
             $totalGrosir = 0;
             $modalGrosir = 0;
+            $countGrosir = 0;
 
             foreach ($aggregated as $row) {
                 if ($row->metode === 'umum') {
                     $totalUmum = (float)$row->total_omzet;
                     $modalUmum = (float)$row->total_modal;
+                    $countUmum = (int)$row->total_count;
                 } elseif ($row->metode === 'grosir') {
                     $totalGrosir = (float)$row->total_omzet;
                     $modalGrosir = (float)$row->total_modal;
+                    $countGrosir = (int)$row->total_count;
                 }
             }
 
             // Fetch lightweight chart data only (omit details to reduce size by 95%!)
+            $driver = DB::connection()->getDriverName();
+            if ($param === 'hari') {
+                $format = $driver === 'sqlite' ? "strftime('%Y-%m-%d %H:00:00', transaksis.created_at)" : "DATE_FORMAT(transaksis.created_at, '%Y-%m-%d %H:00:00')";
+            } elseif ($param === 'bulan') {
+                $format = $driver === 'sqlite' ? "strftime('%Y-%m-%d 00:00:00', transaksis.created_at)" : "DATE_FORMAT(transaksis.created_at, '%Y-%m-%d 00:00:00')";
+            } else { // tahun
+                $format = $driver === 'sqlite' ? "strftime('%Y-%m-01 00:00:00', transaksis.created_at)" : "DATE_FORMAT(transaksis.created_at, '%Y-%m-01 00:00:00')";
+            }
+
             $chartItems = $totalsQuery
                 ->select(
-                    'transaksis.created_at as tanggal_data',
+                    DB::raw("$format as tanggal_data"),
                     'transaksis.metode',
-                    'transaksis.harga_total'
-                )->get();
+                    DB::raw('SUM(transaksis.harga_total) as harga_total')
+                )
+                ->groupBy('tanggal_data', 'transaksis.metode')
+                ->get();
 
             $data = [
                 'laporan' => $chartItems, // Kept key name as 'laporan' for frontend chart parser compatibility
+                'counts' => [
+                    'umum' => $countUmum,
+                    'grosir' => $countGrosir,
+                ],
                 'total' => [
                     'umum' => $totalUmum,
                     'modal_umum' => $modalUmum,
