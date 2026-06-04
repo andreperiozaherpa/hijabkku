@@ -56,6 +56,13 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
             Route::get('/edit', [TransaksiController::class, 'edit']);
             Route::get('/neraca', [TransaksiController::class, 'neraca']);
         });
+
+        Route::prefix('/pickup')->middleware('permission:kelola_pesanan_pickup')->group(function () {
+            Route::get('/', [\App\Http\Controllers\PesananPickupController::class, 'index'])->name('transaksi.pickup');
+            Route::get('/data', [\App\Http\Controllers\PesananPickupController::class, 'data'])->name('transaksi.pickup.data');
+            Route::get('/{id}/items', [\App\Http\Controllers\PesananPickupController::class, 'showItems'])->name('transaksi.pickup.items');
+            Route::post('/{id}/complete', [\App\Http\Controllers\PesananPickupController::class, 'complete'])->name('transaksi.pickup.complete');
+        });
     });
 
     Route::prefix('/manajemen')->group(function () {

@@ -75,7 +75,7 @@
                         <span class="label">Dashboards</span>
                     </a>
                 </li>
-                @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('proses_transaksi') || Auth::user()->hasPermission('lihat_daftar_penjualan'))
+                @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('proses_transaksi') || Auth::user()->hasPermission('lihat_daftar_penjualan') || Auth::user()->hasPermission('kelola_pesanan_pickup'))
                 <li>
                     <a href="#transaksi">
                         <i data-acorn-icon="cart" class="icon" data-acorn-size="18"></i>
@@ -93,6 +93,13 @@
                         <li>
                             <a href="/transaksi/daftar">
                                 <span class="label">Daftar Penjualan</span>
+                            </a>
+                        </li>
+                        @endif
+                        @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('kelola_pesanan_pickup'))
+                        <li>
+                            <a href="/transaksi/pickup">
+                                <span class="label">Pesanan Pickup</span>
                             </a>
                         </li>
                         @endif

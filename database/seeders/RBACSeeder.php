@@ -86,6 +86,12 @@ class RBACSeeder extends Seeder
                 'description' => 'Mengizinkan pengguna membaca panduan penggunaan aplikasi.',
                 'module' => 'Panduan',
             ],
+            [
+                'name' => 'kelola_pesanan_pickup',
+                'display_name' => 'Kelola Pesanan Pickup',
+                'description' => 'Mengizinkan pengguna melihat daftar pesanan pickup online dan memproses pengambilannya.',
+                'module' => 'Transaksi',
+            ],
         ];
 
         // Insert or update permissions
@@ -120,12 +126,14 @@ class RBACSeeder extends Seeder
                 'lihat_laporan_penjualan',
                 'kelola_pengguna',
                 'lihat_buku_panduan',
+                'kelola_pesanan_pickup',
             ],
             'kasir' => [
                 'lihat_dashboard',
                 'proses_transaksi',
                 'lihat_daftar_penjualan',
                 'lihat_buku_panduan',
+                'kelola_pesanan_pickup',
             ],
             'gudang' => [
                 'lihat_dashboard',
