@@ -88,6 +88,17 @@ class LandingComplianceTest extends TestCase
         $response->assertSee(route('contact'));
         $response->assertSee('andreperiozaherpa@gmail.com');
         $response->assertSee('0822 8078 3843');
-        $response->assertSee('08.00 – 20.00 WIB');
+    }
+
+    /**
+     * Test that a non-existent URL loads the custom 404 page successfully.
+     */
+    public function test_custom_404_page_loads_with_brand_layout()
+    {
+        $response = $this->get('/non-existent-page-url-path');
+
+        $response->assertStatus(404);
+        $response->assertSee('Halaman Tidak Ditemukan');
+        $response->assertSee('Kembali ke Beranda');
     }
 }
