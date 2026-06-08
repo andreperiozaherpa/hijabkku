@@ -202,18 +202,18 @@ class StockOpnameController extends Controller
     public function itemsData(Request $request, $id)
     {
         $session = StockOpname::findOrFail($id);
-        $session_created_at = $session->created_at;
+        $waktuMulai = $session->tanggal_mulai ?? $session->created_at;
         $session_kode_toko = $session->kode_toko;
 
         $query = StockOpnameItem::with('barang')
             ->select('stock_opname_items.*')
-            ->selectSub(function ($q) use ($session_kode_toko, $session_created_at) {
+            ->selectSub(function ($q) use ($session_kode_toko, $waktuMulai) {
                 $q->selectRaw('COALESCE(SUM(transaksis.jumlah), 0)')
                     ->from('transaksis')
                     ->leftJoin('pesanan_pickups', 'transaksis.kode_invoice', '=', 'pesanan_pickups.kode_invoice')
                     ->whereColumn('transaksis.kode_barang', 'stock_opname_items.kode_barang')
                     ->where('transaksis.kode_toko', $session_kode_toko)
-                    ->where('transaksis.created_at', '>=', $session_created_at)
+                    ->where('transaksis.created_at', '>=', $waktuMulai)
                     ->where(function ($sub) {
                         $sub->whereNull('pesanan_pickups.id')
                             ->orWhere('pesanan_pickups.status_pengambilan', '!=', 'Belum Diambil');
@@ -393,12 +393,14 @@ class StockOpnameController extends Controller
 
             $item->$qtyCol = $qtyAfter;
 
+            $waktuMulai = $session->tanggal_mulai ?? $session->created_at;
+
             // Recalculate Final Qty & Variance taking real-time sales into account
             $sales = DB::table('transaksis')
                 ->leftJoin('pesanan_pickups', 'transaksis.kode_invoice', '=', 'pesanan_pickups.kode_invoice')
                 ->where('transaksis.kode_toko', $session->kode_toko)
                 ->where('transaksis.kode_barang', $barcode)
-                ->where('transaksis.created_at', '>=', $session->created_at)
+                ->where('transaksis.created_at', '>=', $waktuMulai)
                 ->where(function ($sub) {
                     $sub->whereNull('pesanan_pickups.id')
                         ->orWhere('pesanan_pickups.status_pengambilan', '!=', 'Belum Diambil');
@@ -468,11 +470,13 @@ class StockOpnameController extends Controller
             $qtyBefore = $item->$qtyCol;
             $item->$qtyCol = $qty;
 
+            $waktuMulai = $session->tanggal_mulai ?? $session->created_at;
+
             $sales = DB::table('transaksis')
                 ->leftJoin('pesanan_pickups', 'transaksis.kode_invoice', '=', 'pesanan_pickups.kode_invoice')
                 ->where('transaksis.kode_toko', $session->kode_toko)
                 ->where('transaksis.kode_barang', $item->kode_barang)
-                ->where('transaksis.created_at', '>=', $session->created_at)
+                ->where('transaksis.created_at', '>=', $waktuMulai)
                 ->where(function ($sub) {
                     $sub->whereNull('pesanan_pickups.id')
                         ->orWhere('pesanan_pickups.status_pengambilan', '!=', 'Belum Diambil');
@@ -521,11 +525,13 @@ class StockOpnameController extends Controller
         }
 
         $result = DB::transaction(function () use ($session) {
+            $waktuMulai = $session->tanggal_mulai ?? $session->created_at;
+
             // Bulk prefetch sales during opname for this shop
             $salesData = DB::table('transaksis')
                 ->leftJoin('pesanan_pickups', 'transaksis.kode_invoice', '=', 'pesanan_pickups.kode_invoice')
                 ->where('transaksis.kode_toko', $session->kode_toko)
-                ->where('transaksis.created_at', '>=', $session->created_at)
+                ->where('transaksis.created_at', '>=', $waktuMulai)
                 ->where(function ($sub) {
                     $sub->whereNull('pesanan_pickups.id')
                         ->orWhere('pesanan_pickups.status_pengambilan', '!=', 'Belum Diambil');
@@ -641,11 +647,13 @@ class StockOpnameController extends Controller
             $session->supervisor_id = Auth::user()->id;
             $session->save();
 
+            $waktuMulai = $session->tanggal_mulai ?? $session->created_at;
+
             // Bulk prefetch sales during opname for this shop
             $salesData = DB::table('transaksis')
                 ->leftJoin('pesanan_pickups', 'transaksis.kode_invoice', '=', 'pesanan_pickups.kode_invoice')
                 ->where('transaksis.kode_toko', $session->kode_toko)
-                ->where('transaksis.created_at', '>=', $session->created_at)
+                ->where('transaksis.created_at', '>=', $waktuMulai)
                 ->where(function ($sub) {
                     $sub->whereNull('pesanan_pickups.id')
                         ->orWhere('pesanan_pickups.status_pengambilan', '!=', 'Belum Diambil');

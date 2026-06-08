@@ -1017,4 +1017,88 @@ class StockOpnameTest extends TestCase
         $this->assertTrue(in_array($item1->id, $ids));
         $this->assertFalse(in_array($item2->id, $ids));
     }
+
+    public function test_sales_during_opname_uses_tanggal_mulai_instead_of_created_at()
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'kode_toko' => 'TK_001',
+            'shift' => 0,
+        ]);
+
+        $barang = DataBarang::create([
+            'kode' => '77777777',
+            'nama_barang' => 'Test Time Reference Item',
+            'harga_beli' => '10000',
+            'harga_jual' => '15000',
+            'harga_grosir' => '12000',
+            'jenis_barang' => 'Hijab',
+        ]);
+
+        $stock = StockToko::create([
+            'kode_input' => 'IN-TIME-REF',
+            'kode_toko' => 'TK_001',
+            'kode_barang' => '77777777',
+            'nama_barang' => 'Test Time Reference Item',
+            'jumlah' => 100,
+            'terjual' => 0,
+            'supplier' => 'Test Supplier',
+        ]);
+
+        // Create SO session draft 2 hours ago
+        $so = StockOpname::create([
+            'nomor_so' => 'SO-TIME-TEST',
+            'kode_toko' => 'TK_001',
+            'status' => 'Counting',
+            'petugas_id' => $admin->id,
+            'created_at' => now()->subHours(2),
+            'tanggal_mulai' => now()->subHours(1), // Started counting 1 hour ago
+        ]);
+
+        $item = StockOpnameItem::create([
+            'stock_opname_id' => $so->id,
+            'kode_barang' => '77777777',
+            'snapshot_qty' => 100,
+            'round_1_qty' => null,
+            'final_qty' => 0,
+        ]);
+
+        // Transaction 1: 1.5 hours ago (AFTER session draft created_at, but BEFORE counting started tanggal_mulai)
+        \App\Models\Transaksi::create([
+            'kode_invoice' => 'INV-PRE-SO',
+            'kode_toko' => 'TK_001',
+            'kode_barang' => '77777777',
+            'nama_barang' => 'Test Time Reference Item',
+            'metode' => 'umum',
+            'jumlah' => 10,
+            'harga' => 15000,
+            'harga_beli' => 10000,
+            'harga_total' => 150000,
+            'created_at' => now()->subMinutes(90),
+        ]);
+
+        // Transaction 2: 30 minutes ago (AFTER counting started tanggal_mulai)
+        \App\Models\Transaksi::create([
+            'kode_invoice' => 'INV-DURING-SO',
+            'kode_toko' => 'TK_001',
+            'kode_barang' => '77777777',
+            'nama_barang' => 'Test Time Reference Item',
+            'metode' => 'umum',
+            'jumlah' => 5,
+            'harga' => 15000,
+            'harga_beli' => 10000,
+            'harga_total' => 75000,
+            'created_at' => now()->subMinutes(30),
+        ]);
+
+        // Fetch data via items-data API route
+        $response = $this->actingAs($admin)->get('/laporan/opname/items-data/' . $so->id);
+        $response->assertStatus(200);
+
+        $data = $response->json()['data'];
+        $this->assertCount(1, $data);
+        
+        // The sales_during_opname should only count the 5 items from Transaction 2, not the 10 from Transaction 1!
+        $this->assertEquals(5, $data[0]['sales_during_opname']);
+    }
 }
