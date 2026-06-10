@@ -1,28 +1,30 @@
 <?php
 
+use App\Http\Controllers\Api\XenditController;
 use App\Http\Controllers\BahanBarangController;
 use App\Http\Controllers\BukuPanduanController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataBarangController;
 use App\Http\Controllers\JenisBarangController;
-use App\Http\Controllers\LaporanPenjualanController;
+use App\Http\Controllers\landing\LandingController;
 use App\Http\Controllers\LaporanBarangController;
+use App\Http\Controllers\LaporanPenjualanController;
 use App\Http\Controllers\MerekBarangController;
 use App\Http\Controllers\ModelBarangController;
 use App\Http\Controllers\PackagingBarangController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PesananPickupController;
+use App\Http\Controllers\RevisiPenjualanController;
 use App\Http\Controllers\StockInOutController;
 use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\StockTokoController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\TokoController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\UkuranBarangController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\VariasiBarangController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\landing\LandingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,7 +36,6 @@ use App\Http\Controllers\landing\LandingController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-
 
 Route::get('/', [LandingController::class, 'index']);
 Route::get('/catalog', [LandingController::class, 'catalog'])->name('catalog');
@@ -52,7 +53,7 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
             Route::get('/', [TransaksiController::class, 'index'])->name('transaksi.penjualan');
             Route::get('/create', [TransaksiController::class, 'create']);
             Route::post('/store', [TransaksiController::class, 'store']);
-            Route::post('/xendit/create', [\App\Http\Controllers\Api\XenditController::class, 'createInvoice']);
+            Route::post('/xendit/create', [XenditController::class, 'createInvoice']);
         });
 
         Route::prefix('/daftar')->middleware('permission:lihat_daftar_penjualan')->group(function () {
@@ -63,11 +64,18 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
             Route::get('/neraca', [TransaksiController::class, 'neraca']);
         });
 
+        Route::prefix('/revisi')->middleware('permission:proses_transaksi')->group(function () {
+            Route::get('/', [RevisiPenjualanController::class, 'index'])->name('revisi.index');
+            Route::get('/cari', [RevisiPenjualanController::class, 'cariInvoice'])->name('revisi.cari');
+            Route::get('/cari-barang', [RevisiPenjualanController::class, 'cariBarang'])->name('revisi.cari_barang');
+            Route::post('/proses', [RevisiPenjualanController::class, 'prosesRevisi'])->name('revisi.proses');
+        });
+
         Route::prefix('/pickup')->middleware('permission:kelola_pesanan_pickup')->group(function () {
-            Route::get('/', [\App\Http\Controllers\PesananPickupController::class, 'index'])->name('transaksi.pickup');
-            Route::get('/data', [\App\Http\Controllers\PesananPickupController::class, 'data'])->name('transaksi.pickup.data');
-            Route::get('/{id}/items', [\App\Http\Controllers\PesananPickupController::class, 'showItems'])->name('transaksi.pickup.items');
-            Route::post('/{id}/complete', [\App\Http\Controllers\PesananPickupController::class, 'complete'])->name('transaksi.pickup.complete');
+            Route::get('/', [PesananPickupController::class, 'index'])->name('transaksi.pickup');
+            Route::get('/data', [PesananPickupController::class, 'data'])->name('transaksi.pickup.data');
+            Route::get('/{id}/items', [PesananPickupController::class, 'showItems'])->name('transaksi.pickup.items');
+            Route::post('/{id}/complete', [PesananPickupController::class, 'complete'])->name('transaksi.pickup.complete');
         });
     });
 
@@ -228,4 +236,4 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
     });
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

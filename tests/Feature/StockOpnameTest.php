@@ -2,14 +2,17 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\Toko;
 use App\Models\DataBarang;
-use App\Models\StockToko;
 use App\Models\StockOpname;
+use App\Models\StockOpnameAudit;
 use App\Models\StockOpnameItem;
+use App\Models\StockToko;
+use App\Models\Toko;
+use App\Models\Transaksi;
+use App\Models\User;
 use Database\Seeders\RBACSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class StockOpnameTest extends TestCase
@@ -17,7 +20,9 @@ class StockOpnameTest extends TestCase
     use RefreshDatabase;
 
     protected $admin;
+
     protected $toko;
+
     protected $barang;
 
     protected function setUp(): void
@@ -26,7 +31,7 @@ class StockOpnameTest extends TestCase
         $this->seed(RBACSeeder::class);
 
         // Create standard Store
-        $this->toko = new Toko();
+        $this->toko = new Toko;
         $this->toko->kode = 'TK_001';
         $this->toko->nama_toko = 'Toko Fashion Pusat';
         $this->toko->save();
@@ -40,7 +45,7 @@ class StockOpnameTest extends TestCase
         ]);
 
         // Create dummy Product
-        $this->barang = new DataBarang();
+        $this->barang = new DataBarang;
         $this->barang->kode = '88888888';
         $this->barang->jenis_barang = 'Hijab';
         $this->barang->nama_barang = 'Hijab Segiempat Voal';
@@ -61,7 +66,7 @@ class StockOpnameTest extends TestCase
         ]);
 
         // Create second product with 0 stock
-        $barang0 = new DataBarang();
+        $barang0 = new DataBarang;
         $barang0->kode = '99999999';
         $barang0->jenis_barang = 'Hijab';
         $barang0->nama_barang = 'Hijab Instan 0 Stock';
@@ -281,7 +286,7 @@ class StockOpnameTest extends TestCase
             'final_qty' => 0,
         ]);
 
-        \App\Models\StockOpnameAudit::create([
+        StockOpnameAudit::create([
             'stock_opname_id' => $so->id,
             'stock_opname_item_id' => $item->id,
             'user_id' => $this->admin->id,
@@ -291,13 +296,13 @@ class StockOpnameTest extends TestCase
             'action' => 'Scan Barcode',
         ]);
 
-        $response = $this->actingAs($this->admin)->get('/laporan/opname/audit-logs/' . $so->id);
+        $response = $this->actingAs($this->admin)->get('/laporan/opname/audit-logs/'.$so->id);
 
         $response->assertStatus(200);
         $response->assertJson([
             'success' => true,
         ]);
-        
+
         $this->assertCount(1, $response->json('logs'));
     }
 
@@ -494,7 +499,7 @@ class StockOpnameTest extends TestCase
         ]);
 
         // A transaction of 5 items is created DURING opname (created_at >= session->created_at)
-        \App\Models\Transaksi::create([
+        Transaksi::create([
             'kode_invoice' => 'INV-001',
             'kode_toko' => 'TK_001',
             'kode_barang' => '99999999',
@@ -546,7 +551,7 @@ class StockOpnameTest extends TestCase
 
         $response->assertJson([
             'success' => false,
-            'message' => 'Toko ini masih memiliki sesi Stock Opname yang aktif! Selesaikan sesi sebelumnya terlebih dahulu.'
+            'message' => 'Toko ini masih memiliki sesi Stock Opname yang aktif! Selesaikan sesi sebelumnya terlebih dahulu.',
         ]);
     }
 
@@ -561,11 +566,11 @@ class StockOpnameTest extends TestCase
             'supervisor_id' => $supervisor->id,
         ]);
 
-        $response = $this->actingAs($this->admin)->delete('/laporan/opname/destroy/' . $so->id);
+        $response = $this->actingAs($this->admin)->delete('/laporan/opname/destroy/'.$so->id);
 
         $response->assertJson([
             'success' => true,
-            'message' => 'Sesi Stock Opname berhasil dihapus!'
+            'message' => 'Sesi Stock Opname berhasil dihapus!',
         ]);
 
         $this->assertDatabaseMissing('stock_opnames', ['id' => $so->id]);
@@ -582,11 +587,11 @@ class StockOpnameTest extends TestCase
             'supervisor_id' => $supervisor->id,
         ]);
 
-        $response = $this->actingAs($this->admin)->delete('/laporan/opname/destroy/' . $so->id);
+        $response = $this->actingAs($this->admin)->delete('/laporan/opname/destroy/'.$so->id);
 
         $response->assertJson([
             'success' => false,
-            'message' => 'Hanya sesi berstatus Draft yang dapat dihapus!'
+            'message' => 'Hanya sesi berstatus Draft yang dapat dihapus!',
         ]);
 
         $this->assertDatabaseHas('stock_opnames', ['id' => $so->id]);
@@ -632,7 +637,7 @@ class StockOpnameTest extends TestCase
 
         $response->assertJson([
             'success' => false,
-            'message' => 'Hanya Admin atau Supervisor yang ditunjuk yang berhak melakukan validasi round!'
+            'message' => 'Hanya Admin atau Supervisor yang ditunjuk yang berhak melakukan validasi round!',
         ]);
     }
 
@@ -654,7 +659,7 @@ class StockOpnameTest extends TestCase
 
         $response->assertJson([
             'success' => false,
-            'message' => 'Hanya Admin yang dapat memfinalkan Stock Opname!'
+            'message' => 'Hanya Admin yang dapat memfinalkan Stock Opname!',
         ]);
     }
 
@@ -715,18 +720,18 @@ class StockOpnameTest extends TestCase
 
         // Add '99999999' which is in master data but NOT in this session's items
         $response = $this->actingAs($this->admin)->post("/laporan/opname/add-master-product/{$so->id}", [
-            'kode_barang' => '99999999'
+            'kode_barang' => '99999999',
         ]);
 
         $response->assertJson([
             'success' => true,
-            'message' => 'Barang berhasil ditambahkan ke list stock opname!'
+            'message' => 'Barang berhasil ditambahkan ke list stock opname!',
         ]);
 
         $this->assertDatabaseHas('stock_opname_items', [
             'stock_opname_id' => $so->id,
             'kode_barang' => '99999999',
-            'snapshot_qty' => 0 // '99999999' has 5 - 5 = 0 available stock
+            'snapshot_qty' => 0, // '99999999' has 5 - 5 = 0 available stock
         ]);
     }
 
@@ -741,7 +746,7 @@ class StockOpnameTest extends TestCase
         ]);
 
         $response = $this->actingAs($unauthorizedUser)->post("/laporan/opname/add-master-product/{$so->id}", [
-            'kode_barang' => '99999999'
+            'kode_barang' => '99999999',
         ]);
 
         $response->assertStatus(403);
@@ -759,19 +764,19 @@ class StockOpnameTest extends TestCase
         ]);
 
         $response = $this->actingAs($supervisor)->post("/laporan/opname/add-master-product/{$so->id}", [
-            'kode_barang' => '99999999'
+            'kode_barang' => '99999999',
         ]);
 
         $response->assertJson([
             'success' => true,
-            'message' => 'Barang berhasil ditambahkan ke list stock opname!'
+            'message' => 'Barang berhasil ditambahkan ke list stock opname!',
         ]);
     }
 
     public function test_pos_sale_auto_deducts_counted_opname_item()
     {
         // Fake Firebase service
-        \Illuminate\Support\Facades\Http::fake();
+        Http::fake();
 
         $user = User::factory()->create([
             'role' => 'kasir',
@@ -829,8 +834,8 @@ class StockOpnameTest extends TestCase
                     'jumlah_barang' => 2,
                     'harga_item' => 15000,
                     'harga_jual' => 30000,
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $response->assertJson([
@@ -854,10 +859,10 @@ class StockOpnameTest extends TestCase
 
     public function test_admin_can_edit_qty_in_review_mode()
     {
-        \Illuminate\Support\Facades\Http::fake();
+        Http::fake();
 
         $admin = User::factory()->create(['role' => 'admin']);
-        
+
         $barang = DataBarang::create([
             'kode' => 'BRG_REVIEW_EDIT',
             'nama_barang' => 'Test Review Product',
@@ -895,7 +900,7 @@ class StockOpnameTest extends TestCase
 
         $item->refresh();
         $this->assertEquals(12, $item->final_qty);
-        
+
         // Verify log action
         $this->assertDatabaseHas('stock_opname_audits', [
             'stock_opname_id' => $so->id,
@@ -909,7 +914,7 @@ class StockOpnameTest extends TestCase
 
     public function test_non_admin_cannot_edit_qty_in_review_mode()
     {
-        \Illuminate\Support\Facades\Http::fake();
+        Http::fake();
 
         $nonAdmin = User::factory()->create(['role' => 'gudang']);
         $admin = User::factory()->create(['role' => 'admin']);
@@ -1007,9 +1012,9 @@ class StockOpnameTest extends TestCase
         ]);
 
         // Verify DataTables list returns data correctly and filters by variance
-        $dtResponse = $this->actingAs($this->admin)->get('/laporan/opname/items-data/' . $so->id . '?variance_only=true');
+        $dtResponse = $this->actingAs($this->admin)->get('/laporan/opname/items-data/'.$so->id.'?variance_only=true');
         $dtResponse->assertStatus(200);
-        
+
         $data = $dtResponse->json()['data'];
         $ids = collect($data)->pluck('id')->toArray();
 
@@ -1064,7 +1069,7 @@ class StockOpnameTest extends TestCase
         ]);
 
         // Transaction 1: 1.5 hours ago (AFTER session draft created_at, but BEFORE counting started tanggal_mulai)
-        \App\Models\Transaksi::create([
+        Transaksi::create([
             'kode_invoice' => 'INV-PRE-SO',
             'kode_toko' => 'TK_001',
             'kode_barang' => '77777777',
@@ -1078,7 +1083,7 @@ class StockOpnameTest extends TestCase
         ]);
 
         // Transaction 2: 30 minutes ago (AFTER counting started tanggal_mulai)
-        \App\Models\Transaksi::create([
+        Transaksi::create([
             'kode_invoice' => 'INV-DURING-SO',
             'kode_toko' => 'TK_001',
             'kode_barang' => '77777777',
@@ -1092,13 +1097,49 @@ class StockOpnameTest extends TestCase
         ]);
 
         // Fetch data via items-data API route
-        $response = $this->actingAs($admin)->get('/laporan/opname/items-data/' . $so->id);
+        $response = $this->actingAs($admin)->get('/laporan/opname/items-data/'.$so->id);
         $response->assertStatus(200);
 
         $data = $response->json()['data'];
         $this->assertCount(1, $data);
-        
+
         // The sales_during_opname should only count the 5 items from Transaction 2, not the 10 from Transaction 1!
         $this->assertEquals(5, $data[0]['sales_during_opname']);
+    }
+
+    public function test_cannot_update_qty_manual_with_negative_value()
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'kode_toko' => 'TK_001',
+            'shift' => 0,
+        ]);
+
+        $so = StockOpname::create([
+            'nomor_so' => 'SO-MANUAL-NEG-TEST',
+            'kode_toko' => 'TK_001',
+            'status' => 'Counting',
+            'petugas_id' => $admin->id,
+        ]);
+
+        $item = StockOpnameItem::create([
+            'stock_opname_id' => $so->id,
+            'kode_barang' => '88888888',
+            'snapshot_qty' => 10,
+            'final_qty' => 0,
+        ]);
+
+        $response = $this->actingAs($admin)->post('/laporan/opname/update-qty-manual', [
+            'item_id' => $item->id,
+            'qty' => -5,
+            'round' => 1,
+        ]);
+
+        $response->assertJson([
+            'success' => false,
+        ]);
+
+        $item->refresh();
+        $this->assertEquals(null, $item->round_1_qty);
     }
 }

@@ -96,6 +96,13 @@
                             </a>
                         </li>
                         @endif
+                        @if (Auth::user()->role == 'admin')
+                        <li>
+                            <a href="/transaksi/revisi">
+                                <span class="label">Revisi Penjualan</span>
+                            </a>
+                        </li>
+                        @endif
                         @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('kelola_pesanan_pickup'))
                         <li>
                             <a href="/transaksi/pickup">

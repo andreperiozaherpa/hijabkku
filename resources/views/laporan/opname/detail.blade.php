@@ -969,7 +969,7 @@
                     return; // If no edit trigger is present (e.g. read-only final/other state), do nothing
 
                 const itemId = trigger.attr('data-id');
-                const currentVal = trigger.text() === '-' ? 0 : parseInt(trigger.text());
+                const currentVal = trigger.text() === '-' ? null : parseInt(trigger.text());
 
                 Swal.fire({
                     title: 'Edit Qty Manual',
