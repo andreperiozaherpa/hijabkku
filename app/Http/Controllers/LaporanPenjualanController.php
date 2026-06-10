@@ -7,6 +7,7 @@ use App\Models\Toko;
 use App\Models\Transaksi;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -18,6 +19,7 @@ class LaporanPenjualanController extends Controller
     public function index()
     {
         $toko = Toko::whereNotIn('nama_toko', ['stock hilang', 'Online Shop'])->get();
+
         return view('laporan.penjualan.index', [
             'toko' => $toko,
         ]);
@@ -33,12 +35,13 @@ class LaporanPenjualanController extends Controller
         $select = $request->selected;
 
         if ($parameter == 'karyawan') {
-            # code...
+            // code...
             $data = User::where('kode_toko', $select)->where('status', 'on')->get();
         }
+
         return response()->json([
             'data' => $data,
-            'param' => 'change'
+            'param' => 'change',
         ]);
     }
 
@@ -61,7 +64,6 @@ class LaporanPenjualanController extends Controller
     //     $date = $request->date;
     //     $toko = $request->toko;
     //     $karyawan = $request->karyawan;
-
 
     //     function data_toko($toko, $date)
     //     {
@@ -122,78 +124,98 @@ class LaporanPenjualanController extends Controller
         $startDate = null;
         $endDate = null;
         if ($param === 'hari') {
-            $startDate = $date . ' 00:00:00';
-            $endDate = $date . ' 23:59:59';
+            $startDate = $date.' 00:00:00';
+            $endDate = $date.' 23:59:59';
         } elseif ($param === 'bulan') {
             try {
-                $carbonDate = \Illuminate\Support\Carbon::parse($date . '-01');
+                $carbonDate = Carbon::parse($date.'-01');
                 $startDate = $carbonDate->startOfMonth()->toDateTimeString();
                 $endDate = $carbonDate->endOfMonth()->toDateTimeString();
             } catch (\Exception $e) {
-                $startDate = $date . '-01 00:00:00';
-                $endDate = $date . '-31 23:59:59';
+                $startDate = $date.'-01 00:00:00';
+                $endDate = $date.'-31 23:59:59';
             }
         } elseif ($param === 'tahun') {
             try {
-                $carbonDate = \Illuminate\Support\Carbon::parse($date . '-01-01');
+                $carbonDate = Carbon::parse($date.'-01-01');
                 $startDate = $carbonDate->startOfYear()->toDateTimeString();
                 $endDate = $carbonDate->endOfYear()->toDateTimeString();
             } catch (\Exception $e) {
-                $startDate = $date . '-01-01 00:00:00';
-                $endDate = $date . '-12-31 23:59:59';
+                $startDate = $date.'-01-01 00:00:00';
+                $endDate = $date.'-12-31 23:59:59';
             }
         }
 
         // 1. DataTables Server-Side Pagination
         if ($request->has('draw')) {
             $metode = $request->input('metode', 'umum');
+            $needsUserFilter = ($karyawan !== 'semua' && ! empty($karyawan)) || Auth::user()->role != 'admin';
 
-            // Joins users table removed because user_name is already denormalized in pembayarans table!
+            // Get excluded store codes once
+            $excludedTokoCodes = DB::table('tokos')
+                ->whereIn('nama_toko', ['stock hilang', 'Online Shop'])
+                ->pluck('kode')
+                ->toArray();
+
+            // Build a lightweight count query (avoid JOIN to pembayarans if not filtering on user_id)
+            $countQuery = DB::table('transaksis')
+                ->where('transaksis.metode', $metode);
+
+            if ($startDate && $endDate) {
+                $countQuery->whereBetween('transaksis.created_at', [$startDate, $endDate]);
+            }
+
+            if ($toko !== 'semua' && ! empty($toko)) {
+                $countQuery->where('transaksis.kode_toko', $toko);
+            } elseif (! empty($excludedTokoCodes)) {
+                $countQuery->whereNotIn('transaksis.kode_toko', $excludedTokoCodes);
+            }
+
+            if ($needsUserFilter) {
+                $countQuery->join('pembayarans', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice');
+                if ($karyawan !== 'semua' && ! empty($karyawan)) {
+                    $countQuery->where('pembayarans.user_id', $karyawan);
+                }
+                if (Auth::user()->role != 'admin') {
+                    $countQuery->where('pembayarans.user_id', Auth::id());
+                }
+            }
+
+            $totalRecords = $countQuery->count();
+
+            // Build query to retrieve rows (includes JOIN to get pembayarans.user_name)
             $query = DB::table('transaksis')
                 ->join('pembayarans', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice')
                 ->where('transaksis.metode', $metode);
 
-            // Filter tanggal using optimized index range scan
             if ($startDate && $endDate) {
                 $query->whereBetween('transaksis.created_at', [$startDate, $endDate]);
             }
 
-            // Filter toko
-            if ($toko !== 'semua' && !empty($toko)) {
+            if ($toko !== 'semua' && ! empty($toko)) {
                 $query->where('transaksis.kode_toko', $toko);
-            } else {
-                $excludedTokoCodes = DB::table('tokos')
-                    ->whereIn('nama_toko', ['stock hilang', 'Online Shop'])
-                    ->pluck('kode')
-                    ->toArray();
-                if (!empty($excludedTokoCodes)) {
-                    $query->whereNotIn('transaksis.kode_toko', $excludedTokoCodes);
-                }
+            } elseif (! empty($excludedTokoCodes)) {
+                $query->whereNotIn('transaksis.kode_toko', $excludedTokoCodes);
             }
 
-            // Filter karyawan
-            if ($karyawan !== 'semua' && !empty($karyawan)) {
+            if ($karyawan !== 'semua' && ! empty($karyawan)) {
                 $query->where('pembayarans.user_id', $karyawan);
             }
-
-            // Jika bukan admin, batasi berdasarkan user login
             if (Auth::user()->role != 'admin') {
                 $query->where('pembayarans.user_id', Auth::id());
             }
 
-            $totalRecords = $query->count();
-
-            // Search filter using denormalized user_name column from pembayarans
             $searchValue = $request->input('search.value');
-            if (!empty($searchValue)) {
-                $query->where(function($q) use ($searchValue) {
-                    $q->where('transaksis.kode_invoice', 'like', '%' . $searchValue . '%')
-                      ->orWhere('pembayarans.user_name', 'like', '%' . $searchValue . '%')
-                      ->orWhere('transaksis.nama_barang', 'like', '%' . $searchValue . '%');
+            if (! empty($searchValue)) {
+                $query->where(function ($q) use ($searchValue) {
+                    $q->where('transaksis.kode_invoice', 'like', '%'.$searchValue.'%')
+                        ->orWhere('pembayarans.user_name', 'like', '%'.$searchValue.'%')
+                        ->orWhere('transaksis.nama_barang', 'like', '%'.$searchValue.'%');
                 });
+                $totalFiltered = $query->count();
+            } else {
+                $totalFiltered = $totalRecords; // Avoid executing second count query!
             }
-
-            $totalFiltered = $query->count();
 
             // Ordering
             $orderColumnIdx = $request->input('order.0.column', 0);
@@ -222,7 +244,7 @@ class LaporanPenjualanController extends Controller
                 'transaksis.harga_total'
             )->get();
 
-            $data = $items->map(function($item) {
+            $data = $items->map(function ($item) {
                 return [
                     'tanggal' => $item->tanggal_data,
                     'kode_invoice' => $item->kode_invoice,
@@ -231,7 +253,7 @@ class LaporanPenjualanController extends Controller
                     'metode' => $item->metode,
                     'jumlah' => $item->jumlah,
                     'harga' => $item->harga,
-                    'total' => (float)$item->harga_total
+                    'total' => (float) $item->harga_total,
                 ];
             });
 
@@ -239,16 +261,20 @@ class LaporanPenjualanController extends Controller
                 'draw' => intval($request->input('draw')),
                 'recordsTotal' => $totalRecords,
                 'recordsFiltered' => $totalFiltered,
-                'data' => $data
+                'data' => $data,
             ]);
         }
 
         // 2. Summary Request (KPI & Chart) - Highly Optimized using aggregates!
         if (in_array($param, ['hari', 'bulan', 'tahun'])) {
+            $needsUserFilter = ($karyawan !== 'semua' && ! empty($karyawan)) || Auth::user()->role != 'admin';
 
-            // Build base totals query
-            $totalsQuery = DB::table('transaksis')
-                ->join('pembayarans', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice');
+            // Build base totals query (avoid JOIN to pembayarans if not filtering on user_id)
+            $totalsQuery = DB::table('transaksis');
+
+            if ($needsUserFilter) {
+                $totalsQuery->join('pembayarans', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice');
+            }
 
             // Apply date filters using optimized index range scan
             if ($startDate && $endDate) {
@@ -256,26 +282,26 @@ class LaporanPenjualanController extends Controller
             }
 
             // Apply toko filters
-            if ($toko !== 'semua' && !empty($toko)) {
+            if ($toko !== 'semua' && ! empty($toko)) {
                 $totalsQuery->where('transaksis.kode_toko', $toko);
             } else {
                 $excludedTokoCodes = DB::table('tokos')
                     ->whereIn('nama_toko', ['stock hilang', 'Online Shop'])
                     ->pluck('kode')
                     ->toArray();
-                if (!empty($excludedTokoCodes)) {
+                if (! empty($excludedTokoCodes)) {
                     $totalsQuery->whereNotIn('transaksis.kode_toko', $excludedTokoCodes);
                 }
             }
 
-            // Apply karyawan filters
-            if ($karyawan !== 'semua' && !empty($karyawan)) {
-                $totalsQuery->where('pembayarans.user_id', $karyawan);
-            }
-
-            // Batasi berdasarkan user login jika bukan admin
-            if (Auth::user()->role != 'admin') {
-                $totalsQuery->where('pembayarans.user_id', Auth::id());
+            // Apply user filters
+            if ($needsUserFilter) {
+                if ($karyawan !== 'semua' && ! empty($karyawan)) {
+                    $totalsQuery->where('pembayarans.user_id', $karyawan);
+                }
+                if (Auth::user()->role != 'admin') {
+                    $totalsQuery->where('pembayarans.user_id', Auth::id());
+                }
             }
 
             // Aggregate totals directly in DB!
@@ -298,13 +324,13 @@ class LaporanPenjualanController extends Controller
 
             foreach ($aggregated as $row) {
                 if ($row->metode === 'umum') {
-                    $totalUmum = (float)$row->total_omzet;
-                    $modalUmum = (float)$row->total_modal;
-                    $countUmum = (int)$row->total_count;
+                    $totalUmum = (float) $row->total_omzet;
+                    $modalUmum = (float) $row->total_modal;
+                    $countUmum = (int) $row->total_count;
                 } elseif ($row->metode === 'grosir') {
-                    $totalGrosir = (float)$row->total_omzet;
-                    $modalGrosir = (float)$row->total_modal;
-                    $countGrosir = (int)$row->total_count;
+                    $totalGrosir = (float) $row->total_omzet;
+                    $modalGrosir = (float) $row->total_modal;
+                    $countGrosir = (int) $row->total_count;
                 }
             }
 
@@ -338,23 +364,22 @@ class LaporanPenjualanController extends Controller
                     'modal_umum' => $modalUmum,
                     'grosir' => $totalGrosir,
                     'modal_grosir' => $modalGrosir,
-                ]
+                ],
             ];
             $parameter = $param;
         } else {
             return response()->json([
                 'message' => 'Parameter tidak valid',
-                'icon' => 'error'
+                'icon' => 'error',
             ], 400);
         }
 
         return response()->json([
             'data' => $data,
             'param' => $parameter,
-            'karyawan' => $karyawan
+            'karyawan' => $karyawan,
         ]);
     }
-
 
     /**
      * Show the form for editing the specified resource.
