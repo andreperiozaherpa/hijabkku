@@ -115,44 +115,47 @@ class RevisiPenjualanController extends Controller
                     throw new \Exception('Revisi hanya dapat dilakukan untuk transaksi pada bulan berjalan.');
                 }
 
-                if ($transaksi->kode_barang === $request->barang_baru_kode) {
-                    throw new \Exception('Barang pengganti tidak boleh sama dengan barang sebelumnya.');
+                if ($transaksi->kode_barang === $request->barang_baru_kode &&
+                    $transaksi->metode === $request->metode_harga_baru &&
+                    floatval($pembayaran->pembayaran) === floatval($request->pembayaran_baru)) {
+                    throw new \Exception('Tidak ada perubahan barang, metode harga, atau nominal pembayaran.');
                 }
 
                 $barang_baru = DataBarang::where('kode', $request->barang_baru_kode)->firstOrFail();
 
-                // 1. Update Stok Toko (Barang Lama)
-                $stockLama = StockToko::lockForUpdate()
-                    ->where('kode_toko', $transaksi->kode_toko)
-                    ->where('kode_barang', $transaksi->kode_barang)
-                    ->first();
+                // 1 & 2. Update Stok Toko hanya jika barang berubah
+                if ($transaksi->kode_barang !== $barang_baru->kode) {
+                    $stockLama = StockToko::lockForUpdate()
+                        ->where('kode_toko', $transaksi->kode_toko)
+                        ->where('kode_barang', $transaksi->kode_barang)
+                        ->first();
 
-                if ($stockLama) {
-                    // Kembalikan ke gudang (kurangi terjual)
-                    $stockLama->terjual = max(0, $stockLama->terjual - $transaksi->jumlah);
-                    $stockLama->save();
-                }
+                    if ($stockLama) {
+                        // Kembalikan ke gudang (kurangi terjual)
+                        $stockLama->terjual = max(0, $stockLama->terjual - $transaksi->jumlah);
+                        $stockLama->save();
+                    }
 
-                // 2. Update Stok Toko (Barang Baru)
-                $stockBaru = StockToko::lockForUpdate()
-                    ->where('kode_toko', $transaksi->kode_toko)
-                    ->where('kode_barang', $barang_baru->kode)
-                    ->first();
+                    $stockBaru = StockToko::lockForUpdate()
+                        ->where('kode_toko', $transaksi->kode_toko)
+                        ->where('kode_barang', $barang_baru->kode)
+                        ->first();
 
-                if ($stockBaru) {
-                    $stockBaru->terjual += $transaksi->jumlah;
-                    $stockBaru->save();
-                } else {
-                    // Jika stok barang baru belum pernah diinput di toko tersebut
-                    StockToko::create([
-                        'kode_input' => 'REV-'.$transaksi->kode_invoice,
-                        'kode_toko' => $transaksi->kode_toko,
-                        'kode_barang' => $barang_baru->kode,
-                        'nama_barang' => $barang_baru->nama_barang,
-                        'supplier' => '-',
-                        'jumlah' => 0,
-                        'terjual' => $transaksi->jumlah,
-                    ]);
+                    if ($stockBaru) {
+                        $stockBaru->terjual += $transaksi->jumlah;
+                        $stockBaru->save();
+                    } else {
+                        // Jika stok barang baru belum pernah diinput di toko tersebut
+                        StockToko::create([
+                            'kode_input' => 'REV-'.$transaksi->kode_invoice,
+                            'kode_toko' => $transaksi->kode_toko,
+                            'kode_barang' => $barang_baru->kode,
+                            'nama_barang' => $barang_baru->nama_barang,
+                            'supplier' => '-',
+                            'jumlah' => 0,
+                            'terjual' => $transaksi->jumlah,
+                        ]);
+                    }
                 }
 
                 // 3. Hitung Harga Baru

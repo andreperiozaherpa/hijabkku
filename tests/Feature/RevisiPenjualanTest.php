@@ -288,3 +288,28 @@ it('can process revisi penjualan using grosir price successfully', function () {
     expect($this->transaksi->harga)->toBe(110000); // Harga grosir BRG-BENAR
     expect($this->transaksi->harga_total)->toBe(220000);
 });
+
+it('can revise same item pricing method without changing item code', function () {
+    // Aksi revisi mengubah harga eceran (umum) ke grosir untuk BRG-SALAH
+    $response = $this->actingAs($this->admin)->postJson(route('revisi.proses'), [
+        'transaksi_id' => $this->transaksi->id,
+        'barang_baru_kode' => 'BRG-SALAH', // Kode barang sama
+        'metode_harga_baru' => 'grosir', // Metode diubah dari umum ke grosir
+        'pembayaran_baru' => 250000,
+        'alasan' => 'Ubah ke grosir untuk barang yang sama',
+    ]);
+
+    $response->assertStatus(200)
+        ->assertJsonPath('success', true);
+
+    // Verifikasi transaksi terupdate ke harga grosir
+    $this->transaksi->refresh();
+    expect($this->transaksi->kode_barang)->toBe('BRG-SALAH');
+    expect($this->transaksi->metode)->toBe('grosir');
+    expect($this->transaksi->harga)->toBe(90000); // Harga grosir BRG-SALAH adalah 90.000
+    expect($this->transaksi->harga_total)->toBe(180000); // 2 * 90.000
+
+    // Stok barang tidak boleh berubah karena kode barang sama
+    $stokSalah = StockToko::where('kode_barang', 'BRG-SALAH')->first();
+    expect($stokSalah->terjual)->toBe(2); // Tetap 2 terjual
+});
