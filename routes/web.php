@@ -64,7 +64,7 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
             Route::get('/neraca', [TransaksiController::class, 'neraca']);
         });
 
-        Route::prefix('/revisi')->middleware('permission:proses_transaksi')->group(function () {
+        Route::prefix('/revisi')->middleware('permission:revisi_penjualan')->group(function () {
             Route::get('/', [RevisiPenjualanController::class, 'index'])->name('revisi.index');
             Route::get('/cari', [RevisiPenjualanController::class, 'cariInvoice'])->name('revisi.cari');
             Route::get('/cari-barang', [RevisiPenjualanController::class, 'cariBarang'])->name('revisi.cari_barang');

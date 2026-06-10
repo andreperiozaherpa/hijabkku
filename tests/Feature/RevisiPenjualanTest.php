@@ -20,8 +20,8 @@ beforeEach(function () {
     $this->kasir = User::factory()->create(['role' => 'kasir']);
 
     $permId = DB::table('permissions')->insertGetId([
-        'name' => 'proses_transaksi',
-        'display_name' => 'Proses Transaksi',
+        'name' => 'revisi_penjualan',
+        'display_name' => 'Revisi Penjualan',
         'module' => 'Transaksi',
     ]);
 
@@ -226,7 +226,7 @@ it('prevents kasir from accessing revisi penjualan page', function () {
 
 it('restricts non-admin users to their own store', function () {
     // Berikan permission ke kasir
-    $permId = DB::table('permissions')->where('name', 'proses_transaksi')->value('id');
+    $permId = DB::table('permissions')->where('name', 'revisi_penjualan')->value('id');
     DB::table('role_permissions')->insert([
         'role' => 'kasir',
         'permission_id' => $permId,

@@ -92,6 +92,12 @@ class RBACSeeder extends Seeder
                 'description' => 'Mengizinkan pengguna melihat daftar pesanan pickup online dan memproses pengambilannya.',
                 'module' => 'Transaksi',
             ],
+            [
+                'name' => 'revisi_penjualan',
+                'display_name' => 'Revisi Penjualan',
+                'description' => 'Mengizinkan pengguna melakukan revisi transaksi penjualan (ganti barang/nominal).',
+                'module' => 'Transaksi',
+            ],
         ];
 
         // Insert or update permissions
@@ -103,7 +109,7 @@ class RBACSeeder extends Seeder
                     'description' => $perm['description'],
                     'module' => $perm['module'],
                     'created_at' => now(),
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ]
             );
         }
@@ -127,6 +133,7 @@ class RBACSeeder extends Seeder
                 'kelola_pengguna',
                 'lihat_buku_panduan',
                 'kelola_pesanan_pickup',
+                'revisi_penjualan',
             ],
             'kasir' => [
                 'lihat_dashboard',
@@ -158,7 +165,7 @@ class RBACSeeder extends Seeder
                 if (isset($dbPerms[$permName])) {
                     DB::table('role_permissions')->insert([
                         'role' => $role,
-                        'permission_id' => $dbPerms[$permName]
+                        'permission_id' => $dbPerms[$permName],
                     ]);
                 }
             }
