@@ -205,6 +205,14 @@
                                 </div>
                             </div>
 
+                            <div class="mb-4" id="selectMetodeHargaContainer" style="display: none;">
+                                <label class="form-label font-weight-bold">Metode Harga Barang Pengganti <span class="text-danger">*</span></label>
+                                <select id="metode_harga_baru" class="form-select">
+                                    <option value="umum">Harga Umum (Ecer)</option>
+                                    <option value="grosir">Harga Grosir</option>
+                                </select>
+                            </div>
+
                             <!-- Kalkulasi Harga & Pembayaran Baru -->
                             <div id="sectionKalkulasi" class="card border-0 bg-light mb-3" style="display: none;">
                                 <div class="card-body p-3">
@@ -340,19 +348,21 @@
             $('#hasilPencarian').hide().html('');
             $('#barang_baru_kode').val('');
             $('#barangTerpilih').hide();
+            $('#selectMetodeHargaContainer').hide();
+            $('#metode_harga_baru').val(btn.data('metode'));
             $('#alasanRevisi').val('');
-
+ 
             // Reset Kalkulasi
             $('#sectionKalkulasi').hide();
             $('#inputPembayaranBaru').val(currentPembayaran ? currentPembayaran.pembayaran.toLocaleString('id-ID') : '');
-
+ 
             $('#modalGantiBarang').modal('show');
         });
-
+ 
         const cariBarang = () => {
             const q = $('#cariBarangInput').val().trim();
             if (q.length < 2) return;
-
+ 
             $('#hasilPencarian').show().html('<div class="p-3 text-center text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Mencari...</div>');
             
             $.get('{{ route("revisi.cari_barang") }}', { query: q, kode_toko: $('#kode_toko_modal').val() }, function(res) {
@@ -381,7 +391,7 @@
                 $('#hasilPencarian').html(html);
             });
         };
-
+ 
         $('#btnCariBarang').on('click', cariBarang);
         $('#cariBarangInput').on('keypress', function(e) {
             if (e.which === 13) {
@@ -390,23 +400,18 @@
             }
         });
 
-        $(document).on('click', '.item-pilih-barang', function() {
-            const btn = $(this);
-            const kode = btn.data('kode');
-            const nama = btn.data('nama');
-            
-            $('#barang_baru_kode').val(kode);
-            $('#lblBarangTerpilih').text(kode + ' - ' + nama);
-            $('#barangTerpilih').fadeIn();
-            $('#hasilPencarian').hide();
-            $('#cariBarangInput').val('');
+        const hitungKalkulasi = () => {
+            const kodeBaru = $('#barang_baru_kode').val();
+            if (!kodeBaru) return;
 
-            // Hitung kalkulasi
-            const metode = $('#metode_modal').val();
+            const metodeHargaBaru = $('#metode_harga_baru').val();
             const qty = parseInt($('#qty_modal').val()) || 0;
             const hargaLama = parseInt($('#harga_lama_modal').val()) || 0;
             
-            const hargaBaru = metode === 'grosir' ? parseInt(btn.data('harga-grosir')) : parseInt(btn.data('harga-jual'));
+            const hargaJual = parseInt($('#barang_baru_kode').data('harga-jual')) || 0;
+            const hargaGrosir = parseInt($('#barang_baru_kode').data('harga-grosir')) || 0;
+            
+            const hargaBaru = metodeHargaBaru === 'grosir' ? hargaGrosir : hargaJual;
             
             const totalLamaItem = qty * hargaLama;
             const totalBaruItem = qty * hargaBaru;
@@ -432,8 +437,29 @@
             $('#lblKembalianBaru').text(formatRupiah(kembalianBaru));
             
             $('#sectionKalkulasi').fadeIn();
-        });
+        };
 
+        $('#metode_harga_baru').on('change', hitungKalkulasi);
+ 
+        $(document).on('click', '.item-pilih-barang', function() {
+            const btn = $(this);
+            const kode = btn.data('kode');
+            const nama = btn.data('nama');
+            
+            $('#barang_baru_kode')
+                .val(kode)
+                .data('harga-jual', btn.data('harga-jual'))
+                .data('harga-grosir', btn.data('harga-grosir'));
+
+            $('#lblBarangTerpilih').text(kode + ' - ' + nama);
+            $('#barangTerpilih').fadeIn();
+            $('#selectMetodeHargaContainer').fadeIn();
+            $('#hasilPencarian').hide();
+            $('#cariBarangInput').val('');
+ 
+            hitungKalkulasi();
+        });
+ 
         $('#inputPembayaranBaru').on('input', function() {
             const val = $(this).val().replace(/\D/g, '');
             $(this).val(val ? parseInt(val).toLocaleString('id-ID') : '');
@@ -444,23 +470,24 @@
             
             $('#lblKembalianBaru').text(formatRupiah(kembalianBaru));
         });
-
+ 
         $('#btnProsesRevisi').on('click', function() {
             const trxId = $('#transaksi_id').val();
             const kodeBaru = $('#barang_baru_kode').val();
+            const metodeHargaBaru = $('#metode_harga_baru').val();
             const alasan = $('#alasanRevisi').val();
             const pembayaranBaru = $('#inputPembayaranBaru').val().replace(/\D/g, '');
-
+ 
             if (!kodeBaru) {
                 Swal.fire('Peringatan', 'Silakan pilih barang pengganti yang benar!', 'warning');
                 return;
             }
-
+ 
             if (!pembayaranBaru) {
                 Swal.fire('Peringatan', 'Nominal pembayaran baru wajib diisi!', 'warning');
                 return;
             }
-
+ 
             Swal.fire({
                 title: 'Konfirmasi Revisi?',
                 text: "Pastikan barang pengganti sudah benar. Aksi ini akan mengubah laporan stok dan transaksi!",
@@ -476,6 +503,7 @@
                         _token: '{{ csrf_token() }}',
                         transaksi_id: trxId,
                         barang_baru_kode: kodeBaru,
+                        metode_harga_baru: metodeHargaBaru,
                         pembayaran_baru: pembayaranBaru,
                         alasan: alasan
                     }, function(res) {

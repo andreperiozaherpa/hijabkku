@@ -97,6 +97,7 @@ class RevisiPenjualanController extends Controller
         $request->validate([
             'transaksi_id' => 'required|exists:transaksis,id',
             'barang_baru_kode' => 'required|exists:data_barangs,kode',
+            'metode_harga_baru' => 'required|in:umum,grosir',
             'pembayaran_baru' => 'required|numeric|min:0',
             'alasan' => 'nullable|string',
         ]);
@@ -155,7 +156,8 @@ class RevisiPenjualanController extends Controller
                 }
 
                 // 3. Hitung Harga Baru
-                $harga_baru_satuan = ($transaksi->metode === 'grosir')
+                $metode_baru = $request->metode_harga_baru;
+                $harga_baru_satuan = ($metode_baru === 'grosir')
                     ? floatval(str_replace('.', '', $barang_baru->harga_grosir))
                     : floatval(str_replace('.', '', $barang_baru->harga_jual));
 
@@ -189,6 +191,7 @@ class RevisiPenjualanController extends Controller
                 // 6. Update Transaksi
                 $transaksi->kode_barang = $barang_baru->kode;
                 $transaksi->nama_barang = $barang_baru->nama_barang;
+                $transaksi->metode = $metode_baru;
                 $transaksi->harga = $harga_baru_satuan;
                 $transaksi->harga_beli = $harga_beli_baru;
                 $transaksi->harga_total = $harga_total_baru;

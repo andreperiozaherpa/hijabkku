@@ -164,6 +164,7 @@ it('can process revisi penjualan successfully', function () {
     $response = $this->actingAs($this->admin)->postJson(route('revisi.proses'), [
         'transaksi_id' => $this->transaksi->id,
         'barang_baru_kode' => 'BRG-BENAR',
+        'metode_harga_baru' => 'umum',
         'pembayaran_baru' => 250000,
         'alasan' => 'Salah klik varian',
     ]);
@@ -204,6 +205,7 @@ it('cannot revise non-current month transaction', function () {
     $response = $this->actingAs($this->admin)->postJson(route('revisi.proses'), [
         'transaksi_id' => $this->transaksi->id,
         'barang_baru_kode' => 'BRG-BENAR',
+        'metode_harga_baru' => 'umum',
         'pembayaran_baru' => 250000,
         'alasan' => 'Expired',
     ]);
@@ -257,10 +259,32 @@ it('restricts non-admin users to their own store', function () {
     $response4 = $this->actingAs($kasirToko2)->postJson(route('revisi.proses'), [
         'transaksi_id' => $this->transaksi->id,
         'barang_baru_kode' => 'BRG-BENAR',
+        'metode_harga_baru' => 'umum',
         'pembayaran_baru' => 250000,
         'alasan' => 'Bypass',
     ]);
     $response4->assertStatus(200)
         ->assertJsonPath('success', false)
         ->assertJsonPath('message', 'Anda tidak memiliki hak akses untuk merevisi transaksi dari toko lain.');
+});
+
+it('can process revisi penjualan using grosir price successfully', function () {
+    // Aksi revisi
+    $response = $this->actingAs($this->admin)->postJson(route('revisi.proses'), [
+        'transaksi_id' => $this->transaksi->id,
+        'barang_baru_kode' => 'BRG-BENAR',
+        'metode_harga_baru' => 'grosir',
+        'pembayaran_baru' => 250000,
+        'alasan' => 'Salah klik varian grosir',
+    ]);
+
+    $response->assertStatus(200)
+        ->assertJsonPath('success', true);
+
+    // Verifikasi transaksi terupdate ke harga grosir
+    $this->transaksi->refresh();
+    expect($this->transaksi->kode_barang)->toBe('BRG-BENAR');
+    expect($this->transaksi->metode)->toBe('grosir');
+    expect($this->transaksi->harga)->toBe(110000); // Harga grosir BRG-BENAR
+    expect($this->transaksi->harga_total)->toBe(220000);
 });
