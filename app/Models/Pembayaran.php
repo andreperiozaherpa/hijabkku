@@ -10,7 +10,7 @@ class Pembayaran extends Model
     use HasFactory;
 
     protected $guarded = [
-        'id'
+        'id',
     ];
 
     public function user()
@@ -21,5 +21,10 @@ class Pembayaran extends Model
     public function transaksis()
     {
         return $this->hasMany(Transaksi::class, 'kode_invoice', 'kode_invoice');
+    }
+
+    public function sesiKasir()
+    {
+        return $this->belongsTo(SesiKasir::class, 'sesi_kasir_id');
     }
 }

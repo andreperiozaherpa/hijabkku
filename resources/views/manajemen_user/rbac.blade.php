@@ -72,6 +72,12 @@
                         <h1 class="mb-1 pb-0 display-4" id="title">Pengaturan Hak Akses (RBAC)</h1>
                         <p class="text-muted mb-0">Kelola hak akses dinamis untuk setiap level pengguna sistem secara real-time.</p>
                     </div>
+                    <div class="col-12 col-md-5 text-end mt-2 mt-md-0 d-flex align-items-center justify-content-md-end">
+                        <button class="btn btn-icon btn-icon-start btn-primary btn-sm shadow-sm" type="button" data-bs-toggle="modal" data-bs-target="#addRoleModal">
+                            <i data-acorn-icon="plus"></i>
+                            <span>Tambah Role</span>
+                        </button>
+                    </div>
                 </div>
             </div>
             <!-- Title and Top Buttons End -->
@@ -135,6 +141,37 @@
             <!-- Content End -->
         </div>
     </main>
+
+    <!-- Modal Tambah Role -->
+    <div class="modal fade" id="addRoleModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-alternate"><i data-acorn-icon="plus" class="me-2 text-primary" data-acorn-size="18"></i>Tambah Role Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAddRole" class="tooltip-label-end" novalidate>
+                        <div class="mb-3 filled position-relative form-group">
+                            <i data-acorn-icon="tag"></i>
+                            <input type="text" class="form-control" placeholder="Nama Role (contoh: supervisor)" id="role_name" name="role_name" required pattern="^[a-zA-Z0-9_\-]+$">
+                            <div class="form-text text-muted small">Hanya huruf, angka, strip (-), dan underscore (_).</div>
+                        </div>
+
+                        <div class="mb-3 filled position-relative form-group">
+                            <i data-acorn-icon="bookmark"></i>
+                            <input type="text" class="form-control" placeholder="Display Name (contoh: Supervisor)" id="role_display_name" name="role_display_name" required>
+                        </div>
+
+                        <div class="mt-4 pt-2 border-top text-end">
+                            <button type="button" class="btn btn-outline-muted btn-sm me-1" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary btn-sm"><i data-acorn-icon="save" class="me-1" data-acorn-size="15"></i>Simpan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @push('script')
     <script>
@@ -143,6 +180,73 @@
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Initialize form validation
+            $("#formAddRole").validate({
+                rules: {
+                    role_name: {
+                        required: true,
+                        pattern: /^[a-zA-Z0-9_\-]+$/
+                    },
+                    role_display_name: {
+                        required: true
+                    }
+                },
+                messages: {
+                    role_name: {
+                        required: "Nama Role wajib diisi.",
+                        pattern: "Format Nama Role tidak valid (hanya huruf, angka, - dan _)."
+                    },
+                    role_display_name: {
+                        required: "Display Name wajib diisi."
+                    }
+                }
+            });
+
+            // Handle form submission to create role
+            $('#formAddRole').on('submit', function(e) {
+                e.preventDefault();
+                if ($(this).valid()) {
+                    var roleName = $('#role_name').val().trim().toLowerCase();
+                    var roleDisplayName = $('#role_display_name').val().trim();
+
+                    $.ajax({
+                        url: "{{ route('user.rbac.role.store') }}",
+                        type: "POST",
+                        data: {
+                            name: roleName,
+                            display_name: roleDisplayName
+                        },
+                        success: function(response) {
+                            if (response.icon === 'success') {
+                                $('#addRoleModal').modal('hide');
+                                Swal.fire({
+                                    icon: response.icon,
+                                    title: response.title,
+                                    text: response.text,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: response.icon,
+                                    title: response.title,
+                                    text: response.text
+                                });
+                            }
+                        },
+                        error: function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Gagal membuat role baru.'
+                            });
+                        }
+                    });
                 }
             });
 

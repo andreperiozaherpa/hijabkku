@@ -8,3 +8,7 @@ services:
     - mysql
     - mailpit
     - redis
+workers:
+    - queue
+    - schedule
+    - vite

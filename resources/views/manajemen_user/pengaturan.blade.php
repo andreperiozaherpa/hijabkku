@@ -54,7 +54,7 @@
             <!-- Content Start -->
             <div class="row mb-5">
                 <div class="col-12 col-lg-8">
-                    <div class="card settings-card">
+                    <div class="card settings-card mb-4">
                         <div class="card-header border-0 bg-transparent pt-4 px-4 pb-0">
                             <h3 class="fw-bold text-dark mb-1">Integrasi Gateway Xendit</h3>
                             <p class="text-muted small">Kelola mode operasional Xendit Payment Gateway.</p>
@@ -75,6 +75,33 @@
                                         id="xenditSimulationToggle"
                                         data-key="xendit_simulation_mode"
                                         {{ $xenditSimulationMode === 'true' ? 'checked' : '' }}
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card settings-card">
+                        <div class="card-header border-0 bg-transparent pt-4 px-4 pb-0">
+                            <h3 class="fw-bold text-dark mb-1">Fitur Sesi Kasir</h3>
+                            <p class="text-muted small">Kelola status aktif/non-aktif fitur kasir shift harian.</p>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center justify-content-between p-3 border border-light rounded-lg bg-light-opacity">
+                                <div class="me-3">
+                                    <h5 class="fw-bold text-alternate mb-1">Aktifkan Fitur Sesi Kasir</h5>
+                                    <p class="text-muted small mb-0">
+                                        Saat diaktifkan, kasir wajib membuka sesi kasir (modal awal) sebelum bertransaksi, dan mencatat saldo laci saat penutupan shift harian.
+                                    </p>
+                                </div>
+                                <div class="form-check form-switch mb-0">
+                                    <input 
+                                        class="form-check-input settings-toggle" 
+                                        type="checkbox" 
+                                        role="switch" 
+                                        id="fiturSesiKasirToggle"
+                                        data-key="fitur_sesi_kasir"
+                                        {{ $fiturSesiKasir === 'true' ? 'checked' : '' }}
                                     >
                                 </div>
                             </div>

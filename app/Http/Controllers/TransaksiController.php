@@ -4,16 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\DataBarang;
 use App\Models\Pembayaran;
+use App\Models\SesiKasir;
+use App\Models\StockOpname;
+use App\Models\StockOpnameAudit;
+use App\Models\StockOpnameItem;
 use App\Models\StockToko;
+use App\Models\SystemSetting;
 use App\Models\Toko;
 use App\Models\Transaksi;
 use App\Models\User;
+use App\Services\FirebaseService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\Services\FirebaseService;
 
 class TransaksiController extends Controller
 {
@@ -34,9 +39,56 @@ class TransaksiController extends Controller
         if ($user->role === 'admin') {
             $all_tokos = Toko::whereNotIn('nama_toko', ['stock hilang', 'Online Shop'])->get();
         }
+        $fitur_sesi_kasir = SystemSetting::getByKey('fitur_sesi_kasir', 'true') === 'true';
+        $active_session = null;
+        $pending_session = null;
+        $rejected_session = null;
+        $today_closed = false;
+
+        $closed_session_today = null;
+        if ($fitur_sesi_kasir) {
+            $active_session = SesiKasir::where('kode_toko', $data_toko->kode)
+                ->where('status', 'buka')
+                ->first();
+            $today_closed = SesiKasir::where('kode_toko', $data_toko->kode)
+                ->where(function ($query) {
+                    $query->where('status', 'tutup')
+                        ->orWhere('status', 'pending_reopen');
+                })
+                ->whereDate('waktu_tutup', today())
+                ->exists();
+            if ($today_closed) {
+                $closed_session_today = SesiKasir::where('kode_toko', $data_toko->kode)
+                    ->where(function ($query) {
+                        $query->where('status', 'tutup')
+                            ->orWhere('status', 'pending_reopen');
+                    })
+                    ->whereDate('waktu_tutup', today())
+                    ->latest()
+                    ->first();
+            }
+            if (! $active_session) {
+                $pending_session = SesiKasir::where('kode_toko', $data_toko->kode)
+                    ->where('status', 'pending_reopen')
+                    ->first();
+                $rejected_session = SesiKasir::where('kode_toko', $data_toko->kode)
+                    ->where('status', 'tutup')
+                    ->whereDate('waktu_tutup', today())
+                    ->where('catatan', 'like', '%Ditolak%')
+                    ->latest()
+                    ->first();
+            }
+        }
+
         return view('transaksi.penjualan', [
             'data_toko' => $data_toko,
             'all_tokos' => $all_tokos,
+            'active_session' => $active_session,
+            'fitur_sesi_kasir' => $fitur_sesi_kasir,
+            'today_closed' => $today_closed,
+            'pending_session' => $pending_session,
+            'rejected_session' => $rejected_session,
+            'closed_session_today' => $closed_session_today,
         ]);
     }
 
@@ -55,9 +107,10 @@ class TransaksiController extends Controller
                 ->where('status', 'on')
                 ->get();
         }
+
         return view('transaksi.daftar', [
-            'toko' =>  $data_toko,
-            'kasir' =>  $data_kasir
+            'toko' => $data_toko,
+            'kasir' => $data_kasir,
         ]);
     }
 
@@ -101,11 +154,11 @@ class TransaksiController extends Controller
                 )
                 ->where(function ($q) use ($key1, $key2) {
                     $q->where(function ($sq) use ($key1, $key2) {
-                        $sq->where('stock_tokos.nama_barang', 'like', '%' . $key1 . '%')
-                           ->where('stock_tokos.nama_barang', 'like', '%' . $key2 . '%');
+                        $sq->where('stock_tokos.nama_barang', 'like', '%'.$key1.'%')
+                            ->where('stock_tokos.nama_barang', 'like', '%'.$key2.'%');
                     })->orWhere(function ($sq) use ($key1, $key2) {
-                        $sq->where('data_barangs.nama_barang', 'like', '%' . $key1 . '%')
-                           ->where('data_barangs.nama_barang', 'like', '%' . $key2 . '%');
+                        $sq->where('data_barangs.nama_barang', 'like', '%'.$key1.'%')
+                            ->where('data_barangs.nama_barang', 'like', '%'.$key2.'%');
                     });
                 })
                 ->where('kode_toko', $kode_toko)
@@ -116,14 +169,14 @@ class TransaksiController extends Controller
 
         $hideStock = false;
         if ($user->role !== 'admin') {
-            $hideStock = \App\Models\StockOpname::where('kode_toko', $kode_toko)
+            $hideStock = StockOpname::where('kode_toko', $kode_toko)
                 ->whereIn('status', ['Draft', 'Counting', 'Recount', 'Review'])
                 ->exists();
         }
 
         return response()->json([
             'stock' => $stock_toko,
-            'hide_stock' => $hideStock
+            'hide_stock' => $hideStock,
         ]);
     }
 
@@ -142,11 +195,27 @@ class TransaksiController extends Controller
             $kode_toko = $request->kode_toko;
         }
 
+        $fitur_sesi_kasir = SystemSetting::getByKey('fitur_sesi_kasir', 'true') === 'true';
+        $active_session = null;
+
+        if ($fitur_sesi_kasir) {
+            $active_session = SesiKasir::where('kode_toko', $kode_toko)
+                ->where('status', 'buka')
+                ->first();
+
+            if (! $active_session) {
+                return response()->json([
+                    'icon' => 'error',
+                    'cek_data' => 'Sesi kasir belum dibuka! Silakan buka sesi kasir terlebih dahulu.',
+                ]);
+            }
+        }
+
         $data = $request->data;
         $cek_transaksi = Pembayaran::where('kode_invoice', $invoice)->count();
 
-        $now   = Carbon::now('Asia/Jakarta');
-        $time  = $now->format('H:i');
+        $now = Carbon::now('Asia/Jakarta');
+        $time = $now->format('H:i');
 
         if ($time >= '07:30' && $time <= '17:01') {
             $shif = 1;
@@ -171,17 +240,17 @@ class TransaksiController extends Controller
                 // Validate all items' stock first to prevent race conditions atomically
                 foreach ($data as $d) {
                     $stock = $stocks->get($d['nomor_paket']);
-                    if (!$stock) {
+                    if (! $stock) {
                         return response()->json([
                             'icon' => 'error',
-                            'cek_data' => 'Barang ' . $d['nama_barang'] . ' tidak terdaftar di toko ini!'
+                            'cek_data' => 'Barang '.$d['nama_barang'].' tidak terdaftar di toko ini!',
                         ]);
                     }
                     $available = $stock->jumlah - $stock->terjual;
                     if ($available < intval($d['jumlah_barang'])) {
                         return response()->json([
                             'icon' => 'error',
-                            'cek_data' => 'Stok barang ' . $d['nama_barang'] . ' tidak mencukupi! Sisa stok saat ini: ' . $available
+                            'cek_data' => 'Stok barang '.$d['nama_barang'].' tidak mencukupi! Sisa stok saat ini: '.$available,
                         ]);
                     }
                 }
@@ -198,7 +267,7 @@ class TransaksiController extends Controller
                         'metode' => $d['method'],
                         'jumlah' => $d['jumlah_barang'],
                         'harga' => $d['harga_item'],
-                        'harga_beli' => str_replace(".", "", $hargaBeliMentah),
+                        'harga_beli' => str_replace('.', '', $hargaBeliMentah),
                         'harga_total' => $d['harga_jual'],
                     ];
                     Transaksi::create($arr);
@@ -214,7 +283,8 @@ class TransaksiController extends Controller
                     'user_name' => $user->name,
                     'total_harga' => $total_harga,
                     'pembayaran' => $pembayaran,
-                    'kembalian' => $kembali
+                    'kembalian' => $kembali,
+                    'sesi_kasir_id' => $active_session ? $active_session->id : null,
                 ];
                 Pembayaran::create($data_pembayaran);
 
@@ -222,17 +292,17 @@ class TransaksiController extends Controller
                 FirebaseService::triggerUpdate('updates/sales', ['toko' => $kode_toko]);
 
                 // Also trigger updates and auto-adjust counted quantities for any active stock opname session in this shop
-                $activeSessions = \App\Models\StockOpname::where('kode_toko', $kode_toko)
+                $activeSessions = StockOpname::where('kode_toko', $kode_toko)
                     ->whereIn('status', ['Counting', 'Recount'])
                     ->get();
 
                 foreach ($activeSessions as $session) {
                     // Update Firebase trigger for real-time UI refresh
-                    FirebaseService::triggerUpdate('updates/opname_session_' . $session->id);
+                    FirebaseService::triggerUpdate('updates/opname_session_'.$session->id);
 
                     // Real-Time Adjusting Physical Count by Sales
                     foreach ($data as $d) {
-                        $soItem = \App\Models\StockOpnameItem::where('stock_opname_id', $session->id)
+                        $soItem = StockOpnameItem::where('stock_opname_id', $session->id)
                             ->where('kode_barang', $d['nomor_paket'])
                             ->first();
 
@@ -242,14 +312,14 @@ class TransaksiController extends Controller
                             // Determine the current active round
                             $activeRound = 1;
                             if ($session->status === 'Recount') {
-                                $hasRound3 = \App\Models\StockOpnameItem::where('stock_opname_id', $session->id)
+                                $hasRound3 = StockOpnameItem::where('stock_opname_id', $session->id)
                                     ->whereNotNull('round_3_qty')
                                     ->exists();
                                 $activeRound = $hasRound3 ? 3 : 2;
                             }
 
                             // Check if the current round has been counted (is not null)
-                            $qtyCol = 'round_' . $activeRound . '_qty';
+                            $qtyCol = 'round_'.$activeRound.'_qty';
                             if ($soItem->$qtyCol !== null) {
                                 $qtyBefore = $soItem->$qtyCol;
                                 // Deduct sold quantity, ensuring it doesn't go below 0
@@ -261,7 +331,7 @@ class TransaksiController extends Controller
                                 }
 
                                 // Fetch product purchase price to recalculate difference_value
-                                $barang = \App\Models\DataBarang::where('kode', $soItem->kode_barang)->first();
+                                $barang = DataBarang::where('kode', $soItem->kode_barang)->first();
                                 $harga_beli = $barang ? floatval(str_replace('.', '', $barang->harga_beli)) : 0;
 
                                 // Recalculate difference and difference_value
@@ -278,7 +348,7 @@ class TransaksiController extends Controller
                                 $soItem->save();
 
                                 // Record in audit logs so there is a clear trail of this automated adjustment!
-                                \App\Models\StockOpnameAudit::create([
+                                StockOpnameAudit::create([
                                     'stock_opname_id' => $session->id,
                                     'stock_opname_item_id' => $soItem->id,
                                     'user_id' => $user->id, // The cashier who did the POS transaction
@@ -305,7 +375,7 @@ class TransaksiController extends Controller
 
         return response()->json([
             'icon' => $icon,
-            'cek_data' => $cek_data
+            'cek_data' => $cek_data,
         ]);
     }
 
@@ -343,7 +413,7 @@ class TransaksiController extends Controller
                     $query->whereDate('created_at', $carbonDate->format('Y-m-d'));
                 } elseif ($param == 'bulan') {
                     $query->whereYear('created_at', $carbonDate->year)
-                          ->whereMonth('created_at', $carbonDate->month);
+                        ->whereMonth('created_at', $carbonDate->month);
                 } elseif ($param == 'tahun') {
                     $query->whereYear('created_at', $carbonDate->year);
                 }
@@ -363,10 +433,12 @@ class TransaksiController extends Controller
             ->addColumn('tanggal', function ($row) {
                 $tanggal = Carbon::parse($row->created_at)->locale('id');
                 $tanggal->settings(['formatFunction' => 'translatedFormat']);
+
                 return $tanggal->format('l, d M Y, H:i');
             })
             ->addColumn('toko', function ($row) {
                 $firstItem = $row->transaksis->first();
+
                 return $firstItem && $firstItem->toko ? $firstItem->toko->nama_toko : '-';
             })
             ->addColumn('metode', function ($row) {
@@ -382,17 +454,19 @@ class TransaksiController extends Controller
                         $badges[] = '<span class="badge bg-outline-primary text-primary text-uppercase">Umum</span>';
                     }
                 }
+
                 return implode(' ', $badges);
             })
             ->addColumn('total_rupiah', function ($row) {
-                return 'Rp. ' . number_format($row->total_harga, 0, ',', '.');
+                return 'Rp. '.number_format($row->total_harga, 0, ',', '.');
             })
             ->addColumn('aksi', function ($row) {
                 $eyeIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
                     <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
                     <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
                 </svg>';
-                return '<button data-invoice="' . $row->kode_invoice . '" type="button" class="detailTransaksi btn btn-sm btn-icon btn-icon-only btn-outline-primary me-1" title="Detail Transaksi">' . $eyeIcon . '</button>';
+
+                return '<button data-invoice="'.$row->kode_invoice.'" type="button" class="detailTransaksi btn btn-sm btn-icon btn-icon-only btn-outline-primary me-1" title="Detail Transaksi">'.$eyeIcon.'</button>';
             })
             ->rawColumns(['metode', 'aksi'])
             ->make(true);
@@ -403,7 +477,7 @@ class TransaksiController extends Controller
         $invoice = $request->invoice;
         $data_perinvoice = Pembayaran::with(['transaksis.toko'])->where('kode_invoice', $invoice)->first();
 
-        if (!$data_perinvoice) {
+        if (! $data_perinvoice) {
             return response()->json(['error' => 'Invoice not found'], 404);
         }
 
@@ -446,7 +520,7 @@ class TransaksiController extends Controller
         $bulan = $tanggal->format('m');
         $tahun = $tanggal->format('Y');
         if ($request->toko == 'semua') {
-            # code...
+            // code...
             $toko = null;
             $tokos = 'Semua';
         } else {
@@ -455,24 +529,25 @@ class TransaksiController extends Controller
         }
 
         if ($format == 'Hari') {
-            # code...
+            // code...
             if ($users == 'semua') {
-                # code...
+                // code...
                 $transaksi = Pembayaran::select('pembayarans.*', 'transaksis.kode_toko')
-                    ->where('transaksis.kode_toko', 'LIKE', '%' . $toko . '%')
+                    ->where('transaksis.kode_toko', 'LIKE', '%'.$toko.'%')
                     ->join('transaksis', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice')
-                    ->whereDate('transaksis.created_at', $tahun . '-' . $bulan . '-' . $hari)
+                    ->whereDate('transaksis.created_at', $tahun.'-'.$bulan.'-'.$hari)
                     ->groupBy('pembayarans.kode_invoice')
                     ->get();
             } else {
                 $transaksi = Pembayaran::select('pembayarans.*', 'transaksis.kode_toko')
                     ->join('transaksis', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice')
-                    ->where('transaksis.kode_toko', 'LIKE', '%' . $toko . '%')
+                    ->where('transaksis.kode_toko', 'LIKE', '%'.$toko.'%')
                     ->where('pembayarans.user_id', $users)
-                    ->whereDate('transaksis.created_at', $tahun . '-' . $bulan . '-' . $hari)
+                    ->whereDate('transaksis.created_at', $tahun.'-'.$bulan.'-'.$hari)
                     ->groupBy('pembayarans.kode_invoice')
                     ->get();
             }
+
             return view('transaksi.rekap', [
                 'data' => $transaksi,
                 'users' => $users,
@@ -484,11 +559,11 @@ class TransaksiController extends Controller
                 'bulans' => $tanggal->format('M'),
             ]);
         } elseif ($format == 'Bulan') {
-            # code...
+            // code...
             if ($users == 'semua') {
-                # code...
+                // code...
                 $transaksi = Pembayaran::select('pembayarans.*', 'transaksis.kode_toko')
-                    ->where('transaksis.kode_toko', 'LIKE', '%' . $toko . '%')
+                    ->where('transaksis.kode_toko', 'LIKE', '%'.$toko.'%')
                     ->join('transaksis', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice')
                     ->whereMonth('pembayarans.created_at', $bulan)
                     ->whereYear('pembayarans.created_at', $tahun)
@@ -497,7 +572,7 @@ class TransaksiController extends Controller
             } else {
                 $transaksi = Pembayaran::select('pembayarans.*', 'transaksis.kode_toko')
                     ->join('transaksis', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice')
-                    ->where('transaksis.kode_toko', 'LIKE', '%' . $toko . '%')
+                    ->where('transaksis.kode_toko', 'LIKE', '%'.$toko.'%')
                     ->where('pembayarans.user_id', $users)
                     ->whereMonth('pembayarans.created_at', $bulan)
                     ->whereYear('pembayarans.created_at', $tahun)
@@ -516,9 +591,9 @@ class TransaksiController extends Controller
                 'bulans' => $tanggal->format('M'),
             ]);
         } elseif ($format == 'Tahun') {
-            # code...
+            // code...
             if ($toko == 'semua') {
-                # code...
+                // code...
                 $transaksi = DataBarang::select(
                     'pembayarans.user_name',
                     'data_barangs.nama_barang',
@@ -533,7 +608,7 @@ class TransaksiController extends Controller
                     ->get();
             } else {
                 if ($users == 'semua') {
-                    # code...
+                    // code...
                     $transaksi = Pembayaran::select('pembayarans.*', 'transaksis.kode_toko')
                         ->where('transaksis.kode_toko', $toko)
                         ->join('transaksis', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice')
@@ -549,6 +624,7 @@ class TransaksiController extends Controller
                         ->groupBy('pembayarans.kode_invoice')
                         ->get();
                 }
+
                 return view('transaksi.rekap', [
                     'data' => $transaksi,
                     'users' => $users,
@@ -561,9 +637,10 @@ class TransaksiController extends Controller
                 ]);
             }
         } else {
-            # code...
+            // code...
             $transaksi = 'tidak ada';
         }
+
         return response()->json([
             'role' => Auth::user()->role,
             'data' => $transaksi,
@@ -580,50 +657,50 @@ class TransaksiController extends Controller
         $data_format = $request->dataFormat;
 
         if ($data_format == 'Hari') {
-            # code...
-            $dates = $data_tahun . '-' . $data_bulan . '-' . $data_hari;
+            // code...
+            $dates = $data_tahun.'-'.$data_bulan.'-'.$data_hari;
         } elseif ($data_format == 'Bulan') {
-            # code...
-            $dates = $data_tahun . '-' . $data_bulan;
+            // code...
+            $dates = $data_tahun.'-'.$data_bulan;
         } elseif ($data_format == 'Tahun') {
-            # code...
+            // code...
             $dates = $data_tahun;
         }
 
         if ($request->dataToko == 'semua') {
-            # code...
+            // code...
             $toko = 'null';
         } else {
-            # code...
+            // code...
             $toko = $data_toko;
         }
 
         if ($data_users == 'semua') {
-            # code...
+            // code...
             $bruto = Transaksi::select(
                 DB::raw('SUM(transaksis.harga_total) as harga_totals'),
             )
-                ->where('kode_toko', 'LIKE', '%' . $toko . '%')
-                ->whereDate('transaksis.created_at', 'LIKE', '%' . $dates . '%')
+                ->where('kode_toko', 'LIKE', '%'.$toko.'%')
+                ->whereDate('transaksis.created_at', 'LIKE', '%'.$dates.'%')
                 ->first();
 
             $keuntungan = Transaksi::select(
                 DB::raw('sum( transaksis.harga_total-(transaksis.harga_beli * jumlah) ) as harga_beli_totals'),
             )
-                ->where('kode_toko', 'LIKE', '%' . $toko . '%')
-                ->whereDate('transaksis.created_at', 'LIKE', '%' . $dates . '%')
+                ->where('kode_toko', 'LIKE', '%'.$toko.'%')
+                ->whereDate('transaksis.created_at', 'LIKE', '%'.$dates.'%')
                 ->first();
         } else {
-            # code...
+            // code...
             $bruto = Pembayaran::select(
                 'pembayarans.*',
                 'transaksis.kode_toko',
                 DB::raw('SUM(transaksis.harga_total) as harga_totals'),
             )
                 ->join('transaksis', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice')
-                ->where('transaksis.kode_toko', 'LIKE', '%' . $toko . '%')
+                ->where('transaksis.kode_toko', 'LIKE', '%'.$toko.'%')
                 ->where('pembayarans.user_id', $data_users)
-                ->whereDate('transaksis.created_at', 'LIKE', '%' . $dates . '%')
+                ->whereDate('transaksis.created_at', 'LIKE', '%'.$dates.'%')
                 ->first();
 
             $keuntungan = Pembayaran::select(
@@ -632,14 +709,15 @@ class TransaksiController extends Controller
                 DB::raw('sum( transaksis.harga_total-(transaksis.harga_beli * jumlah) ) as harga_beli_totals'),
             )
                 ->join('transaksis', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice')
-                ->where('transaksis.kode_toko', 'LIKE', '%' . $toko . '%')
+                ->where('transaksis.kode_toko', 'LIKE', '%'.$toko.'%')
                 ->where('pembayarans.user_id', $data_users)
-                ->whereDate('transaksis.created_at', 'LIKE', '%' . $dates . '%')
+                ->whereDate('transaksis.created_at', 'LIKE', '%'.$dates.'%')
                 ->first();
         }
+
         return response()->json([
             'bruto' => $bruto,
-            'keuntungan' => $keuntungan
+            'keuntungan' => $keuntungan,
         ]);
     }
 

@@ -14,6 +14,7 @@ use App\Http\Controllers\ModelBarangController;
 use App\Http\Controllers\PackagingBarangController;
 use App\Http\Controllers\PesananPickupController;
 use App\Http\Controllers\RevisiPenjualanController;
+use App\Http\Controllers\SesiKasirController;
 use App\Http\Controllers\StockInOutController;
 use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\StockTokoController;
@@ -54,6 +55,10 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
             Route::get('/create', [TransaksiController::class, 'create']);
             Route::post('/store', [TransaksiController::class, 'store']);
             Route::post('/xendit/create', [XenditController::class, 'createInvoice']);
+
+            Route::post('/sesi-kasir/buka', [SesiKasirController::class, 'buka'])->name('sesi_kasir.buka');
+            Route::get('/sesi-kasir/summary', [SesiKasirController::class, 'summary'])->name('sesi_kasir.summary');
+            Route::post('/sesi-kasir/tutup', [SesiKasirController::class, 'tutup'])->name('sesi_kasir.tutup');
         });
 
         Route::prefix('/daftar')->middleware('permission:lihat_daftar_penjualan')->group(function () {
@@ -219,6 +224,13 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
             Route::get('/export/{id}', [StockOpnameController::class, 'export']);
             Route::get('/audit-logs/{id}', [StockOpnameController::class, 'auditLogs']);
         });
+
+        Route::prefix('/sesi-kasir')->middleware('permission:kelola_sesi_kasir')->group(function () {
+            Route::get('/', [SesiKasirController::class, 'index'])->name('laporan.sesi_kasir');
+            Route::get('/show', [SesiKasirController::class, 'show'])->name('laporan.sesi_kasir.show');
+            Route::post('/approve/{id}', [SesiKasirController::class, 'approve'])->name('laporan.sesi_kasir.approve');
+            Route::post('/reject/{id}', [SesiKasirController::class, 'reject'])->name('laporan.sesi_kasir.reject');
+        });
     });
 
     Route::prefix('/user')->middleware('permission:kelola_pengguna')->group(function () {
@@ -231,6 +243,10 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
         Route::post('/toggle-status', [UserController::class, 'toggleStatus']);
         Route::get('/rbac', [UserController::class, 'rbacIndex'])->name('user.rbac');
         Route::post('/rbac/update', [UserController::class, 'rbacUpdate'])->name('user.rbac.update');
+        Route::post('/rbac/role', [UserController::class, 'rbacRoleStore'])->name('user.rbac.role.store');
+    });
+
+    Route::middleware('permission:kelola_pengguna')->group(function () {
         Route::get('/pengaturan', [SystemSettingController::class, 'index'])->name('user.pengaturan');
         Route::post('/pengaturan/update', [SystemSettingController::class, 'update'])->name('user.pengaturan.update');
     });

@@ -98,6 +98,12 @@ class RBACSeeder extends Seeder
                 'description' => 'Mengizinkan pengguna melakukan revisi transaksi penjualan (ganti barang/nominal).',
                 'module' => 'Transaksi',
             ],
+            [
+                'name' => 'kelola_sesi_kasir',
+                'display_name' => 'Kelola Sesi Kasir',
+                'description' => 'Mengizinkan pengguna membuka dan menutup laci/sesi kasir.',
+                'module' => 'Transaksi',
+            ],
         ];
 
         // Insert or update permissions
@@ -134,6 +140,7 @@ class RBACSeeder extends Seeder
                 'lihat_buku_panduan',
                 'kelola_pesanan_pickup',
                 'revisi_penjualan',
+                'kelola_sesi_kasir',
             ],
             'kasir' => [
                 'lihat_dashboard',
@@ -141,6 +148,7 @@ class RBACSeeder extends Seeder
                 'lihat_daftar_penjualan',
                 'lihat_buku_panduan',
                 'kelola_pesanan_pickup',
+                'kelola_sesi_kasir',
             ],
             'gudang' => [
                 'lihat_dashboard',

@@ -13,9 +13,11 @@ class SystemSettingController extends Controller
     public function index()
     {
         $xenditSimulationMode = SystemSetting::getByKey('xendit_simulation_mode', 'false');
+        $fiturSesiKasir = SystemSetting::getByKey('fitur_sesi_kasir', 'true');
 
         return view('manajemen_user.pengaturan', [
             'xenditSimulationMode' => $xenditSimulationMode,
+            'fiturSesiKasir' => $fiturSesiKasir,
         ]);
     }
 
@@ -27,11 +29,11 @@ class SystemSettingController extends Controller
         $key = $request->key;
         $value = $request->value;
 
-        if (!in_array($key, ['xendit_simulation_mode'])) {
+        if (! in_array($key, ['xendit_simulation_mode', 'fitur_sesi_kasir'])) {
             return response()->json([
-                'icon' => 'error', 
-                'title' => 'Gagal', 
-                'text' => 'Kunci pengaturan tidak valid'
+                'icon' => 'error',
+                'title' => 'Gagal',
+                'text' => 'Kunci pengaturan tidak valid',
             ]);
         }
 
@@ -40,7 +42,7 @@ class SystemSettingController extends Controller
         return response()->json([
             'icon' => 'success',
             'title' => 'Sukses',
-            'text' => 'Pengaturan sistem berhasil diperbarui.'
+            'text' => 'Pengaturan sistem berhasil diperbarui.',
         ]);
     }
 }

@@ -11,14 +11,19 @@ class Role
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next, $roles): Response
     {
-        $role = in_array($request->user()->role, explode('|', $roles));
-        if ($role) {
+        $userRole = $request->user()->role;
+        $allowedRoles = explode('|', $roles);
+
+        $isDynamicRoleValid = \Schema::hasTable('roles') && \DB::table('roles')->where('name', $userRole)->exists();
+
+        if (in_array($userRole, $allowedRoles) || $isDynamicRoleValid) {
             return $next($request);
         }
+
         abort(403, 'Anda tidak memiliki hak mengakses laman tersebut!');
     }
 }

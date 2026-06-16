@@ -129,9 +129,9 @@
                             <i data-acorn-icon="lock-on"></i>
                             <select class="form-control" id="role" name="role" data-placeholder="Pilih Role" required>
                                 <option label="&nbsp;"></option>
-                                <option value="admin">admin</option>
-                                <option value="gudang">gudang</option>
-                                <option value="kasir">kasir</option>
+                                @foreach ($roles as $r)
+                                    <option value="{{ $r->name }}">{{ $r->display_name }}</option>
+                                @endforeach
                             </select>
                         </div>
 

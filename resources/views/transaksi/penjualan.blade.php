@@ -372,7 +372,7 @@
             <!-- Top Info Bar -->
             <div class="pos-info-bar mb-4">
                 <div class="row g-4 align-items-center">
-                    <div class="col-6 col-md-4">
+                    <div class="col-6 col-md-3">
                         <div class="pos-info-item">
                             <div class="pos-info-icon"><i data-acorn-icon="shop" data-acorn-size="18"></i></div>
                             <div>
@@ -391,7 +391,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 col-md-4">
+                    <div class="col-6 col-md-3">
                         <div class="pos-info-item">
                             <div class="pos-info-icon"><i data-acorn-icon="user" data-acorn-size="18"></i></div>
                             <div>
@@ -400,7 +400,27 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-12 col-md-4 text-md-end">
+                    <div class="col-6 col-md-3">
+                        <div class="pos-info-item">
+                            <div class="pos-info-icon"><i data-acorn-icon="wallet" data-acorn-size="18"></i></div>
+                            <div>
+                                <div class="pos-info-label">Sesi Kasir</div>
+                                @if($fitur_sesi_kasir)
+                                    @if($active_session)
+                                        <div class="pos-info-val text-success d-flex align-items-center gap-2">
+                                            <span>Aktif (Rp. {{ number_format($active_session->saldo_awal, 0, ',', '.') }})</span>
+                                            <button type="button" class="btn btn-xs btn-outline-danger py-0 px-2 fw-bold" id="btnTutupKasir" style="font-size: 0.7rem;">Tutup</button>
+                                        </div>
+                                    @else
+                                        <div class="pos-info-val text-danger">Belum Buka</div>
+                                    @endif
+                                @else
+                                    <div class="pos-info-val text-muted">Nonaktif</div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 text-md-end">
                         <span class="text-muted d-block small mb-1">Kode Invoice</span>
                         <h4 class="fw-bold text-primary mb-0" id="invoiceLabel">GENERATING...</h4>
                     </div>
@@ -551,6 +571,157 @@
                 </div>
             </div>
         </div>
+        @if($fitur_sesi_kasir)
+        <!-- Modal Buka Kasir -->
+        <div class="modal fade" id="modalBukaKasir" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalBukaKasirLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title fw-bold text-white" id="modalBukaKasirLabel">
+                            <i data-acorn-icon="wallet" class="me-2 text-white"></i> Mulaikan Sesi Penjualan (Buka Kasir)
+                        </h5>
+                    </div>
+                    <div class="modal-body py-4">
+                        @if($pending_session)
+                            <div class="text-center py-3">
+                                <div class="spinner-border text-warning mb-3" role="status" style="width: 3rem; height: 3rem;">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <h5 class="fw-bold text-warning mb-2">Menunggu Persetujuan Admin</h5>
+                                <p class="text-muted small px-3">
+                                    Pengajuan pembukaan kembali sesi kasir dengan modal awal <strong>Rp. {{ number_format($pending_session->saldo_awal, 0, ',', '.') }}</strong> sedang menunggu persetujuan Admin.
+                                </p>
+                                <div class="alert alert-light border-0 small mb-4 text-start">
+                                    <strong>Keterangan Kasir:</strong><br>
+                                    {{ $pending_session->catatan }}
+                                </div>
+                                <div class="d-grid gap-2 px-3">
+                                    <button type="button" class="btn btn-primary fw-bold" onclick="location.reload()">
+                                        <i data-acorn-icon="refresh" class="me-1"></i> PERIKSA STATUS PERSATUJUAN
+                                    </button>
+                                </div>
+                            </div>
+                        @else
+                            <form id="formBukaKasir">
+                                @if($today_closed)
+                                    <div class="alert alert-warning border-0 mb-3 small d-flex align-items-center">
+                                        <i data-acorn-icon="warning" class="me-2 text-warning"></i>
+                                        <div>
+                                            <strong>Peringatan!</strong> Sesi kasir hari ini sudah ditutup.
+                                            @if(Auth::user()->role !== 'admin')
+                                                Pengajuan pembukaan sesi baru memerlukan persetujuan dari Admin.
+                                            @else
+                                                Anda masuk sebagai Admin, sesi baru dapat langsung dibuka dengan mencatat keterangan approval di catatan.
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if($rejected_session)
+                                    <div class="alert alert-danger border-0 mb-3 small d-flex align-items-center">
+                                        <i data-acorn-icon="close" class="me-2 text-danger"></i>
+                                        <div>
+                                            <strong>Pengajuan Sebelumnya Ditolak!</strong><br>
+                                            {{ $rejected_session->catatan }}
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-alternate">Toko / Cabang</label>
+                                    <input type="text" class="form-control bg-light" value="{{ $data_toko->nama_toko }}" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-alternate">Petugas</label>
+                                    <input type="text" class="form-control bg-light" value="{{ Auth::user()->name }}" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="modalAwalInput" class="form-label fw-bold text-alternate">Modal Awal / Uang Kembalian (Rp)</label>
+                                    @if($today_closed && Auth::user()->role !== 'admin' && $closed_session_today)
+                                        <input type="text" class="form-control form-control-lg fw-bold text-primary bg-light" id="modalAwalInput" value="{{ number_format($closed_session_today->saldo_awal, 0, ',', '.') }}" readonly required>
+                                    @else
+                                        <input type="text" class="form-control form-control-lg fw-bold text-primary" id="modalAwalInput" placeholder="Masukkan nominal modal awal" required>
+                                    @endif
+                                </div>
+                                
+                                @if($today_closed && Auth::user()->role !== 'admin')
+                                    <div class="mb-3">
+                                        <label for="catatanPengajuanInput" class="form-label fw-bold text-alternate">Alasan Pengajuan Kembali (Wajib)</label>
+                                        <textarea class="form-control" id="catatanPengajuanInput" rows="2" placeholder="Contoh: Pergantian shift tambahan..." required></textarea>
+                                    </div>
+                                @endif
+
+                                <div class="d-grid mt-4">
+                                    <button type="submit" class="btn btn-primary btn-lg fw-bold">
+                                        {{ $today_closed && Auth::user()->role !== 'admin' ? 'KIRIM PENGAJUAN BUKA SESI' : 'BUKA SESI KASIR' }}
+                                    </button>
+                                </div>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Tutup Kasir -->
+        <div class="modal fade" id="modalTutupKasir" tabindex="-1" aria-labelledby="modalTutupKasirLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title fw-bold text-white" id="modalTutupKasirLabel">
+                            <i data-acorn-icon="lock-off" class="me-2 text-white"></i> Tutup Sesi Penjualan (Tutup Kasir)
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body py-4">
+                        <form id="formTutupKasir">
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label small text-muted">Dibuka Oleh</label>
+                                    <div class="fw-bold" id="tutupDibukaOleh">-</div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small text-muted">Waktu Buka</label>
+                                    <div class="fw-bold" id="tutupWaktuBuka">-</div>
+                                </div>
+                            </div>
+                            <hr class="my-3">
+                            <div class="mb-3 d-flex justify-content-between">
+                                <span class="text-alternate">Modal Awal:</span>
+                                <span class="fw-bold" id="tutupSaldoAwal">Rp 0</span>
+                            </div>
+                            <div class="mb-3 d-flex justify-content-between">
+                                <span class="text-alternate">Total Penjualan Tunai:</span>
+                                <span class="fw-bold text-success" id="tutupTotalPenjualan">Rp 0</span>
+                            </div>
+                            <div class="mb-3 d-flex justify-content-between p-2 bg-light rounded">
+                                <span class="text-alternate fw-bold">Saldo Akhir (Sistem):</span>
+                                <span class="fw-bold text-primary" id="tutupSaldoSistem">Rp 0</span>
+                            </div>
+                            <hr class="my-3">
+                            <div class="mb-3">
+                                <label for="saldoAktualInput" class="form-label fw-bold text-alternate">Uang Fisik di Laci (Rp)</label>
+                                <input type="text" class="form-control form-control-lg fw-bold text-primary" id="saldoAktualInput" placeholder="Hitung dan masukkan total uang laci" required>
+                            </div>
+                            <div class="mb-3 d-flex justify-content-between p-2 rounded" id="selisihContainer" style="background-color: var(--background);">
+                                <span class="fw-bold text-alternate">Selisih:</span>
+                                <span class="fw-bold" id="tutupSelisih">Rp 0</span>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tutupCatatan" class="form-label fw-bold text-alternate">Catatan / Keterangan</label>
+                                <textarea class="form-control" id="tutupCatatan" rows="2" placeholder="Contoh: Selisih minus karena..."></textarea>
+                            </div>
+                            <div class="d-grid mt-4">
+                                <button type="submit" class="btn btn-danger btn-lg fw-bold">
+                                    TUTUP SESI KASIR
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
     </main>
 @endsection
 
@@ -573,6 +744,141 @@
             }
             setInterval(updateClock, 1000);
             updateClock();
+
+            @if($fitur_sesi_kasir && !$active_session)
+                var myModal = new bootstrap.Modal(document.getElementById('modalBukaKasir'), {});
+                myModal.show();
+            @endif
+
+            $('#modalAwalInput').on('keyup', function() {
+                var val = $(this).val();
+                $(this).val(formatInputRupiah(val));
+            });
+
+            $('#formBukaKasir').submit(function(e) {
+                e.preventDefault();
+                var saldo_awal = $('#modalAwalInput').val().replaceAll('.', '');
+                var catatan = $('#catatanPengajuanInput').val() || '';
+                
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                
+                $.ajax({
+                    type: 'POST',
+                    url: '{{ route("sesi_kasir.buka") }}',
+                    data: {
+                        saldo_awal: saldo_awal,
+                        kode_toko: $('#switchToko').val() || '{{ $data_toko->kode }}',
+                        catatan: catatan
+                    },
+                    success: function(res) {
+                        if (res.require_approval) {
+                            Swal.fire({
+                                icon: res.icon,
+                                title: 'Pengajuan Dikirim',
+                                text: res.cek_data,
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire({
+                                icon: res.icon,
+                                title: res.cek_data,
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        }
+                    },
+                    error: function(xhr) {
+                        var msg = xhr.responseJSON ? xhr.responseJSON.cek_data : 'Terjadi kesalahan.';
+                        Swal.fire('Error', msg, 'error');
+                    }
+                });
+            });
+
+            $('#btnTutupKasir').click(function() {
+                $.ajax({
+                    type: 'GET',
+                    url: '{{ route("sesi_kasir.summary") }}',
+                    data: {
+                        kode_toko: $('#switchToko').val() || '{{ $data_toko->kode }}'
+                    },
+                    success: function(res) {
+                        $('#tutupDibukaOleh').text(res.dibuka_oleh);
+                        $('#tutupWaktuBuka').text(res.waktu_buka);
+                        $('#tutupSaldoAwal').text('Rp ' + rupiah(res.saldo_awal));
+                        $('#tutupTotalPenjualan').text('Rp ' + rupiah(res.total_penjualan));
+                        $('#tutupSaldoSistem').text('Rp ' + rupiah(res.saldo_akhir_sistem));
+                        
+                        $('#saldoAktualInput').data('sistem', res.saldo_akhir_sistem).val('');
+                        $('#tutupSelisih').text('Rp 0').removeClass('text-success text-danger');
+                        $('#selisihContainer').css('background-color', 'var(--background)');
+                        $('#tutupCatatan').val('');
+                        
+                        var closingModal = new bootstrap.Modal(document.getElementById('modalTutupKasir'), {});
+                        closingModal.show();
+                    },
+                    error: function() {
+                        Swal.fire('Error', 'Gagal memuat ringkasan sesi kasir.', 'error');
+                    }
+                });
+            });
+
+            $('#saldoAktualInput').on('keyup', function() {
+                var formattedVal = formatInputRupiah($(this).val());
+                $(this).val(formattedVal);
+
+                var inputVal = parseInt(formattedVal.replaceAll('.', '')) || 0;
+                var sistemVal = parseInt($(this).data('sistem')) || 0;
+                var selisih = inputVal - sistemVal;
+                
+                var formatted = rupiah(Math.abs(selisih));
+                if (selisih > 0) {
+                    $('#tutupSelisih').text('+ Rp ' + formatted).addClass('text-success').removeClass('text-danger');
+                    $('#selisihContainer').css('background-color', 'rgba(40, 167, 69, 0.15)');
+                } else if (selisih < 0) {
+                    $('#tutupSelisih').text('- Rp ' + formatted).addClass('text-danger').removeClass('text-success');
+                    $('#selisihContainer').css('background-color', 'rgba(220, 53, 69, 0.15)');
+                } else {
+                    $('#tutupSelisih').text('Rp 0').removeClass('text-success text-danger');
+                    $('#selisihContainer').css('background-color', 'var(--background)');
+                }
+            });
+
+            $('#formTutupKasir').submit(function(e) {
+                e.preventDefault();
+                var saldo_akhir_aktual = $('#saldoAktualInput').val().replaceAll('.', '');
+                var catatan = $('#tutupCatatan').val();
+                
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                
+                $.ajax({
+                    type: 'POST',
+                    url: '{{ route("sesi_kasir.tutup") }}',
+                    data: {
+                        saldo_akhir_aktual: saldo_akhir_aktual,
+                        catatan: catatan,
+                        kode_toko: $('#switchToko').val() || '{{ $data_toko->kode }}'
+                    },
+                    success: function(res) {
+                        Swal.fire({
+                            icon: res.icon,
+                            title: res.cek_data,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
+                    },
+                    error: function(xhr) {
+                        var msg = xhr.responseJSON ? xhr.responseJSON.cek_data : 'Terjadi kesalahan.';
+                        Swal.fire('Error', msg, 'error');
+                    }
+                });
+            });
 
 
             // Generate invoice ID
@@ -624,21 +930,33 @@
             function rupiah(param) {
                 if (param === undefined || param === null) return '0';
                 var str = param.toString().trim();
+                var isNegative = str.startsWith('-');
 
                 // If it ends with .00 (laravel decimal), strip it
-                if (str.endsWith('.00')) {
+                if (/^-?\d+\.00$/.test(str)) {
                     str = str.slice(0, -3);
                 }
 
-                // If it already has thousands separators, just return it
-                if (str.includes('.') && !str.includes('.00')) {
-                    return str;
-                }
-
-                // Otherwise format it
                 var clean = str.replace(/\D/g, '');
                 if (clean === '') return '0';
 
+                // Prevent leading zeros unless the value is just "0"
+                clean = parseInt(clean, 10).toString();
+
+                var sisa = clean.length % 3,
+                    r = clean.substr(0, sisa),
+                    ribuan = clean.substr(sisa).match(/\d{3}/g);
+                if (ribuan) {
+                    r += (sisa ? '.' : '') + ribuan.join('.');
+                }
+                return (isNegative ? '-' : '') + r;
+            }
+
+            function formatInputRupiah(val) {
+                if (val === undefined || val === null) return '0';
+                var clean = val.toString().replace(/\D/g, '');
+                if (clean === '') return '0';
+                clean = parseInt(clean, 10).toString();
                 var sisa = clean.length % 3,
                     r = clean.substr(0, sisa),
                     ribuan = clean.substr(sisa).match(/\d{3}/g);

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\DataBarang;
+use App\Models\SesiKasir;
 use App\Models\StockOpname;
 use App\Models\StockOpnameAudit;
 use App\Models\StockOpnameItem;
@@ -818,6 +819,15 @@ class StockOpnameTest extends TestCase
             'snapshot_qty' => 10,
             'round_1_qty' => 5,
             'final_qty' => 5,
+        ]);
+
+        // Open a sesi kasir
+        SesiKasir::create([
+            'kode_toko' => 'TK_001',
+            'waktu_buka' => now(),
+            'dibuka_oleh' => $user->id,
+            'saldo_awal' => 100000,
+            'status' => 'buka',
         ]);
 
         // A POS sale of 2 items occurs

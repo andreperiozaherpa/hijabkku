@@ -274,6 +274,13 @@
                                 </a>
                             </li>
                             @endif
+                            @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('kelola_sesi_kasir'))
+                            <li>
+                                <a href="/laporan/sesi-kasir">
+                                    <span class="label">Laporan Sesi Kasir</span>
+                                </a>
+                            </li>
+                            @endif
                         </ul>
                     </li>
                 @endif
@@ -296,16 +303,17 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="/user/pengaturan">
-                                    <span class="label">Pengaturan Sistem</span>
-                                </a>
-                            </li>
-                            <li>
                                 <a href="#">
                                     <span class="label">Data Log</span>
                                 </a>
                             </li>
                         </ul>
+                    </li>
+                    <li>
+                        <a href="/pengaturan">
+                            <i data-acorn-icon="gear" class="icon" data-acorn-size="18"></i>
+                            <span class="label">Pengaturan Sistem</span>
+                        </a>
                     </li>
                 @endif
             </ul>
