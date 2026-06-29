@@ -276,7 +276,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formAddRole" class="tooltip-label-end" novalidate>
+                    <form id="formAddRole" class="tooltip-label-end" novalidate data-no-spinner>
                         <div class="mb-3 filled position-relative form-group">
                             <i data-acorn-icon="tag"></i>
                             <input type="text" class="form-control" placeholder="Nama Role (contoh: supervisor)" id="role_name" name="role_name" required pattern="^[a-zA-Z0-9_\-]+$">

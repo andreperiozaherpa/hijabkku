@@ -114,7 +114,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formValid" class="tooltip-label-end" novalidate>
+                    <form id="formValid" class="tooltip-label-end" novalidate data-no-spinner>
                         <div class="mb-3 filled position-relative form-group">
                             <i data-acorn-icon="user"></i>
                             <input type="text" class="form-control" placeholder="Nama Lengkap" id="nama" name="nama" required>
@@ -193,7 +193,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formValids" class="tooltip-label-end" novalidate>
+                    <form id="formValids" class="tooltip-label-end" novalidate data-no-spinner>
                         <div class="mb-3 filled position-relative form-group">
                             <i data-acorn-icon="email"></i>
                             <input type="email" class="form-control" placeholder="Email" id="changeEmail" name="changeEmail" readonly required>

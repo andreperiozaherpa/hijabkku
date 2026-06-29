@@ -532,8 +532,11 @@
             }
         });
 
-        // Show spinner on form submits
+        // Show spinner on form submits — skip AJAX forms (data-no-spinner)
         $(document).on('submit', 'form', function() {
+            if ($(this).data('no-spinner') !== undefined) {
+                return; // AJAX form — handled by its own handler
+            }
             var loader = document.getElementById('page-loader');
             if (loader) {
                 loader.style.display = 'flex';

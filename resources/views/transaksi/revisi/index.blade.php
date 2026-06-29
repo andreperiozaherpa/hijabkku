@@ -183,7 +183,7 @@
                             </div>
                         </div>
 
-                        <form id="formRevisi">
+                        <form id="formRevisi" data-no-spinner>
                             <input type="hidden" id="transaksi_id">
                             <input type="hidden" id="kode_toko_modal">
                             <input type="hidden" id="metode_modal">

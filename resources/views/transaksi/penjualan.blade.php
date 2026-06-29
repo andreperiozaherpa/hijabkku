@@ -402,20 +402,59 @@
                     </div>
                     <div class="col-6 col-md-3">
                         <div class="pos-info-item">
-                            <div class="pos-info-icon"><i data-acorn-icon="wallet" data-acorn-size="18"></i></div>
+                            <div class="pos-info-icon" id="sesiKasirIcon">
+                                <i data-acorn-icon="wallet" data-acorn-size="18"></i>
+                            </div>
                             <div>
                                 <div class="pos-info-label">Sesi Kasir</div>
                                 @if($fitur_sesi_kasir)
                                     @if($active_session)
-                                        <div class="pos-info-val text-success d-flex align-items-center gap-2">
-                                            <span>Aktif (Rp. {{ number_format($active_session->saldo_awal, 0, ',', '.') }})</span>
-                                            <button type="button" class="btn btn-xs btn-outline-danger py-0 px-2 fw-bold" id="btnTutupKasir" style="font-size: 0.7rem;">Tutup</button>
+                                        <div class="d-flex flex-column gap-1">
+                                            <div class="pos-info-val text-success d-flex align-items-center gap-1">
+                                                <i data-acorn-icon="check-circle" data-acorn-size="13" class="me-1"></i>
+                                                <span>Sesi Aktif
+                                                    @if(Auth::user()->role === 'admin')
+                                                        — Rp {{ number_format($active_session->saldo_awal, 0, ',', '.') }}
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                id="btnTutupKasir"
+                                                class="btn btn-danger btn-sm fw-semibold d-inline-flex align-items-center gap-1"
+                                                style="font-size: 0.78rem; padding: 0.3rem 0.75rem; border-radius: 50px;"
+                                                title="Tutup sesi kasir sekarang"
+                                                aria-label="Tutup Sesi Kasir"
+                                            >
+                                                <i data-acorn-icon="power" data-acorn-size="13"></i>
+                                                Tutup Kasir
+                                            </button>
                                         </div>
                                     @else
-                                        <div class="pos-info-val text-danger">Belum Buka</div>
+                                        <div class="d-flex flex-column gap-1">
+                                            <div class="pos-info-val text-danger d-flex align-items-center gap-1">
+                                                <i data-acorn-icon="close-circle" data-acorn-size="13" class="me-1"></i>
+                                                <span>Belum Buka</span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                class="btn btn-success btn-sm fw-semibold d-inline-flex align-items-center gap-1"
+                                                style="font-size: 0.78rem; padding: 0.3rem 0.75rem; border-radius: 50px;"
+                                                title="Buka sesi kasir"
+                                                aria-label="Buka Sesi Kasir"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalBukaKasir"
+                                            >
+                                                <i data-acorn-icon="play" data-acorn-size="13"></i>
+                                                Buka Kasir
+                                            </button>
+                                        </div>
                                     @endif
                                 @else
-                                    <div class="pos-info-val text-muted">Nonaktif</div>
+                                    <div class="pos-info-val text-muted d-flex align-items-center gap-1">
+                                        <i data-acorn-icon="close" data-acorn-size="13" class="me-1"></i>
+                                        <span>Nonaktif</span>
+                                    </div>
                                 @endif
                             </div>
                         </div>
@@ -510,7 +549,7 @@
                         </div>
 
                         <!-- Real POS Checkout Form -->
-                        <form id="formValid" class="tooltip-label-end" novalidate>
+                        <form id="formValid" class="tooltip-label-end" novalidate data-no-spinner>
                             <div class="mb-2">
                                 <label class="form-label small text-muted mb-1">Metode Pembayaran</label>
                                 <select class="form-select form-select-sm" id="metodePembayaran" required>
@@ -602,7 +641,7 @@
                                 </div>
                             </div>
                         @else
-                            <form id="formBukaKasir">
+                            <form id="formBukaKasir" data-no-spinner>
                                 @if($today_closed)
                                     <div class="alert alert-warning border-0 mb-3 small d-flex align-items-center">
                                         <i data-acorn-icon="warning" class="me-2 text-warning"></i>
@@ -674,7 +713,7 @@
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body py-4">
-                        <form id="formTutupKasir">
+                        <form id="formTutupKasir" data-no-spinner>
                             <div class="row g-3 mb-3">
                                 <div class="col-6">
                                     <label class="form-label small text-muted">Dibuka Oleh</label>

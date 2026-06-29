@@ -209,7 +209,7 @@
                     <button type="button" class="closed btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formStockInOut" class="tooltip-label-end" novalidate>
+                    <form id="formStockInOut" class="tooltip-label-end" novalidate data-no-spinner>
                         <input type="text" id="kode_barang" name="kode_barang" required readonly hidden>
                         
                         <div class="row g-3">
@@ -260,7 +260,7 @@
                     <button type="button" class="closed btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formExchange" class="tooltip-label-end" novalidate>
+                    <form id="formExchange" class="tooltip-label-end" novalidate data-no-spinner>
                         <input type="text" id="kodeBarang" name="kodeBarang" readonly hidden>
                         <input type="text" id="jumlahOld" name="jumlahOld" readonly hidden>
                         

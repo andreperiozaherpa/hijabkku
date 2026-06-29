@@ -167,7 +167,7 @@
                     <button type="button" class="closed btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formValid" class="tooltip-label-end" novalidate>
+                    <form id="formValid" class="tooltip-label-end" novalidate data-no-spinner>
                         <input type="text" id="id" hidden>
                         
                         <div class="row g-3">

@@ -99,7 +99,7 @@
                     <button type="button" class="closed btn-close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formValid" class="tooltip-label-end" novalidate>
+                    <form id="formValid" class="tooltip-label-end" novalidate data-no-spinner>
                         <div class="mb-3 filled position-relative form-group">
                             <i data-acorn-icon="barcode"></i>
                             <input type="text" class="form-control" placeholder="Kode" id="kode" name="kode" readonly required>
