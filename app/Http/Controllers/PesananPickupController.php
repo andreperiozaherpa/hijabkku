@@ -59,6 +59,7 @@ class PesananPickupController extends Controller
         }
 
         return DataTables()->of($query)
+            ->filterColumn('nama_toko', fn ($query, $keyword) => $query->where('tokos.nama_toko', 'LIKE', "%{$keyword}%"))
             ->addColumn('tanggal', function ($row) {
                 return $row->created_at ? Carbon::parse($row->created_at)->locale('id')->translatedFormat('l, d M Y, H:i') : '-';
             })

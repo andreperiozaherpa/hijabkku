@@ -61,6 +61,9 @@
                                         <span class="search-magnifier-icon">
                                             <i data-acorn-icon="search"></i>
                                         </span>
+                                        <span class="search-delete-icon d-none">
+                                            <i data-acorn-icon="close"></i>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -352,10 +355,18 @@
 
                         $('#pickupPhoneTitle').html(
                             `<a href="https://wa.me/${waPhone}" target="_blank" class="text-success fw-bold">${res.pickup.customer_phone}</a>`
-                            );
+                        );
                         $('#pickupEmailTitle').text(res.pickup.customer_email || '-');
 
-                        const dateFormatted = res.pickup.created_at ? new Date(res.pickup.created_at).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+                        const dateFormatted = res.pickup.created_at ? new Date(res.pickup
+                            .created_at).toLocaleDateString('id-ID', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) : '-';
                         $('#pickupDateTitle').text(dateFormatted);
                         $('#pickupTokoTitle').text(res.toko);
 
@@ -442,7 +453,7 @@
                                         showConfirmButton: false
                                     });
                                     pickupTable.ajax.reload(null,
-                                    false); // Reload table preserving page
+                                        false); // Reload table preserving page
                                     if (callback) callback();
                                 } else {
                                     Swal.fire({

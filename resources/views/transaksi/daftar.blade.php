@@ -85,6 +85,9 @@
                                         <span class="search-magnifier-icon">
                                             <i data-acorn-icon="search"></i>
                                         </span>
+                                        <span class="search-delete-icon d-none">
+                                            <i data-acorn-icon="close"></i>
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-6 text-md-end">
