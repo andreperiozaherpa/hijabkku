@@ -1,31 +1,88 @@
 @extends('layouts.main')
 @section('main')
     <style>
-        .rbac-card {
+        .rbac-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .rbac-header-card {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
             border: none;
             border-radius: 16px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(2, 132, 199, 0.15);
         }
-        
+
+        .accordion-custom .accordion-item {
+            border: none !important;
+            border-radius: 16px !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+            background: #fff;
+            margin-bottom: 1.25rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e2e8f0 !important;
+            overflow: hidden;
+        }
+
+        .accordion-custom .accordion-item:hover {
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08) !important;
+            transform: translateY(-2px);
+            border-color: #cbd5e1 !important;
+        }
+
+        .accordion-custom .accordion-button {
+            border-radius: 16px !important;
+            padding: 1.25rem 1.5rem !important;
+            background-color: #fff !important;
+            color: #1e293b !important;
+            box-shadow: none !important;
+            transition: all 0.25s ease;
+        }
+
+        .accordion-custom .accordion-button:not(.collapsed) {
+            background: linear-gradient(90deg, rgba(56, 189, 248, 0.08) 0%, rgba(3, 105, 161, 0.03) 100%) !important;
+            color: #0369a1 !important;
+            border-bottom-left-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+            border-bottom: 1px solid rgba(56, 189, 248, 0.15) !important;
+        }
+
+        .accordion-custom .accordion-button::after {
+            background-size: 1rem !important;
+            width: 1rem !important;
+            height: 1rem !important;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .rbac-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+        }
+
         .rbac-table th {
-            background-color: rgba(240, 244, 248, 0.6) !important;
+            background-color: #f8fafc !important;
+            color: #475569 !important;
             font-weight: 700;
             text-transform: uppercase;
+            font-size: 0.72rem;
             letter-spacing: 0.8px;
-            border-bottom: 2px solid #eef2f5 !important;
+            padding: 1rem 1.25rem !important;
+            border-bottom: 2px solid #e2e8f0 !important;
+        }
+
+        .rbac-table tr:last-child td {
+            border-bottom: none !important;
         }
 
         .rbac-table td {
-            vertical-align: middle;
+            padding: 1.25rem 1.25rem !important;
+            border-bottom: 1px solid #f1f5f9 !important;
             transition: background-color 0.2s ease;
         }
 
         .rbac-table tr:hover td {
-            background-color: rgba(248, 250, 252, 0.8) !important;
+            background-color: #f8fafc !important;
         }
 
         /* Custom Premium IOS Switch Toggle */
@@ -46,7 +103,7 @@
         }
 
         .form-switch .form-check-input:checked {
-            background-color: #38bdf8; /* Sleek sky blue color */
+            background-color: #0ea5e9; /* Sleek sky blue color */
             background-position: right center;
         }
 
@@ -55,24 +112,46 @@
         }
 
         .perm-badge {
-            background-color: rgba(56, 189, 248, 0.1);
-            color: #0284c7;
+            background-color: rgba(14, 165, 233, 0.08);
+            color: #0369a1;
             font-weight: 600;
-            padding: 0.35em 0.65em;
-            border-radius: 8px;
-            font-size: 0.85rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-family: 'Courier New', Courier, monospace;
+            border: 1px solid rgba(14, 165, 233, 0.15);
+        }
+
+        .toggle-btn-custom {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background-color: rgba(71, 85, 105, 0.05);
+            color: #475569;
+            border: 1px solid rgba(71, 85, 105, 0.1);
+        }
+
+        .toggle-btn-custom:hover {
+            background-color: #0284c7;
+            color: #fff;
+            border-color: #0284c7;
+            transform: translateY(-1px);
         }
     </style>
     <main>
-        <div class="container">
+        <div class="container rbac-container">
             <!-- Title and Top Buttons Start -->
-            <div class="page-title-container">
-                <div class="row">
+            <div class="page-title-container mb-4">
+                <div class="row align-items-center">
                     <div class="col-12 col-md-7">
-                        <h1 class="mb-1 pb-0 display-4" id="title">Pengaturan Hak Akses (RBAC)</h1>
+                        <h1 class="mb-1 pb-0 display-4 fw-bold" id="title">Pengaturan Hak Akses (RBAC)</h1>
                         <p class="text-muted mb-0">Kelola hak akses dinamis untuk setiap level pengguna sistem secara real-time.</p>
                     </div>
-                    <div class="col-12 col-md-5 text-end mt-2 mt-md-0 d-flex align-items-center justify-content-md-end">
+                    <div class="col-12 col-md-5 text-end mt-3 mt-md-0 d-flex align-items-center justify-content-md-end">
                         <button class="btn btn-icon btn-icon-start btn-primary btn-sm shadow-sm" type="button" data-bs-toggle="modal" data-bs-target="#addRoleModal">
                             <i data-acorn-icon="plus"></i>
                             <span>Tambah Role</span>
@@ -85,56 +164,102 @@
             <!-- Content Start -->
             <div class="row mb-5">
                 <div class="col-12">
-                    <div class="card rbac-card">
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table rbac-table align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 30%">Modul / Hak Akses</th>
-                                            <th style="width: 40%">Deskripsi Fitur</th>
-                                            @foreach ($roles as $role)
-                                                <th class="text-center" style="width: 10%">{{ strtoupper($role) }}</th>
-                                            @endforeach
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($permissions as $permission)
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex flex-column">
-                                                        <span class="fw-bold text-alternate mb-1">{{ $permission->display_name }}</span>
-                                                        <div>
-                                                            <span class="perm-badge">{{ $permission->name }}</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="text-muted small">{{ $permission->description ?? 'Tidak ada deskripsi' }}</span>
-                                                </td>
-                                                @foreach ($roles as $role)
-                                                    @php
-                                                        $isChecked = isset($rolePermissions[$role]) && in_array($permission->id, $rolePermissions[$role]);
-                                                    @endphp
-                                                    <td class="text-center">
-                                                        <div class="form-check form-switch d-inline-block">
-                                                            <input 
-                                                                class="form-check-input permission-toggle" 
-                                                                type="checkbox" 
-                                                                role="switch" 
-                                                                data-role="{{ $role }}" 
-                                                                data-permission-id="{{ $permission->id }}"
-                                                                {{ $isChecked ? 'checked' : '' }}
-                                                            >
-                                                        </div>
-                                                    </td>
-                                                @endforeach
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                    @php
+                        $groupedPermissions = $permissions->groupBy('module');
+                    @endphp
+
+                    <div class="accordion accordion-custom" id="rbacAccordion">
+                        @foreach ($groupedPermissions as $moduleName => $modulePermissions)
+                            @php
+                                $cleanModuleName = str_replace([' ', '/'], '-', strtolower($moduleName));
+                                
+                                // Map icons based on module names
+                                $icon = 'grid';
+                                if (strtolower($moduleName) === 'dashboard') {
+                                    $icon = 'home';
+                                } elseif (strtolower($moduleName) === 'transaksi') {
+                                    $icon = 'cart';
+                                } elseif (strtolower($moduleName) === 'manajemen') {
+                                    $icon = 'gear';
+                                } elseif (strtolower($moduleName) === 'stok') {
+                                    $icon = 'factory';
+                                } elseif (strtolower($moduleName) === 'laporan') {
+                                    $icon = 'book-open';
+                                } elseif (strtolower($moduleName) === 'panduan') {
+                                    $icon = 'book';
+                                }
+                            @endphp
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading-{{ $cleanModuleName }}">
+                                    <button class="accordion-button collapsed fw-bold d-flex align-items-center justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ $cleanModuleName }}" aria-expanded="false" aria-controls="collapse-{{ $cleanModuleName }}">
+                                        <div class="d-flex align-items-center">
+                                            <i data-acorn-icon="{{ $icon }}" class="me-3 text-primary" data-acorn-size="20"></i>
+                                            <span style="font-size: 1.05rem;">Modul {{ $moduleName }}</span>
+                                            <span class="badge bg-outline-primary ms-3 rounded-pill px-2.5 py-1.5" style="font-size: 0.72rem;">{{ $modulePermissions->count() }} Fitur</span>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse-{{ $cleanModuleName }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ $cleanModuleName }}" data-bs-parent="#rbacAccordion">
+                                    <div class="accordion-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table rbac-table align-middle mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="ps-4" style="width: 30%">Hak Akses / Fitur</th>
+                                                        <th style="width: 30%">Deskripsi Fitur</th>
+                                                        @foreach ($roles as $role)
+                                                            <th class="text-center" style="width: 10%">
+                                                                <div class="d-flex flex-column align-items-center">
+                                                                    <span class="mb-1 text-alternate">{{ strtoupper($role) }}</span>
+                                                                    <button type="button" class="btn btn-xs toggle-btn-custom select-all-module-role" data-module="{{ $cleanModuleName }}" data-role="{{ $role }}">
+                                                                        Toggle All
+                                                                    </button>
+                                                                </div>
+                                                            </th>
+                                                        @endforeach
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach ($modulePermissions as $permission)
+                                                        <tr>
+                                                            <td class="ps-4">
+                                                                <div class="d-flex flex-column">
+                                                                    <span class="fw-bold text-alternate mb-1" style="font-size: 0.95rem;">{{ $permission->display_name }}</span>
+                                                                    <div>
+                                                                        <span class="perm-badge">{{ $permission->name }}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <span class="text-muted small">{{ $permission->description ?? 'Tidak ada deskripsi' }}</span>
+                                                            </td>
+                                                            @foreach ($roles as $role)
+                                                                @php
+                                                                    $isChecked = isset($rolePermissions[$role]) && in_array($permission->id, $rolePermissions[$role]);
+                                                                @endphp
+                                                                <td class="text-center">
+                                                                    <div class="form-check form-switch d-inline-block">
+                                                                        <input 
+                                                                            class="form-check-input permission-toggle" 
+                                                                            type="checkbox" 
+                                                                            role="switch" 
+                                                                            data-role="{{ $role }}" 
+                                                                            data-permission-id="{{ $permission->id }}"
+                                                                            data-module="{{ $cleanModuleName }}"
+                                                                            {{ $isChecked ? 'checked' : '' }}
+                                                                        >
+                                                                    </div>
+                                                                </td>
+                                                            @endforeach
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
@@ -257,7 +382,6 @@
                 var permissionId = toggle.attr('data-permission-id');
                 var isChecked = toggle.is(':checked');
 
-                // Animate slightly on check
                 toggle.addClass('pe-none'); // Prevent double click
 
                 $.ajax({
@@ -301,6 +425,87 @@
                         });
                     }
                 });
+            });
+
+            // Toggle All permissions for a specific role in a module
+            $('.select-all-module-role').on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                var button = $(this);
+                var module = button.attr('data-module');
+                var role = button.attr('data-role');
+                
+                // Find all checkboxes for this role in this module
+                var checkboxes = $(`.permission-toggle[data-module="${module}"][data-role="${role}"]`);
+                
+                // Determine if we should check all or uncheck all
+                // If any is unchecked, we check all. Otherwise, we uncheck all.
+                var anyUnchecked = false;
+                checkboxes.each(function() {
+                    if (!$(this).is(':checked')) {
+                        anyUnchecked = true;
+                        return false; // break loop
+                    }
+                });
+                
+                var targetState = anyUnchecked;
+                var promises = [];
+                
+                checkboxes.each(function() {
+                    var cb = $(this);
+                    if (cb.is(':checked') !== targetState) {
+                        cb.prop('checked', targetState);
+                        
+                        var permissionId = cb.attr('data-permission-id');
+                        cb.addClass('pe-none');
+                        
+                        var p = $.ajax({
+                            url: "{{ route('user.rbac.update') }}",
+                            type: "POST",
+                            data: {
+                                role: role,
+                                permission_id: permissionId,
+                                checked: targetState ? 1 : 0
+                            }
+                        }).then(
+                            function(response) {
+                                cb.removeClass('pe-none');
+                            },
+                            function() {
+                                cb.removeClass('pe-none');
+                                cb.prop('checked', !targetState);
+                            }
+                        );
+                        promises.push(p);
+                    }
+                });
+                
+                if (promises.length > 0) {
+                    Swal.fire({
+                        title: 'Memproses...',
+                        text: 'Memperbarui hak akses grup',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    Promise.all(promises).then(() => {
+                        Swal.close();
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'Hak akses grup berhasil diperbarui.'
+                        });
+                    });
+                }
             });
         });
     </script>
