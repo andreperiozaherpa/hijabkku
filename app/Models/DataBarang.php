@@ -25,4 +25,9 @@ class DataBarang extends Model
     {
         return $this->hasMany(StockInOut::class, 'kode_barang', 'kode');
     }
+
+    public function fotos()
+    {
+        return $this->hasMany(FotoBarang::class, 'data_barang_id');
+    }
 }

@@ -274,6 +274,39 @@
                 margin-left: 0.25rem !important;
             }
         }
+
+        /* Premium Modal Gallery Styles */
+        .product-modal-thumbnail {
+            width: 55px;
+            height: 55px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+            opacity: 0.6;
+        }
+
+        .product-modal-thumbnail:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        .product-modal-thumbnail.active {
+            border-color: #D4AF37;
+            opacity: 1;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.25);
+        }
+
+        .btn-close-premium {
+            transition: all 0.3s ease;
+        }
+
+        .btn-close-premium:hover {
+            transform: rotate(90deg);
+            background-color: #ffffff !important;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
+        }
     </style>
 @endsection
 
@@ -357,22 +390,38 @@
                             @if ($stock->data_barang)
                                 @php
                                     $itemName = strtolower($stock->data_barang->nama_barang ?? '');
-                                    $imgUrl = '/img/product_1.png'; // default fallback
+                                    $fallbackImg = '/img/product_1.png'; // default fallback
                                     $tag = 'HIJAB';
 
                                     if (str_contains($itemName, 'bella') || str_contains($itemName, 'square')) {
-                                        $imgUrl = '/img/product_2.png';
+                                        $fallbackImg = '/img/product_2.png';
                                         $tag = 'BEST SELLER';
                                     } elseif (
                                         str_contains($itemName, 'khimar') ||
                                         str_contains($itemName, 'syari') ||
                                         str_contains($itemName, 'syar\'i')
                                     ) {
-                                        $imgUrl = '/img/product_3.png';
+                                        $fallbackImg = '/img/product_3.png';
                                         $tag = 'PREMIUM';
                                     } elseif (str_contains($itemName, 'paris')) {
-                                        $imgUrl = '/img/product_4.png';
+                                        $fallbackImg = '/img/product_4.png';
                                         $tag = 'NEW';
+                                    }
+
+                                    // Main photo
+                                    $imgUrl = $stock->data_barang->foto ? '/' . $stock->data_barang->foto : $fallbackImg;
+
+                                    // Get all verified photos of the product
+                                    $verifiedPhotos = $stock->data_barang->fotos
+                                        ->where('is_verified', true)
+                                        ->map(function($f) {
+                                            return '/' . $f->path;
+                                        })
+                                        ->values()
+                                        ->toArray();
+                                    
+                                    if (empty($verifiedPhotos)) {
+                                        $verifiedPhotos = [$imgUrl];
                                     }
                                 @endphp
 
@@ -384,9 +433,17 @@
                                 @endphp
 
                                 <div class="col-6 col-md-4 col-lg-3 product-card-wrapper">
-                                    <div class="card product-card h-100 position-relative {{ $avail <= 0 ? 'out-of-stock' : '' }}"
+                                    <div class="card product-card h-100 position-relative {{ $avail <= 0 ? 'out-of-stock' : '' }} product-detail-trigger"
                                         style="cursor: pointer;"
-                                        onclick="showProductDetail('{{ $stock->kode_barang }}', '{{ addslashes($stock->data_barang->nama_barang ?? 'Hijab') }}', {{ (int) str_replace('.', '', $stock->data_barang->harga_jual ?? '0') }}, '{{ $imgUrl }}', {{ $avail }}, '{{ addslashes($stock->data_barang->jenis_barang ?? 'Hijab') }}', '{{ $tag }}')">
+                                        data-kode="{{ $stock->kode_barang }}"
+                                        data-nama="{{ $stock->data_barang->nama_barang ?? 'Hijab' }}"
+                                        data-harga="{{ (int) str_replace('.', '', $stock->data_barang->harga_jual ?? '0') }}"
+                                        data-img="{{ $imgUrl }}"
+                                        data-images="{{ json_encode($verifiedPhotos) }}"
+                                        data-avail="{{ $avail }}"
+                                        data-category="{{ $stock->data_barang->jenis_barang ?? 'Hijab' }}"
+                                        data-tag="{{ $tag }}"
+                                        data-desc="{{ $stock->data_barang->deskripsi ?? '' }}">
                                         <div class="badge-tag tag-{{ strtolower(str_replace(' ', '-', $tag)) }}">
                                             {{ $tag }}</div>
                                         <div class="product-img overflow-hidden">
@@ -645,45 +702,59 @@
 
     <!-- Product Detail Modal -->
     <div class="modal fade" id="productDetailModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0" style="border-radius: 20px; overflow: hidden; background: #ffffff;">
-                <div class="position-relative">
-                    <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal"
-                        aria-label="Close"
-                        style="top: 20px; right: 20px; z-index: 10; background-color: rgba(255,255,255,0.85); padding: 10px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: none;"></button>
-                    <div class="product-modal-img-wrapper"
-                        style="aspect-ratio: 4/3; overflow: hidden; background: #fdfbf7;">
-                        <img id="modal-product-img" src="" alt=""
-                            style="width: 100%; height: 100%; object-fit: cover;">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden; background: #ffffff;">
+                <div class="row g-0">
+                    <!-- Left Column: Gallery -->
+                    <div class="col-md-6 d-flex flex-column justify-content-center p-4" style="background-color: #faf9f6; border-right: 1px solid #f2e6e6;">
+                        <div class="position-relative w-100 rounded-4 overflow-hidden mb-3 shadow-sm bg-white" style="aspect-ratio: 4/5;">
+                            <img id="modal-product-img" src="" alt="" style="width: 100%; height: 100%; object-fit: cover; transition: all 0.35s ease-in-out;">
+                        </div>
+                        <!-- Thumbnails row -->
+                        <div id="modal-product-thumbnails" class="d-flex justify-content-center flex-wrap gap-2 py-1">
+                            <!-- Dynamic thumbnails will be appended here -->
+                        </div>
+                    </div>
+                    <!-- Right Column: Info & Actions -->
+                    <div class="col-md-6 p-4 p-md-5 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span id="modal-product-badge" class="badge-tag position-static px-3 py-1 font-serif text-uppercase" style="font-size: 0.65rem; border-radius: 20px;"></span>
+                                <span class="small text-muted"><i data-acorn-icon="tag" class="text-gold me-1" data-acorn-size="12"></i> Kategori: <strong id="modal-product-category" class="text-dark"></strong></span>
+                            </div>
+                            <h3 id="modal-product-title" class="fw-bold font-serif mb-2 text-dark" style="font-size: 1.6rem; text-transform: uppercase; letter-spacing: 1px; line-height: 1.3;"></h3>
+                            <h4 id="modal-product-price" class="text-gold fw-bold mb-4" style="font-family: 'Montserrat', sans-serif; font-size: 1.4rem;"></h4>
+
+                            <!-- Stock Status Info Card -->
+                            <div class="p-3 mb-4 rounded-3 d-flex align-items-center justify-content-between" style="background-color: #faf6f0;">
+                                <div class="d-flex align-items-center">
+                                    <i data-acorn-icon="shop" class="text-gold me-2" data-acorn-size="16"></i>
+                                    <span class="small text-muted font-weight-bold">Status Stok Cabang:</span>
+                                </div>
+                                <strong id="modal-product-stock"></strong>
+                            </div>
+
+                            <div class="border-top border-light pt-3 mb-4">
+                                <h6 class="fw-bold text-dark font-serif mb-2" style="letter-spacing: 0.5px;">Deskripsi Produk</h6>
+                                <p id="modal-product-desc" class="text-muted small mb-0" style="line-height: 1.6;"></p>
+                            </div>
+
+                            <!-- E-commerce key features badges -->
+                            <div class="d-flex flex-wrap gap-2 mb-4">
+                                <span class="badge bg-light text-dark rounded-pill py-2 px-3 small border" style="font-size: 0.75rem;"><i data-acorn-icon="heart" class="text-gold me-1" data-acorn-size="12"></i> Adem & Nyaman</span>
+                                <span class="badge bg-light text-dark rounded-pill py-2 px-3 small border" style="font-size: 0.75rem;"><i data-acorn-icon="check" class="text-gold me-1" data-acorn-size="12"></i> Mudah Diatur</span>
+                                <span class="badge bg-light text-dark rounded-pill py-2 px-3 small border" style="font-size: 0.75rem;"><i data-acorn-icon="star" class="text-gold me-1" data-acorn-size="12"></i> Premium Quality</span>
+                            </div>
+                        </div>
+
+                        <div id="modal-action-wrapper" class="mt-auto">
+                            <!-- Dynamic add to cart button -->
+                        </div>
                     </div>
                 </div>
-                <div class="modal-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span id="modal-product-badge"
-                            class="badge-tag position-static px-3 py-1 font-serif text-uppercase"
-                            style="font-size: 0.65rem; border-radius: 20px;"></span>
-                        <span class="small text-muted">Kategori: <strong id="modal-product-category"
-                                class="text-dark"></strong></span>
-                    </div>
-                    <h3 id="modal-product-title" class="fw-bold font-serif mb-2 text-dark"
-                        style="font-size: 1.5rem; text-transform: uppercase; letter-spacing: 1px;"></h3>
-                    <h4 id="modal-product-price" class="text-gold fw-bold mb-3"
-                        style="font-family: 'Montserrat', sans-serif; font-size: 1.3rem;"></h4>
-
-                    <div class="mb-3 p-3 bg-light rounded-3 d-flex align-items-center justify-content-between d-none">
-                        <span class="small text-muted"><i class="bi bi-shop me-1"></i> Stok Cabang Tersedia:</span>
-                        <strong id="modal-product-stock" class="text-dark"></strong>
-                    </div>
-
-                    <div class="border-top border-light pt-3 mb-4">
-                        <h6 class="fw-bold text-dark font-serif mb-2" style="letter-spacing: 0.5px;">Deskripsi Produk</h6>
-                        <p id="modal-product-desc" class="text-muted small mb-0" style="line-height: 1.6;"></p>
-                    </div>
-
-                    <div id="modal-action-wrapper">
-                        <!-- Dynamic add to cart button -->
-                    </div>
-                </div>
+                <!-- Premium Circle Close Button -->
+                <button type="button" class="btn-close btn-close-premium position-absolute" data-bs-dismiss="modal" aria-label="Close"
+                    style="top: 20px; right: 20px; z-index: 10; background-color: rgba(255,255,255,0.9); backdrop-filter: blur(5px); padding: 12px; border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: none;"></button>
             </div>
         </div>
     </div>
@@ -1169,10 +1240,39 @@
             }
         }
 
-        // Open Product Detail Modal (Popup) with dynamic description mapping
-        function showProductDetail(kode, name, price, img, maxStock, category, tag) {
-            document.getElementById('modal-product-img').src = img;
-            document.getElementById('modal-product-img').alt = name;
+        // Open Product Detail Modal (Popup) with dynamic description mapping and gallery support
+        function showProductDetail(kode, name, price, img, maxStock, category, tag, imagesJson, rawDesc = '') {
+            let images = [];
+            try {
+                images = JSON.parse(imagesJson);
+            } catch (e) {
+                images = [img];
+            }
+            if (!images || images.length === 0) {
+                images = [img];
+            }
+
+            // Set main image
+            const mainImgEl = document.getElementById('modal-product-img');
+            mainImgEl.src = images[0];
+            mainImgEl.alt = name;
+
+            // Render thumbnails
+            const thumbnailsContainer = document.getElementById('modal-product-thumbnails');
+            thumbnailsContainer.innerHTML = '';
+            
+            if (images.length > 1) {
+                images.forEach((imagePath, index) => {
+                    const activeClass = index === 0 ? 'active' : '';
+                    thumbnailsContainer.innerHTML += `
+                        <img src="${imagePath}" class="product-modal-thumbnail ${activeClass}" 
+                             data-target-src="${imagePath}" alt="Thumb ${index + 1}">
+                    `;
+                });
+                thumbnailsContainer.style.display = 'flex';
+            } else {
+                thumbnailsContainer.style.display = 'none';
+            }
 
             const badgeEl = document.getElementById('modal-product-badge');
             badgeEl.innerText = tag;
@@ -1194,21 +1294,25 @@
 
             // Dynamic description generator based on product attributes
             let desc = '';
-            const lowerName = name.toLowerCase();
-            if (lowerName.includes('bella') || lowerName.includes('square')) {
-                desc =
-                    'Hijab Bella Square premium berbahan double hycon bertekstur lembut, adem, tidak licin, mudah diatur, dan jatuh dengan cantik saat dikenakan. Sangat cocok digunakan untuk aktivitas sehari-hari maupun acara semiformal Anda.';
-            } else if (lowerName.includes('paris')) {
-                desc =
-                    'Hijab Paris premium kualitas terbaik yang tipis namun tetap tegak sempurna di dahi. Memiliki karakteristik bahan yang adem, lembut, tidak menerawang ketika dilipat dua, serta sangat populer sebagai hijab harian yang simpel dan elegan.';
-            } else if (lowerName.includes('khimar') || lowerName.includes('syari') || lowerName.includes('syar\'i')) {
-                desc =
-                    'Khimar Syar\'i anggun berdesain menutup dada dengan sempurna. Menggunakan bahan ceruty/crepe premium ganda (double layer) yang jatuh dengan anggun, adem, serta nyaman digunakan sepanjang hari.';
+            if (rawDesc && rawDesc.trim().length > 0) {
+                desc = rawDesc;
             } else {
-                desc =
-                    'Hijab eksklusif edisi terbatas dari Hijabku. Menghadirkan kenyamanan maksimal dengan bahan premium pilihan yang lembut di kulit, sejuk, mudah dibentuk, serta hadir dalam variasi warna pastel yang mewah untuk melengkapi penampilan Anda.';
+                const lowerName = name.toLowerCase();
+                if (lowerName.includes('bella') || lowerName.includes('square')) {
+                    desc =
+                        'Hijab Bella Square premium berbahan double hycon bertekstur lembut, adem, tidak licin, mudah diatur, dan jatuh dengan cantik saat dikenakan. Sangat cocok digunakan untuk aktivitas sehari-hari maupun acara semiformal Anda.';
+                } else if (lowerName.includes('paris')) {
+                    desc =
+                        'Hijab Paris premium kualitas terbaik yang tipis namun tetap tegak sempurna di dahi. Memiliki karakteristik bahan yang adem, lembut, tidak menerawang ketika dilipat dua, serta sangat populer sebagai hijab harian yang simpel dan elegan.';
+                } else if (lowerName.includes('khimar') || lowerName.includes('syari') || lowerName.includes('syar\'i')) {
+                    desc =
+                        'Khimar Syar\'i anggun berdesain menutup dada dengan sempurna. Menggunakan bahan ceruty/crepe premium ganda (double layer) yang jatuh dengan anggun, adem, serta nyaman digunakan sepanjang hari.';
+                } else {
+                    desc =
+                        'Hijab eksklusif edisi terbatas dari Hijabku. Menghadirkan kenyamanan maksimal dengan bahan premium pilihan yang lembut di kulit, sejuk, mudah dibentuk, serta hadir dalam variasi warna pastel yang mewah untuk melengkapi penampilan Anda.';
+                }
             }
-            document.getElementById('modal-product-desc').innerText = desc;
+            document.getElementById('modal-product-desc').innerHTML = desc;
 
             const actionWrapper = document.getElementById('modal-action-wrapper');
             if (maxStock > 0) {
@@ -1223,6 +1327,13 @@
                         Stok Habis di Cabang Ini
                     </button>
                 `;
+            }
+
+            // Re-initialize Acorn Icons inside the modal
+            if (typeof AcornIcons !== 'undefined') {
+                setTimeout(function() {
+                    new AcornIcons().replace();
+                }, 100);
             }
 
             const detailModal = new bootstrap.Modal(document.getElementById('productDetailModal'));
@@ -1241,6 +1352,31 @@
             // Add to cart
             addToCart(kode, name, price, img, maxStock);
         }
+
+        // Trigger product detail modal from product card click
+        $(document).on('click', '.product-detail-trigger', function() {
+            const kode = $(this).attr('data-kode');
+            const name = $(this).attr('data-nama');
+            const price = parseInt($(this).attr('data-harga'), 10);
+            const img = $(this).attr('data-img');
+            const avail = parseInt($(this).attr('data-avail'), 10);
+            const category = $(this).attr('data-category');
+            const tag = $(this).attr('data-tag');
+            const images = $(this).attr('data-images') || '[]';
+            const desc = $(this).attr('data-desc') || '';
+            
+            showProductDetail(kode, name, price, img, avail, category, tag, images, desc);
+        });
+
+        // Thumbnail click handler inside product detail modal
+        $(document).on('click', '.product-modal-thumbnail', function() {
+            $('.product-modal-thumbnail').removeClass('active');
+            $(this).addClass('active');
+            const targetSrc = $(this).attr('data-target-src');
+            $('#modal-product-img').fadeOut(150, function() {
+                $(this).attr('src', targetSrc).fadeIn(150);
+            });
+        });
 
         // Open checkout modal
         function openCheckoutModal() {

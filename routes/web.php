@@ -5,6 +5,7 @@ use App\Http\Controllers\BahanBarangController;
 use App\Http\Controllers\BukuPanduanController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataBarangController;
+use App\Http\Controllers\FotoBarangController;
 use App\Http\Controllers\JenisBarangController;
 use App\Http\Controllers\landing\LandingController;
 use App\Http\Controllers\LaporanBarangController;
@@ -136,6 +137,18 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
                 Route::post('/store', [PackagingBarangController::class, 'store']);
                 Route::post('/destroy', [PackagingBarangController::class, 'destroy']);
             });
+
+        });
+
+        Route::prefix('/barang/foto')->middleware('permission:kelola_detail_produk')->group(function () {
+            Route::get('/', [FotoBarangController::class, 'index']);
+            Route::get('/data', [FotoBarangController::class, 'data']);
+            Route::get('/show/{id}', [FotoBarangController::class, 'show']);
+            Route::post('/upload', [FotoBarangController::class, 'upload']);
+            Route::post('/set-main', [FotoBarangController::class, 'setMain']);
+            Route::post('/delete', [FotoBarangController::class, 'delete']);
+            Route::post('/verify', [FotoBarangController::class, 'verify']);
+            Route::post('/update-desc', [FotoBarangController::class, 'updateDescription']);
         });
 
         Route::prefix('/supplier')->middleware('permission:kelola_supplier')->group(function () {

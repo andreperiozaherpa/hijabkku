@@ -104,6 +104,12 @@ class RBACSeeder extends Seeder
                 'description' => 'Mengizinkan pengguna membuka dan menutup laci/sesi kasir.',
                 'module' => 'Transaksi',
             ],
+            [
+                'name' => 'kelola_detail_produk',
+                'display_name' => 'Foto dan Deskripsi Produk',
+                'description' => 'Mengizinkan pengguna mengelola foto dan deskripsi barang.',
+                'module' => 'Manajemen',
+            ],
         ];
 
         // Insert or update permissions
@@ -141,6 +147,7 @@ class RBACSeeder extends Seeder
                 'kelola_pesanan_pickup',
                 'revisi_penjualan',
                 'kelola_sesi_kasir',
+                'kelola_detail_produk',
             ],
             'kasir' => [
                 'lihat_dashboard',

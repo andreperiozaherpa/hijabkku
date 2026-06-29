@@ -3,9 +3,14 @@
 namespace App\Http\Controllers\landing;
 
 use App\Http\Controllers\Controller;
-use App\Models\Toko;
+use App\Models\PendingTransaction;
 use App\Models\StockToko;
+use App\Models\SystemSetting;
+use App\Models\Toko;
+use App\Services\XenditWebhookService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Schema;
 
 class LandingController extends Controller
 {
@@ -15,8 +20,8 @@ class LandingController extends Controller
     public function index()
     {
         $featuredProducts = collect();
-        if (\Illuminate\Support\Facades\Schema::hasTable('stock_tokos')) {
-            $featuredProducts = \App\Models\StockToko::whereHas('data_barang')
+        if (Schema::hasTable('stock_tokos')) {
+            $featuredProducts = StockToko::whereHas('data_barang')
                 ->with('data_barang')
                 ->whereRaw('jumlah > terjual')
                 ->latest('id')
@@ -38,17 +43,17 @@ class LandingController extends Controller
 
         if ($paymentStatus === 'success' && $invoiceCode) {
             if (config('app.env') === 'local' || config('app.env') === 'testing') {
-                $pending = \App\Models\PendingTransaction::where('kode_invoice', $invoiceCode)->first();
+                $pending = PendingTransaction::where('kode_invoice', $invoiceCode)->first();
                 if ($pending && $pending->status === 'PENDING') {
-                    $webhookService = app(\App\Services\XenditWebhookService::class);
+                    $webhookService = app(XenditWebhookService::class);
                     try {
                         $webhookService->handleInvoicePaid([
                             'external_id' => $invoiceCode,
-                            'status' => 'PAID'
+                            'status' => 'PAID',
                         ]);
                         session()->flash('payment_success', 'Pembayaran berhasil dan pesanan Anda telah tercatat!');
                     } catch (\Exception $e) {
-                        session()->flash('payment_error', 'Gagal memproses pembayaran secara otomatis: ' . $e->getMessage());
+                        session()->flash('payment_error', 'Gagal memproses pembayaran secara otomatis: '.$e->getMessage());
                     }
                 } elseif ($pending && $pending->status === 'PAID') {
                     session()->flash('payment_success', 'Pembayaran berhasil dan pesanan Anda telah tercatat!');
@@ -63,11 +68,11 @@ class LandingController extends Controller
         $tokos = Toko::whereNotIn('nama_toko', ['stock hilang', 'Online Shop'])->get();
         $selectedTokoKode = $request->query('toko');
 
-        if (!$selectedTokoKode && $tokos->isNotEmpty()) {
+        if (! $selectedTokoKode && $tokos->isNotEmpty()) {
             $selectedTokoKode = $tokos->first()->kode;
         }
 
-        $stocks = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 8);
+        $stocks = new LengthAwarePaginator([], 0, 8);
         $selectedToko = null;
 
         if ($selectedTokoKode) {
@@ -75,28 +80,28 @@ class LandingController extends Controller
 
             $search = $request->query('search');
             $query = StockToko::whereHas('data_barang')
-                ->with('data_barang')
+                ->with('data_barang.fotos')
                 ->where('kode_toko', $selectedTokoKode)
                 ->whereRaw('jumlah > terjual');
 
             if ($search) {
-                $query->whereHas('data_barang', function($q) use ($search) {
-                    $q->where('nama_barang', 'like', '%' . $search . '%')
-                      ->orWhere('kode_barang', 'like', '%' . $search . '%');
+                $query->whereHas('data_barang', function ($q) use ($search) {
+                    $q->where('nama_barang', 'like', '%'.$search.'%')
+                        ->orWhere('kode_barang', 'like', '%'.$search.'%');
                 });
             }
 
             $stocks = $query->paginate(8)->onEachSide(0)->withQueryString();
         }
 
-        $xenditSimulationMode = \App\Models\SystemSetting::getByKey('xendit_simulation_mode', 'false');
+        $xenditSimulationMode = SystemSetting::getByKey('xendit_simulation_mode', 'false');
 
         return view('landing.catalog', [
             'tokos' => $tokos,
             'selectedTokoKode' => $selectedTokoKode,
             'selectedToko' => $selectedToko,
             'stocks' => $stocks,
-            'xenditSimulationMode' => $xenditSimulationMode
+            'xenditSimulationMode' => $xenditSimulationMode,
         ]);
     }
 

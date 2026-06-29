@@ -23,9 +23,36 @@
         position: relative;
         /* Supaya overlay-spinner mengikuti posisi ini */
     }
+
+    #page-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(255, 255, 255, 0.9);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+
+    body.spinner:after {
+        display: none !important;
+    }
 </style>
 
 <body>
+    <div id="page-loader">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status" style="width: 3.5rem; height: 3.5rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="mt-3 fs-5 fw-bold text-dark">Memproses Permintaan Anda...</div>
+            <div class="text-muted small mt-1">Harap tunggu sebentar</div>
+        </div>
+    </div>
     <div id="root">
         @include('layouts.nav')
 
@@ -483,6 +510,34 @@
         $.ajaxSetup({
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+        // Global Page Loader Spinner functionality
+        window.addEventListener('load', function() {
+            var loader = document.getElementById('page-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(function() {
+                    loader.style.display = 'none';
+                }, 250);
+            }
+        });
+
+        window.addEventListener('beforeunload', function(e) {
+            var loader = document.getElementById('page-loader');
+            if (loader) {
+                loader.style.display = 'flex';
+                loader.style.opacity = '1';
+            }
+        });
+
+        // Show spinner on form submits
+        $(document).on('submit', 'form', function() {
+            var loader = document.getElementById('page-loader');
+            if (loader) {
+                loader.style.display = 'flex';
+                loader.style.opacity = '1';
             }
         });
     </script>
