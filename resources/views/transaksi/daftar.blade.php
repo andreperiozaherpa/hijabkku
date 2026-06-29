@@ -118,13 +118,14 @@
                                     <thead>
                                         <tr>
                                             <th class="text-muted text-small text-uppercase" style="width: 5%">No</th>
-                                            <th class="text-muted text-small text-uppercase" style="width: 15%">Invoice</th>
-                                            <th class="text-muted text-small text-uppercase" style="width: 25%">Tanggal</th>
-                                            <th class="text-muted text-small text-uppercase" style="width: 15%">Kasir</th>
-                                            <th class="text-muted text-small text-uppercase" style="width: 15%">Cabang Toko</th>
-                                            <th class="text-muted text-small text-uppercase" style="width: 10%">Metode</th>
-                                            <th class="text-muted text-small text-uppercase text-end" style="width: 15%">Total Belanja</th>
-                                            <th class="text-muted text-small text-uppercase text-center" style="width: 10%">Aksi</th>
+                                            <th class="text-muted text-small text-uppercase" style="width: 12%">Invoice</th>
+                                            <th class="text-muted text-small text-uppercase" style="width: 18%">Tanggal</th>
+                                            <th class="text-muted text-small text-uppercase" style="width: 12%">Kasir</th>
+                                            <th class="text-muted text-small text-uppercase" style="width: 12%">Cabang Toko</th>
+                                            <th class="text-muted text-small text-uppercase" style="width: 8%">Harga</th>
+                                            <th class="text-muted text-small text-uppercase" style="width: 12%">Pembayaran</th>
+                                            <th class="text-muted text-small text-uppercase text-end" style="width: 13%">Total Belanja</th>
+                                            <th class="text-muted text-small text-uppercase text-center" style="width: 8%">Aksi</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -275,6 +276,7 @@
                     { data: 'user_name' },
                     { data: 'toko' },
                     { data: 'metode' },
+                    { data: 'metode_pembayaran' },
                     {
                         data: 'total_rupiah',
                         className: 'font-weight-bold text-end'
@@ -363,7 +365,7 @@
                         $('#nameTitle').text(res.username);
                         $('#dateTitle').text(res.tanggal);
                         $('#tokoTitle').text(res.toko);
-                        $('#metodeTitle').text(res.metode);
+                        $('#metodeTitle').text(res.metode_pembayaran || 'TUNAI');
                         
                         $('#totalBelanjaTitle').text(formatRupiah(res.total_harga));
                         $('#bayarTitle').text(formatRupiah(res.pembayaran));

@@ -3,96 +3,67 @@
 @section('title', 'Kebijakan Privasi - Hijabkku')
 
 @section('content')
-    <!-- Header Banner -->
-    <section class="py-5 text-center"
-        style="background: linear-gradient(135deg, #ffd1dc 0%, #fff 100%); font-family: 'Playfair Display', serif;">
-        <div class="container py-4">
-            <span class="text-gold fw-bold tracking-wide text-uppercase"
-                style="letter-spacing: 2px; font-size: 0.9rem; font-family: 'Montserrat', sans-serif;">KEBIJAKAN
-                PRIVASI</span>
-            <h1 class="fw-bold display-5 mt-2 mb-2" style="color: #2c2c2c;">Kebijakan Privasi</h1>
-            <p class="text-muted lead" style="font-family: 'Montserrat', sans-serif;">Bagaimana kami mengumpulkan,
-                menggunakan, dan melindungi data pribadi Anda.</p>
+    <!-- Header -->
+    <section style="padding: 100px 0 80px; background: var(--bg);">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-7 text-center">
+                    <span class="section-label">Kebijakan</span>
+                    <h1 class="section-title">Kebijakan Privasi</h1>
+                    <p class="section-desc mx-auto">Bagaimana kami mengumpulkan, menggunakan, dan melindungi data pribadi Anda.</p>
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- Content Policy -->
-    <section class="py-5 bg-white">
-        <div class="container" style="max-width: 800px;">
-            <div class="card border-0 shadow-sm p-4 p-md-5" style="border-radius: 16px; background: #faf9f6;">
-                <p class="text-muted small">Terakhir diperbarui: {{ date('d F Y') }}</p>
-                <hr class="border-light my-4">
+    <!-- Content -->
+    <section class="section border-top">
+        <div class="container" style="max-width: 780px;">
+            <div class="card-clean">
+                <p style="font-size: 0.82rem; color: var(--text-light); margin-bottom: 24px;">Terakhir diperbarui: {{ date('d F Y') }}</p>
 
-                <h4 class="fw-bold font-serif text-dark mb-3">1. Pendahuluan</h4>
-                <p class="text-muted" style="line-height: 1.7;">
-                    Selamat datang di website resmi Hijabkku. Kami sangat menghargai kepercayaan Anda dan berkomitmen untuk
-                    melindungi informasi pribadi Anda. Kebijakan Privasi ini menjelaskan bagaimana informasi pribadi Anda
-                    dikumpulkan, digunakan, disimpan, dan dilindungi ketika Anda mengunjungi atau melakukan transaksi
-                    pembelian di website kami.
+                <h4 style="font-size: 1.2rem; color: var(--text); margin-bottom: 16px;">1. Pendahuluan</h4>
+                <p style="font-size: 0.92rem; color: var(--text-sub); line-height: 1.8; margin-bottom: 24px;">
+                    Selamat datang di website resmi Hijabkku. Kami berkomitmen untuk melindungi informasi pribadi Anda. Kebijakan Privasi ini menjelaskan bagaimana informasi pribadi Anda dikumpulkan, digunakan, disimpan, dan dilindungi.
                 </p>
 
-                <h4 class="fw-bold font-serif text-dark mt-4 mb-3">2. Informasi yang Kami Kumpulkan</h4>
-                <p class="text-muted" style="line-height: 1.7;">
-                    Ketika Anda melakukan proses pembelian melalui katalog online kami, kami mengumpulkan beberapa data
-                    pribadi yang diperlukan untuk menyelesaikan transaksi, meliputi:
-                </p>
-                <ul class="text-muted" style="line-height: 1.7;">
-                    <li><strong>Nama Lengkap:</strong> Untuk keperluan identifikasi saat pengambilan barang (Store Pickup).
-                    </li>
-                    <li><strong>Nomor WhatsApp/HP:</strong> Untuk verifikasi pesanan dan notifikasi status transaksi.</li>
-                    <li><strong>Alamat Email:</strong> Untuk pengiriman tagihan resmi (invoice) melalui payment gateway
-                        terintegrasi.</li>
-                    <li><strong>Detail Pesanan:</strong> Jenis barang, variasi, jumlah, dan nilai total pembelian Anda.</li>
+                <h4 style="font-size: 1.2rem; color: var(--text); margin-bottom: 16px;">2. Informasi yang Kami Kumpulkan</h4>
+                <p style="font-size: 0.92rem; color: var(--text-sub); margin-bottom: 12px;">Ketika Anda melakukan pembelian, kami mengumpulkan:</p>
+                <ul style="padding-left: 18px; margin-bottom: 24px;">
+                    <li style="font-size: 0.92rem; color: var(--text-sub); padding: 4px 0;"><strong style="color: var(--text);">Nama Lengkap:</strong> Untuk identifikasi saat pengambilan.</li>
+                    <li style="font-size: 0.92rem; color: var(--text-sub); padding: 4px 0;"><strong style="color: var(--text);">Nomor WhatsApp:</strong> Untuk verifikasi dan notifikasi.</li>
+                    <li style="font-size: 0.92rem; color: var(--text-sub); padding: 4px 0;"><strong style="color: var(--text);">Email:</strong> Untuk pengiriman invoice.</li>
+                    <li style="font-size: 0.92rem; color: var(--text-sub); padding: 4px 0;"><strong style="color: var(--text);">Detail Pesanan:</strong> Jenis barang, jumlah, dan nilai pembelian.</li>
                 </ul>
 
-                <h4 class="fw-bold font-serif text-dark mt-4 mb-3">3. Penggunaan Informasi Anda</h4>
-                <p class="text-muted" style="line-height: 1.7;">
-                    Kami menggunakan informasi yang dikumpulkan untuk tujuan-tujuan berikut:
-                </p>
-                <ul class="text-muted" style="line-height: 1.7;">
-                    <li>Memproses transaksi pembelian Anda dan menerbitkan tagihan digital melalui mitra payment gateway
-                        kami.</li>
-                    <li>Menyediakan notifikasi pembaruan status pesanan Anda.</li>
-                    <li>Mengelola administrasi program pengambilan barang di toko (Store Pickup).</li>
-                    <li>Mencegah aktivitas penipuan, transaksi mencurigakan, dan penyalahgunaan sistem kami.</li>
+                <h4 style="font-size: 1.2rem; color: var(--text); margin-bottom: 16px;">3. Penggunaan Informasi</h4>
+                <ul style="padding-left: 18px; margin-bottom: 24px;">
+                    <li style="font-size: 0.92rem; color: var(--text-sub); padding: 4px 0;">Memproses transaksi dan menerbitkan tagihan.</li>
+                    <li style="font-size: 0.92rem; color: var(--text-sub); padding: 4px 0;">Menyediakan notifikasi status pesanan.</li>
+                    <li style="font-size: 0.92rem; color: var(--text-sub); padding: 4px 0;">Mengelola administrasi Store Pickup.</li>
+                    <li style="font-size: 0.92rem; color: var(--text-sub); padding: 4px 0;">Mencegah penipuan dan penyalahgunaan sistem.</li>
                 </ul>
 
-                <h4 class="fw-bold font-serif text-dark mt-4 mb-3">4. Penyimpanan & Keamanan Data</h4>
-                <p class="text-muted" style="line-height: 1.7;">
-                    Kami menerapkan standar keamanan teknis dan organisasional yang ketat untuk memastikan data pribadi Anda
-                    aman dari akses tanpa izin, kehilangan, atau penyalahgunaan. Seluruh data transaksi dienkripsi
-                    menggunakan protokol Secure Sockets Layer (SSL) selama pengiriman data ke payment gateway resmi. Kami
-                    tidak menyimpan data sensitif kartu kredit atau detail perbankan Anda di server kami.
+                <h4 style="font-size: 1.2rem; color: var(--text); margin-bottom: 16px;">4. Keamanan Data</h4>
+                <p style="font-size: 0.92rem; color: var(--text-sub); line-height: 1.8; margin-bottom: 24px;">
+                    Kami menerapkan standar keamanan teknis dan organisasional yang ketat. Seluruh data transaksi dienkripsi menggunakan SSL. Kami tidak menyimpan data sensitif kartu kredit atau detail perbankan.
                 </p>
 
-                <h4 class="fw-bold font-serif text-dark mt-4 mb-3">5. Pengungkapan kepada Pihak Ketiga</h4>
-                <p class="text-muted" style="line-height: 1.7;">
-                    Kami tidak akan menjual, menyewakan, atau memperdagangkan data pribadi Anda kepada pihak ketiga manapun.
-                    Kami hanya membagikan informasi Anda kepada pihak ketiga yang berwenang demi memproses pesanan Anda,
-                    seperti:
-                </p>
-                <ul class="text-muted" style="line-height: 1.7;">
-                    <li>Mitra Payment Gateway resmi untuk memproses pembayaran Anda secara aman.</li>
-                    <li>Otoritas penegak hukum jika diwajibkan oleh peraturan perundang-undangan yang berlaku di Negara
-                        Republik Indonesia.</li>
-                </ul>
-
-                <h4 class="fw-bold font-serif text-dark mt-4 mb-3">6. Hak-Hak Pengguna</h4>
-                <p class="text-muted" style="line-height: 1.7;">
-                    Anda memiliki hak penuh untuk meminta akses, melakukan perbaikan, atau meminta penghapusan informasi
-                    pribadi Anda dari sistem kami. Silakan hubungi tim perwakilan DPO kami melalui detail kontak di bawah
-                    ini untuk mengajukan permohonan tersebut.
+                <h4 style="font-size: 1.2rem; color: var(--text); margin-bottom: 16px;">5. Pengungkapan kepada Pihak Ketiga</h4>
+                <p style="font-size: 0.92rem; color: var(--text-sub); line-height: 1.8; margin-bottom: 24px;">
+                    Kami tidak menjual, menyewakan, atau memperdagangkan data pribadi Anda. Informasi hanya dibagikan kepada pihak yang berwenang untuk memproses pesanan.
                 </p>
 
-                <h4 class="fw-bold font-serif text-dark mt-4 mb-3">7. Hubungi Kami</h4>
-                <p class="text-muted mb-0" style="line-height: 1.7;">
-                    Jika Anda memiliki pertanyaan tentang Kebijakan Privasi ini atau pengelolaan data pribadi di Hijabkku,
-                    silakan hubungi kami di:
+                <h4 style="font-size: 1.2rem; color: var(--text); margin-bottom: 16px;">6. Hak Pengguna</h4>
+                <p style="font-size: 0.92rem; color: var(--text-sub); line-height: 1.8; margin-bottom: 24px;">
+                    Anda memiliki hak untuk meminta akses, perbaikan, atau penghapusan informasi pribadi dari sistem kami.
                 </p>
-                <div class="mt-3 p-3 bg-white rounded-3 border">
-                    <p class="mb-1 text-dark"><strong>Hijabkku Retail Indonesia</strong></p>
-                    <p class="mb-1 text-muted">Email: andreperiozaherpa@gmail.com</p>
-                    <p class="mb-0 text-muted">WhatsApp: 082280783843</p>
+
+                <h4 style="font-size: 1.2rem; color: var(--text); margin-bottom: 16px;">7. Hubungi Kami</h4>
+                <div class="p-4" style="background: var(--bg-warm); border: 1px solid var(--border-light);">
+                    <p style="font-size: 0.92rem; color: var(--text); margin-bottom: 8px;"><strong>Hijabkku Retail Indonesia</strong></p>
+                    <p style="font-size: 0.88rem; color: var(--text-sub); margin-bottom: 4px;">Email: andreperiozaherpa@gmail.com</p>
+                    <p style="font-size: 0.88rem; color: var(--text-sub); margin: 0;">WhatsApp: 082280783843</p>
                 </div>
             </div>
         </div>

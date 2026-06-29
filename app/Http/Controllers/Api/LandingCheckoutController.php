@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\PendingTransaction;
 use App\Models\StockToko;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class LandingCheckoutController extends Controller
@@ -27,7 +27,7 @@ class LandingCheckoutController extends Controller
         ];
 
         $recaptchaSecret = config('services.recaptcha.secret_key');
-        if (!empty($recaptchaSecret)) {
+        if (! empty($recaptchaSecret)) {
             $rules['g-recaptcha-response'] = 'required|string';
         }
 
@@ -36,18 +36,18 @@ class LandingCheckoutController extends Controller
             'customer_email.email' => 'Format email tidak valid.',
         ]);
 
-        if (!empty($recaptchaSecret)) {
+        if (! empty($recaptchaSecret)) {
             $recaptchaResponse = $request->input('g-recaptcha-response');
             $verifyResponse = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
                 'secret' => $recaptchaSecret,
                 'response' => $recaptchaResponse,
-                'remoteip' => $request->ip()
+                'remoteip' => $request->ip(),
             ]);
 
-            if (!$verifyResponse->successful() || !$verifyResponse->json('success')) {
+            if (! $verifyResponse->successful() || ! $verifyResponse->json('success')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Verifikasi reCAPTCHA gagal. Silakan coba lagi!'
+                    'message' => 'Verifikasi reCAPTCHA gagal. Silakan coba lagi!',
                 ], 422);
             }
         }
@@ -72,13 +72,13 @@ class LandingCheckoutController extends Controller
 
         foreach ($cart as $item) {
             $stock = $stocks->get($item['kode_barang']);
-            if (!$stock || !$stock->data_barang) {
+            if (! $stock || ! $stock->data_barang) {
                 return response()->json(['success' => false, 'message' => 'Barang tidak ditemukan di cabang toko ini!'], 422);
             }
 
             $available = $stock->jumlah - $stock->terjual;
             if ($available < intval($item['jumlah'])) {
-                return response()->json(['success' => false, 'message' => 'Stok untuk barang ' . $stock->data_barang->nama_barang . ' tidak mencukupi!'], 422);
+                return response()->json(['success' => false, 'message' => 'Stok untuk barang '.$stock->data_barang->nama_barang.' tidak mencukupi!'], 422);
             }
 
             $harga_jual = intval(str_replace('.', '', $stock->data_barang->harga_jual));
@@ -91,7 +91,7 @@ class LandingCheckoutController extends Controller
                 'jumlah_barang' => $item['jumlah'],
                 'harga_item' => $harga_jual,
                 'harga_jual' => $total_item_harga,
-                'method' => 'umum'
+                'method' => 'umum',
             ];
         }
 
@@ -103,37 +103,37 @@ class LandingCheckoutController extends Controller
             $qrisRate = 0.007; // 0.7% flat
             $grand_total = ceil($total_harga / (1 - $qrisRate));
             $fee = $grand_total - $total_harga;
-            $payment_methods = ["QRIS"];
+            $payment_methods = ['QRIS'];
         } elseif ($method === 'VA') {
             $vaFeeFlat = 4500;
             $ppnRate = 0.12; // 12% PPN
             $fee = $vaFeeFlat + ($vaFeeFlat * $ppnRate);
             $grand_total = $total_harga + $fee;
-            $payment_methods = ["BCA", "BNI", "BSI", "BRI", "MANDIRI", "PERMATA"];
+            $payment_methods = ['BCA', 'BNI', 'BSI', 'BRI', 'MANDIRI', 'PERMATA'];
         } elseif ($method === 'EWALLET') {
             $ewalletRate = 0.015; // 1.5%
             $ppnRateOfFee = 0.11; // 11% PPN on top of fee
             $effectiveRate = $ewalletRate * (1 + $ppnRateOfFee); // 1.665%
             $grand_total = ceil($total_harga / (1 - $effectiveRate));
             $fee = $grand_total - $total_harga;
-            $payment_methods = ["OVO", "DANA", "LINKAJA", "SHOPEEPAY"];
+            $payment_methods = ['OVO', 'DANA', 'LINKAJA', 'SHOPEEPAY'];
         }
 
-        $invoice = 'INV-OL-' . date('YmdHis') . '-' . strtoupper(bin2hex(random_bytes(2)));
+        $invoice = 'INV-OL-'.date('YmdHis').'-'.strtoupper(bin2hex(random_bytes(2)));
 
         $secret_key = env('XENDIT_SECRET_KEY');
-        if (!$secret_key) {
+        if (! $secret_key) {
             return response()->json(['success' => false, 'message' => 'Xendit Secret Key is not configured.'], 500);
         }
 
         $payload = [
             'external_id' => $invoice,
             'amount' => $grand_total,
-            'description' => 'Pembayaran Pesanan Online ' . $invoice,
+            'description' => 'Pembayaran Pesanan Online '.$invoice,
             'payment_methods' => $payment_methods,
             'currency' => 'IDR',
-            'success_redirect_url' => request()->schemeAndHttpHost() . '/catalog?payment_status=success&invoice=' . $invoice,
-            'failure_redirect_url' => request()->schemeAndHttpHost() . '/catalog?payment_status=failure&invoice=' . $invoice
+            'success_redirect_url' => request()->schemeAndHttpHost().'/invoice/'.$invoice,
+            'failure_redirect_url' => request()->schemeAndHttpHost().'/catalog?payment_status=failure&invoice='.$invoice,
         ];
 
         if ($customer_email) {
@@ -146,30 +146,27 @@ class LandingCheckoutController extends Controller
         if ($response->successful()) {
             $xenditData = $response->json();
 
-            $isSimulation = \App\Models\SystemSetting::getByKey('xendit_simulation_mode', 'false');
-            if ($isSimulation !== 'true') {
-                PendingTransaction::create([
-                    'kode_invoice' => $invoice,
-                    'kode_toko' => $kode_toko,
-                    'user_id' => 0,
-                    'user_name' => 'Guest (' . $customer_name . ')',
-                    'total_harga' => $total_harga,
-                    'fee' => $fee,
-                    'grand_total' => $grand_total,
-                    'payment_method' => $method,
-                    'xendit_id' => $xenditData['id'],
-                    'checkout_url' => $xenditData['invoice_url'],
-                    'cart_payload' => json_encode([
-                        'items' => $formattedCartData,
-                        'customer' => [
-                            'name' => $customer_name,
-                            'email' => $customer_email,
-                            'phone' => $customer_phone
-                        ]
-                    ]),
-                    'status' => 'PENDING'
-                ]);
-            }
+            PendingTransaction::create([
+                'kode_invoice' => $invoice,
+                'kode_toko' => $kode_toko,
+                'user_id' => 0,
+                'user_name' => 'Guest ('.$customer_name.')',
+                'total_harga' => $total_harga,
+                'fee' => $fee,
+                'grand_total' => $grand_total,
+                'payment_method' => $method,
+                'xendit_id' => $xenditData['id'],
+                'checkout_url' => $xenditData['invoice_url'],
+                'cart_payload' => json_encode([
+                    'items' => $formattedCartData,
+                    'customer' => [
+                        'name' => $customer_name,
+                        'email' => $customer_email,
+                        'phone' => $customer_phone,
+                    ],
+                ]),
+                'status' => 'PENDING',
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -177,13 +174,13 @@ class LandingCheckoutController extends Controller
                 'invoice' => $invoice,
                 'grand_total' => $grand_total,
                 'fee' => $fee,
-                'payment_method' => $method
+                'payment_method' => $method,
             ]);
         }
 
         return response()->json([
             'success' => false,
-            'message' => 'Gagal membuat tagihan Xendit. ' . $response->body()
+            'message' => 'Gagal membuat tagihan Xendit. '.$response->body(),
         ], 400);
     }
 }

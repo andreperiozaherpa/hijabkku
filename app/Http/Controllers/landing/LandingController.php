@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\landing;
 
 use App\Http\Controllers\Controller;
-use App\Models\PendingTransaction;
 use App\Models\StockToko;
 use App\Models\SystemSetting;
 use App\Models\Toko;
-use App\Services\XenditWebhookService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Schema;
@@ -42,25 +40,7 @@ class LandingController extends Controller
         $invoiceCode = $request->query('invoice');
 
         if ($paymentStatus === 'success' && $invoiceCode) {
-            if (config('app.env') === 'local' || config('app.env') === 'testing') {
-                $pending = PendingTransaction::where('kode_invoice', $invoiceCode)->first();
-                if ($pending && $pending->status === 'PENDING') {
-                    $webhookService = app(XenditWebhookService::class);
-                    try {
-                        $webhookService->handleInvoicePaid([
-                            'external_id' => $invoiceCode,
-                            'status' => 'PAID',
-                        ]);
-                        session()->flash('payment_success', 'Pembayaran berhasil dan pesanan Anda telah tercatat!');
-                    } catch (\Exception $e) {
-                        session()->flash('payment_error', 'Gagal memproses pembayaran secara otomatis: '.$e->getMessage());
-                    }
-                } elseif ($pending && $pending->status === 'PAID') {
-                    session()->flash('payment_success', 'Pembayaran berhasil dan pesanan Anda telah tercatat!');
-                }
-            } else {
-                session()->flash('payment_success', 'Pembayaran sedang diproses, mohon tunggu beberapa saat.');
-            }
+            return redirect()->route('invoice', $invoiceCode);
         } elseif ($paymentStatus === 'failure') {
             session()->flash('payment_error', 'Pembayaran gagal atau dibatalkan.');
         }

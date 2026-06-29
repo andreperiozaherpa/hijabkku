@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\PesananPickup;
+use App\Models\StockOpname;
 use App\Models\Toko;
+use App\Services\FirebaseService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Services\FirebaseService;
-use Carbon\Carbon;
 
 class PesananPickupController extends Controller
 {
@@ -67,16 +68,16 @@ class PesananPickupController extends Controller
                     ->where('kode_invoice', $row->kode_invoice)
                     ->select('nama_barang', 'jumlah')
                     ->get();
-                
+
                 $summary = [];
                 foreach ($items as $item) {
-                    $summary[] = $item->nama_barang . ' (' . $item->jumlah . 'x)';
+                    $summary[] = $item->nama_barang.' ('.$item->jumlah.'x)';
                 }
-                
+
                 return empty($summary) ? '-' : implode(', ', $summary);
             })
             ->addColumn('aksi', function ($row) {
-                $btn = '<button type="button" class="btn btn-sm btn-icon btn-icon-only btn-outline-primary btn-detail me-1" data-invoice="' . $row->kode_invoice . '" title="Detail Pesanan">
+                $btn = '<button type="button" class="btn btn-sm btn-icon btn-icon-only btn-outline-primary btn-detail me-1" data-id="'.$row->id.'" data-invoice="'.$row->kode_invoice.'" title="Detail Pesanan">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
                         <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
                         <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
@@ -84,13 +85,14 @@ class PesananPickupController extends Controller
                 </button>';
 
                 if ($row->status_pengambilan === 'Belum Diambil') {
-                    $btn .= '<button type="button" class="btn btn-sm btn-icon btn-icon-only btn-outline-success btn-complete" data-id="' . $row->id . '" data-invoice="' . $row->kode_invoice . '" title="Tandai Sudah Diambil">
+                    $btn .= '<button type="button" class="btn btn-sm btn-icon btn-icon-only btn-outline-success btn-complete" data-id="'.$row->id.'" data-invoice="'.$row->kode_invoice.'" title="Tandai Sudah Diambil">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
                             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                             <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
                         </svg>
                     </button>';
                 }
+
                 return $btn;
             })
             ->rawColumns(['aksi', 'items'])
@@ -123,7 +125,7 @@ class PesananPickupController extends Controller
             'items' => $items,
             'toko' => $toko ? $toko->nama_toko : '-',
             'grand_total' => $grandTotal,
-            'grand_total_rupiah' => 'Rp. ' . number_format($grandTotal, 0, ',', '.'),
+            'grand_total_rupiah' => 'Rp. '.number_format($grandTotal, 0, ',', '.'),
         ]);
     }
 
@@ -138,14 +140,14 @@ class PesananPickupController extends Controller
         if ($user->role !== 'admin' && $pickup->kode_toko !== $user->kode_toko) {
             return response()->json([
                 'success' => false,
-                'message' => 'Akses ditolak.'
+                'message' => 'Akses ditolak.',
             ], 403);
         }
 
         if ($pickup->status_pengambilan === 'Sudah Diambil') {
             return response()->json([
                 'success' => false,
-                'message' => 'Pesanan ini sudah diambil sebelumnya.'
+                'message' => 'Pesanan ini sudah diambil sebelumnya.',
             ], 400);
         }
 
@@ -155,21 +157,21 @@ class PesananPickupController extends Controller
         // Trigger updates in Firebase
         FirebaseService::triggerUpdate('updates/sales', [
             'toko' => $pickup->kode_toko,
-            'timestamp' => time()
+            'timestamp' => time(),
         ]);
 
         // Trigger auto-adjust or refresh on any active stock opname session in this shop
-        $activeSessions = \App\Models\StockOpname::where('kode_toko', $pickup->kode_toko)
+        $activeSessions = StockOpname::where('kode_toko', $pickup->kode_toko)
             ->whereIn('status', ['Counting', 'Recount'])
             ->get();
 
         foreach ($activeSessions as $session) {
-            FirebaseService::triggerUpdate('updates/opname_session_' . $session->id);
+            FirebaseService::triggerUpdate('updates/opname_session_'.$session->id);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Pesanan berhasil diserahkan ke pelanggan.'
+            'message' => 'Pesanan berhasil diserahkan ke pelanggan.',
         ]);
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataBarangController;
 use App\Http\Controllers\FotoBarangController;
 use App\Http\Controllers\JenisBarangController;
+use App\Http\Controllers\landing\InvoiceController;
 use App\Http\Controllers\landing\LandingController;
 use App\Http\Controllers\LaporanBarangController;
 use App\Http\Controllers\LaporanPenjualanController;
@@ -41,6 +42,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index']);
 Route::get('/catalog', [LandingController::class, 'catalog'])->name('catalog');
+Route::get('/invoice/{kode}', [InvoiceController::class, 'show'])->name('invoice');
 Route::get('/about', [LandingController::class, 'about'])->name('about');
 Route::get('/contact', [LandingController::class, 'contact'])->name('contact');
 Route::get('/privacy-policy', [LandingController::class, 'privacyPolicy'])->name('privacy-policy');

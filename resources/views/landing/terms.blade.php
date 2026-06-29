@@ -3,87 +3,62 @@
 @section('title', 'Syarat & Ketentuan - Hijabkku')
 
 @section('content')
-    <!-- Header Banner -->
-    <section class="py-5 text-center"
-        style="background: linear-gradient(135deg, #ffd1dc 0%, #fff 100%); font-family: 'Playfair Display', serif;">
-        <div class="container py-4">
-            <span class="text-gold fw-bold tracking-wide text-uppercase"
-                style="letter-spacing: 2px; font-size: 0.9rem; font-family: 'Montserrat', sans-serif;">SYARAT &
-                KETENTUAN</span>
-            <h1 class="fw-bold display-5 mt-2 mb-2" style="color: #2c2c2c;">Syarat & Ketentuan</h1>
-            <p class="text-muted lead" style="font-family: 'Montserrat', sans-serif;">Aturan dan panduan penggunaan website
-                serta pembelian produk Hijabkku.</p>
+    <!-- Header -->
+    <section style="padding: 100px 0 80px; background: var(--bg);">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-7 text-center">
+                    <span class="section-label">Kebijakan</span>
+                    <h1 class="section-title">Syarat & Ketentuan</h1>
+                    <p class="section-desc mx-auto">Aturan dan panduan penggunaan website serta pembelian produk.</p>
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- Content Terms -->
-    <section class="py-5 bg-white">
-        <div class="container" style="max-width: 800px;">
-            <div class="card border-0 shadow-sm p-4 p-md-5" style="border-radius: 16px; background: #faf9f6;">
-                <p class="text-muted small">Terakhir diperbarui: {{ date('d F Y') }}</p>
-                <hr class="border-light my-4">
+    <!-- Content -->
+    <section class="section border-top">
+        <div class="container" style="max-width: 780px;">
+            <div class="card-clean">
+                <p style="font-size: 0.82rem; color: var(--text-light); margin-bottom: 24px;">Terakhir diperbarui: {{ date('d F Y') }}</p>
 
-                <h4 class="fw-bold font-serif text-dark mb-3">1. Ketentuan Umum</h4>
-                <p class="text-muted" style="line-height: 1.7;">
-                    Dengan mengakses, menelusuri, dan menggunakan website Hijabkku ini, Anda menyatakan bahwa Anda telah
-                    membaca, memahami, dan setuju untuk terikat oleh Syarat dan Ketentuan ini. Jika Anda tidak menyetujui
-                    seluruh ketentuan di dalam halaman ini, Anda tidak diperkenankan menggunakan layanan kami.
+                <h4 style="font-size: 1.2rem; color: var(--text); margin-bottom: 16px;">1. Ketentuan Umum</h4>
+                <p style="font-size: 0.92rem; color: var(--text-sub); line-height: 1.8; margin-bottom: 24px;">
+                    Dengan mengakses website Hijabkku, Anda menyatakan telah membaca, memahami, dan setuju untuk terikat oleh Syarat dan Ketentuan ini.
                 </p>
 
-                <h4 class="fw-bold font-serif text-dark mt-4 mb-3">2. Ketentuan Pembelian & Transaksi</h4>
-                <p class="text-muted" style="line-height: 1.7;">
-                    Pembelian produk di website kami tunduk pada ketentuan berikut:
-                </p>
-                <ul class="text-muted" style="line-height: 1.7;">
-                    <li>Semua produk yang ditawarkan di website kami tunduk pada ketersediaan stok aktual di masing-masing
-                        cabang toko terpilih.</li>
-                    <li>Harga yang tertera adalah harga mutlak dalam Rupiah (IDR) dan dapat berubah sewaktu-waktu tanpa
-                        pemberitahuan sebelumnya.</li>
-                    <li>Kesalahan input data pemesanan (nama, nomor HP, email) oleh pembeli sepenuhnya menjadi tanggung
-                        jawab pihak pembeli.</li>
+                <h4 style="font-size: 1.2rem; color: var(--text); margin-bottom: 16px;">2. Pembelian & Transaksi</h4>
+                <ul style="padding-left: 18px; margin-bottom: 24px;">
+                    <li style="font-size: 0.92rem; color: var(--text-sub); padding: 4px 0;">Produk tunduk pada ketersediaan stok aktual di masing-masing cabang.</li>
+                    <li style="font-size: 0.92rem; color: var(--text-sub); padding: 4px 0;">Harga yang tertera adalah harga final dalam Rupiah.</li>
+                    <li style="font-size: 0.92rem; color: var(--text-sub); padding: 4px 0;">Kesalahan input data menjadi tanggung jawab pembeli.</li>
                 </ul>
 
-                <h4 class="fw-bold font-serif text-dark mt-4 mb-3">3. Metode Pembayaran</h4>
-                <p class="text-muted" style="line-height: 1.7;">
-                    Kami menggunakan payment gateway resmi untuk memproses seluruh transaksi pembayaran online. Kami
-                    mendukung metode pembayaran menggunakan QRIS, Virtual Account (VA), dan E-Wallet. Seluruh proses
-                    pembayaran tunduk pada kebijakan dan ketentuan sistem verifikasi payment gateway. Pesanan baru akan
-                    diproses setelah sistem kami menerima notifikasi pelunasan secara real-time dari payment gateway.
+                <h4 style="font-size: 1.2rem; color: var(--text); margin-bottom: 16px;">3. Metode Pembayaran</h4>
+                <p style="font-size: 0.92rem; color: var(--text-sub); line-height: 1.8; margin-bottom: 24px;">
+                    Kami menggunakan payment gateway resmi. Mendukung QRIS, Virtual Account, dan E-Wallet. Pesanan baru diproses setelah notifikasi pelunasan diterima.
                 </p>
 
-                <h4 class="fw-bold font-serif text-dark mt-4 mb-3">4. Kebijakan Store Pickup (Pengambilan di Toko)</h4>
-                <p class="text-muted" style="line-height: 1.7;">
-                    Layanan pemesanan melalui website kami saat ini menggunakan metode <strong>Store Pickup (Ambil di
-                        Toko)</strong>:
-                </p>
-                <ul class="text-muted" style="line-height: 1.7;">
-                    <li>Pembeli wajib mengambil pesanan di cabang outlet terpilih yang tertera pada invoice pembelian.</li>
-                    <li>Saat pengambilan, pembeli wajib menunjukkan bukti invoice lunas asli yang dikirimkan ke email atau
-                        WhatsApp.</li>
-                    <li>Batas maksimal pengambilan barang adalah 7 (tujuh) hari kalender sejak status pembayaran dinyatakan
-                        lunas. Pesanan yang tidak diambil melebihi batas waktu tersebut tidak dapat dibatalkan, namun kami
-                        akan berupaya mengontak pembeli.</li>
+                <h4 style="font-size: 1.2rem; color: var(--text); margin-bottom: 16px;">4. Store Pickup</h4>
+                <ul style="padding-left: 18px; margin-bottom: 24px;">
+                    <li style="font-size: 0.92rem; color: var(--text-sub); padding: 4px 0;">Pembeli wajib mengambil pesanan di cabang outlet terpilih.</li>
+                    <li style="font-size: 0.92rem; color: var(--text-sub); padding: 4px 0;">Tunjukkan bukti invoice lunas saat pengambilan.</li>
+                    <li style="font-size: 0.92rem; color: var(--text-sub); padding: 4px 0;">Batas pengambilan: 7 hari kalender sejak pembayaran lunas.</li>
                 </ul>
 
-                <h4 class="fw-bold font-serif text-dark mt-4 mb-3">5. Hak & Kewajiban Pengguna</h4>
-                <p class="text-muted" style="line-height: 1.7;">
-                    Pengguna berkewajiban memberikan data pribadi yang valid dan akurat demi kelancaran proses transaksi.
-                    Pengguna dilarang keras melakukan manipulasi sistem checkout, melakukan tindakan penipuan transaksi,
-                    atau menggunakan layanan kami untuk tujuan ilegal yang melanggar hukum Negara Republik Indonesia.
+                <h4 style="font-size: 1.2rem; color: var(--text); margin-bottom: 16px;">5. Hak & Kewajiban Pengguna</h4>
+                <p style="font-size: 0.92rem; color: var(--text-sub); line-height: 1.8; margin-bottom: 24px;">
+                    Pengguna wajib memberikan data yang valid. Dilarang melakukan manipulasi sistem checkout atau penipuan transaksi.
                 </p>
 
-                <h4 class="fw-bold font-serif text-dark mt-4 mb-3">6. Batasan Tanggung Jawab</h4>
-                <p class="text-muted" style="line-height: 1.7;">
-                    Hijabkku tidak bertanggung jawab atas kerugian tidak langsung atau masalah teknis yang disebabkan oleh
-                    gangguan jaringan internet pembeli, kegagalan sistem pembayaran perbankan/e-wallet, atau keadaan memaksa
-                    (Force Majeure) seperti bencana alam, pemadaman listrik massal, dan kebijakan darurat pemerintah.
+                <h4 style="font-size: 1.2rem; color: var(--text); margin-bottom: 16px;">6. Batasan Tanggung Jawab</h4>
+                <p style="font-size: 0.92rem; color: var(--text-sub); line-height: 1.8; margin-bottom: 24px;">
+                    Hijabkku tidak bertanggung jawab atas gangguan jaringan internet, kegagalan sistem pembayaran, atau Force Majeure.
                 </p>
 
-                <h4 class="fw-bold font-serif text-dark mt-4 mb-3">7. Hukum yang Berlaku</h4>
-                <p class="text-muted mb-0" style="line-height: 1.7;">
-                    Syarat & Ketentuan ini diatur dan ditafsirkan sesuai dengan hukum yang berlaku di Negara Republik
-                    Indonesia. Setiap perselisihan yang timbul dari syarat ketentuan ini akan diselesaikan secara musyawarah
-                    mufakat atau melalui yurisdiksi pengadilan negeri terdekat.
+                <h4 style="font-size: 1.2rem; color: var(--text); margin-bottom: 16px;">7. Hukum yang Berlaku</h4>
+                <p style="font-size: 0.92rem; color: var(--text-sub); line-height: 1.8; margin: 0;">
+                    Syarat & Ketentuan ini diatur sesuai hukum Negara Republik Indonesia. Perselisihan akan diselesaikan secara musyawarah atau melalui pengadilan negeri terdekat.
                 </p>
             </div>
         </div>

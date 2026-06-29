@@ -3,60 +3,51 @@
 @section('title', 'Tentang Kami - Hijabkku')
 
 @section('content')
-    <!-- Header Banner -->
-    <section class="py-5 text-center" style="background: linear-gradient(135deg, #ffd1dc 0%, #fff 100%);">
-        <div class="container py-4">
-            <span class="text-gold fw-bold tracking-wide text-uppercase"
-                style="letter-spacing: 2px; font-size: 0.9rem;">CERITA HIJABKKU</span>
-            <h1 class="fw-bold display-5 mt-2 mb-2" style="color: #2c2c2c;">Tentang Kami</h1>
-            <p class="text-muted lead">Mengenal lebih dekat visi, misi, dan nilai-nilai yang kami bawa untuk Anda.</p>
+    <!-- Header -->
+    <section style="padding: 100px 0 80px; background: var(--bg);">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-7 text-center">
+                    <span class="section-label">Cerita Hijabkku</span>
+                    <h1 class="section-title">Tentang Kami</h1>
+                    <p class="section-desc mx-auto">Mengenal lebih dekat visi, misi, dan nilai-nilai yang kami bawa untuk Anda.</p>
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- Company Story Section -->
-    <section class="py-5 bg-white">
+    <!-- Story Section -->
+    <section class="section border-top">
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6">
-                    <h2 class="fw-bold mb-4 font-serif text-dark" style="font-size: 2rem;">Awal Mula Perjalanan Kami</h2>
-                    <p class="text-muted" style="line-height: 1.8;">
-                        Didirikan dengan kecintaan mendalam pada fashion Muslimah, <strong>Hijabkku</strong> hadir untuk
-                        mendefinisikan ulang cara wanita mengenakan hijab. Kami percaya bahwa berhijab tidak hanya tentang
-                        menjalankan kewajiban, tetapi juga tentang mengekspresikan kepribadian, keanggunan, dan rasa percaya
-                        diri.
+                    <span class="section-label">Perjalanan Kami</span>
+                    <h2 class="section-title">Awal Mula Perjalanan</h2>
+                    <div class="section-line"></div>
+                    <p style="font-size: 0.95rem; color: var(--text-sub); line-height: 1.8; margin-bottom: 16px;">
+                        Didirikan dengan kecintaan mendalam pada fashion Muslimah, <strong style="color: var(--text);">Hijabkku</strong> hadir untuk mendefinisikan ulang cara wanita mengenakan hijab.
                     </p>
-                    <p class="text-muted" style="line-height: 1.8;">
-                        Kami mengkhususkan diri dalam penyediaan produk hijab berkualitas. Setiap helai hijab kami dikurasi
-                        dengan perhatian penuh terhadap detail demi
-                        kenyamanan maksimal aktivitas harian Anda.
+                    <p style="font-size: 0.95rem; color: var(--text-sub); line-height: 1.8; margin-bottom: 0;">
+                        Kami mengkhususkan diri dalam penyediaan produk hijab berkualitas. Setiap helai hijab kami dikurasi dengan perhatian penuh terhadap detail demi kenyamanan maksimal aktivitas harian Anda.
                     </p>
                 </div>
-                <div class="col-lg-6">
-                    <div class="card border-0 shadow-sm p-4 text-center position-relative overflow-hidden"
-                        style="border-radius: 20px; background: #faf9f6;">
-                        <div class="position-absolute top-0 end-0 bg-gold text-white px-3 py-1 font-serif"
-                            style="border-bottom-left-radius: 15px; font-size: 0.8rem;">
-                            EST. 2017
-                        </div>
-                        <img src="/img/logo.png" alt="Hijabku Logo" class="img-fluid mb-4 rounded-circle mx-auto border"
-                            style="width: 120px; height: 120px; object-fit: cover;">
-                        <h4 class="fw-bold text-gold font-serif mb-2">HIJABKKU</h4>
-                        <p class="text-muted small px-3">
-                            "Menebar kebaikan dan kecantikan melalui balutan hijab yang elegan dengan sentuhan warna."
+                <div class="col-lg-5 offset-lg-1">
+                    <div class="card-clean text-center" style="padding: 48px 32px;">
+                        <div style="display: inline-block; padding: 6px 14px; border: 1px solid var(--border); font-size: 0.7rem; font-weight: 500; letter-spacing: 1px; color: var(--text-light); margin-bottom: 28px;">EST. 2017</div>
+                        <img src="/img/logo.png" alt="Hijabkku" style="width: 90px; height: 90px; object-fit: cover; border: 1px solid var(--border); padding: 8px; margin-bottom: 24px;">
+                        <h4 style="font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; letter-spacing: 2px; color: var(--text); margin-bottom: 12px;">HIJABKKU</h4>
+                        <p style="font-size: 0.88rem; color: var(--text-sub); font-style: italic; margin: 0;">
+                            "Menebar kebaikan dan kecantikan melalui balutan hijab yang elegan."
                         </p>
-                        <div class="d-flex justify-content-around border-top pt-4 mt-3">
-                            {{-- <div>
-                                <h5 class="fw-bold text-dark mb-0">10k+</h5>
-                                <span class="small text-muted">Pelanggan</span>
+                        <div style="border-top: 1px solid var(--border-light); margin-top: 28px; padding-top: 24px; display: flex; justify-content: center; gap: 48px;">
+                            <div>
+                                <div style="font-family: 'DM Serif Display', serif; font-size: 1.5rem; color: var(--text);">2017</div>
+                                <div style="font-size: 0.75rem; color: var(--text-light);">Tahun Berdiri</div>
                             </div>
                             <div>
-                                <h5 class="fw-bold text-dark mb-0">50+</h5>
-                                <span class="small text-muted">Varian Warna</span>
+                                <div style="font-family: 'DM Serif Display', serif; font-size: 1.5rem; color: var(--text);">100%</div>
+                                <div style="font-size: 0.75rem; color: var(--text-light);">Katun Premium</div>
                             </div>
-                            <div>
-                                <h5 class="fw-bold text-dark mb-0">100%</h5>
-                                <span class="small text-muted">Katun Premium</span>
-                            </div> --}}
                         </div>
                     </div>
                 </div>
@@ -64,42 +55,40 @@
         </div>
     </section>
 
-    <!-- Visi & Misi Section -->
-    <section class="py-5" style="background-color: #faf9f6;">
+    <!-- Visi & Misi -->
+    <section class="section" style="background: var(--bg-warm); border-top: 1px solid var(--border-light);">
         <div class="container">
+            <div class="text-center mb-5">
+                <span class="section-label">Visi & Misi</span>
+                <h2 class="section-title">Tujuan Kami</h2>
+                <div class="section-line mx-auto"></div>
+            </div>
             <div class="row g-4 justify-content-center">
                 <div class="col-md-5">
-                    <div class="card h-100 border-0 shadow-sm p-4" style="border-radius: 16px; background: white;">
-                        <div class="d-flex align-items-center mb-3">
-                            <span
-                                class="d-flex align-items-center justify-content-center bg-light text-gold rounded-circle me-3"
-                                style="width: 50px; height: 50px;">
-                                <i data-acorn-icon="activity" style="font-size: 24px;"></i>
-                            </span>
-                            <h3 class="fw-bold font-serif mb-0 text-dark" style="font-size: 1.5rem;">Visi Kami</h3>
+                    <div class="card-clean h-100">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="card-icon me-3">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                            </div>
+                            <h3 style="font-size: 1.2rem; color: var(--text); margin: 0;">Visi Kami</h3>
                         </div>
-                        <p class="text-muted mb-0" style="line-height: 1.7;">
-                            Menjadi brand hijab lokal terkemuka yang menginspirasi Muslimah Indonesia untuk tampil anggun,
-                            modern, dan percaya diri tanpa mengabaikan nilai-nilai syariat Islam melalui produk busana
-                            berkualitas tinggi.
+                        <p style="font-size: 0.92rem; color: var(--text-sub); line-height: 1.8; margin: 0;">
+                            Menjadi brand hijab lokal terkemuka yang menginspirasi Muslimah Indonesia untuk tampil anggun, modern, dan percaya diri melalui produk berkualitas tinggi.
                         </p>
                     </div>
                 </div>
                 <div class="col-md-5">
-                    <div class="card h-100 border-0 shadow-sm p-4" style="border-radius: 16px; background: white;">
-                        <div class="d-flex align-items-center mb-3">
-                            <span
-                                class="d-flex align-items-center justify-content-center bg-light text-gold rounded-circle me-3"
-                                style="width: 50px; height: 50px;">
-                                <i data-acorn-icon="check" style="font-size: 24px;"></i>
-                            </span>
-                            <h3 class="fw-bold font-serif mb-0 text-dark" style="font-size: 1.5rem;">Misi Kami</h3>
+                    <div class="card-clean h-100">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="card-icon me-3">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            </div>
+                            <h3 style="font-size: 1.2rem; color: var(--text); margin: 0;">Misi Kami</h3>
                         </div>
-                        <ul class="text-muted ps-3 mb-0" style="line-height: 1.7;">
-                            <li class="mb-2">Menghadirkan hijab berkualitas dengan berbagai varian.</li>
-                            <li class="mb-2">Memberikan pelayanan pelanggan yang responsif, ramah, dan solutif.</li>
-                            <li class="mb-0">Membangun ekosistem ritel terintegrasi melalui sistem Point of Sale (POS) dan
-                                e-commerce modern.</li>
+                        <ul style="padding-left: 18px; margin: 0;">
+                            <li style="font-size: 0.92rem; color: var(--text-sub); line-height: 1.6; padding: 4px 0;">Menghadirkan hijab berkualitas dengan berbagai varian.</li>
+                            <li style="font-size: 0.92rem; color: var(--text-sub); line-height: 1.6; padding: 4px 0;">Memberikan pelayanan pelanggan yang responsif dan ramah.</li>
+                            <li style="font-size: 0.92rem; color: var(--text-sub); line-height: 1.6; padding: 4px 0;">Membangun ekosistem ritel terintegrasi melalui POS dan e-commerce.</li>
                         </ul>
                     </div>
                 </div>
@@ -107,38 +96,43 @@
         </div>
     </section>
 
-    <!-- Legal Business Information -->
-    <section class="py-5 bg-white">
-        <div class="container">
-            <div class="text-center mb-5 pb-2">
-                <h2 class="fw-bold font-serif text-dark mb-2">Informasi Legal Usaha</h2>
-                <div class="mx-auto" style="width: 60px; height: 3px; background-color: #D4AF37;"></div>
+    <!-- Legal Information -->
+    <section class="section border-top">
+        <div class="container" style="max-width: 780px;">
+            <div class="text-center mb-5">
+                <span class="section-label">Informasi Legal</span>
+                <h2 class="section-title">Informasi Usaha</h2>
+                <div class="section-line mx-auto"></div>
             </div>
 
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="table-responsive bg-light p-4 rounded-4 border" style="border-radius: 16px;">
-                        <table class="table table-borderless mb-0">
-                            <tbody>
-                                <tr class="border-bottom border-light">
-                                    <td class="fw-bold text-muted py-3" style="width: 35%;">Nama Toko</td>
-                                    <td class="text-dark py-3 font-weight-bold">Hijabkku</td>
-                                </tr>
-                                <tr class="border-bottom border-light">
-                                    <td class="fw-bold text-muted py-3">Alamat Lengkap Kantor</td>
-                                    <td class="text-dark py-3">Kelurahan Panaragan Jaya, Kecamatan Tulang Bawang Tengah,
-                                        Kabupaten Tulang Bawang Barat, Provinsi Lampung (Depan Masjid Baitul Sobur)</td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold text-muted py-3">Metode Operasional</td>
-                                    <td class="text-dark py-3">Pemesanan online melalui catalog (Store Pickup) & penjualan
-                                        offline di outlet resmi.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="card-clean">
+                <table class="table table-borderless mb-0">
+                    <tbody>
+                        <tr style="border-bottom: 1px solid var(--border-light);">
+                            <td class="py-4" style="width: 35%; font-size: 0.82rem; font-weight: 500; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px;">Nama Toko</td>
+                            <td class="py-4" style="color: var(--text);">Hijabkku</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-light);">
+                            <td class="py-4" style="font-size: 0.82rem; font-weight: 500; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px;">Alamat</td>
+                            <td class="py-4" style="color: var(--text); line-height: 1.7;">Kelurahan Panaragan Jaya, Kecamatan Tulang Bawang Tengah, Kabupaten Tulang Bawang Barat, Provinsi Lampung</td>
+                        </tr>
+                        <tr>
+                            <td class="py-4" style="font-size: 0.82rem; font-weight: 500; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px;">Metode Operasional</td>
+                            <td class="py-4" style="color: var(--text);">Pemesanan online melalui catalog (Store Pickup) & penjualan offline di outlet resmi.</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </section>
+@endsection
+
+@section('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof AcornIcons !== 'undefined') {
+                new AcornIcons().replace();
+            }
+        });
+    </script>
 @endsection

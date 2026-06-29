@@ -8,7 +8,8 @@
                     <!-- Title Start -->
                     <div class="col-12 col-md-7">
                         <h1 class="mb-0 pb-0 display-4" id="title">Kelola Pesanan Pickup</h1>
-                        <p class="text-muted mb-0">Lacak, kelola, dan proses pengambilan barang pesanan pelanggan online secara real-time.</p>
+                        <p class="text-muted mb-0">Lacak, kelola, dan proses pengambilan barang pesanan pelanggan online
+                            secara real-time.</p>
                     </div>
                     <!-- Title End -->
                 </div>
@@ -19,7 +20,8 @@
             <div class="row mb-5">
                 <div class="col-12">
                     <!-- Modern Filter Panel Start -->
-                    <div class="card mb-4 border-0 shadow-sm" style="border-radius: 12px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
+                    <div class="card mb-4 border-0 shadow-sm"
+                        style="border-radius: 12px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
                         <div class="card-body p-4">
                             <div class="row g-3 align-items-end">
                                 <!-- Toko Filter -->
@@ -42,16 +44,20 @@
                                     <div class="form-group mb-0">
                                         <label class="form-label text-muted small ms-1 mb-1">Status Pengambilan</label>
                                         <div class="btn-group w-100" role="group">
-                                            <button type="button" class="status-filter-btn btn btn-outline-primary active" data-status="Belum Diambil">Belum Diambil</button>
-                                            <button type="button" class="status-filter-btn btn btn-outline-primary" data-status="Sudah Diambil">Sudah Diambil</button>
+                                            <button type="button" class="status-filter-btn btn btn-outline-primary active"
+                                                data-status="Belum Diambil">Belum Diambil</button>
+                                            <button type="button" class="status-filter-btn btn btn-outline-primary"
+                                                data-status="Sudah Diambil">Sudah Diambil</button>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Search Field -->
                                 <div class="col-12 col-md-4">
-                                    <div class="d-inline-block search-input-container w-100 border border-separator bg-foreground search-sm rounded-lg">
-                                        <input class="form-control form-control-sm datatable-search" placeholder="Cari Pelanggan / Invoice..." data-datatable="#tbPickupTransaksi">
+                                    <div
+                                        class="d-inline-block search-input-container w-100 border border-separator bg-foreground search-sm rounded-lg">
+                                        <input class="form-control form-control-sm datatable-search"
+                                            placeholder="Cari Pelanggan / Invoice..." data-datatable="#tbPickupTransaksi">
                                         <span class="search-magnifier-icon">
                                             <i data-acorn-icon="search"></i>
                                         </span>
@@ -66,15 +72,20 @@
                     <div class="card border-0 shadow-sm" style="border-radius: 12px;">
                         <div class="card-body p-0">
                             <div class="data-table-responsive-wrapper p-4">
-                                <table class="data-table nowrap hover w-100" id="tbPickupTransaksi" data-order='[[ 0, "desc" ]]'>
+                                <table class="data-table nowrap hover w-100" id="tbPickupTransaksi"
+                                    data-order='[[ 0, "desc" ]]'>
                                     <thead>
                                         <tr>
                                             <th class="text-muted text-small text-uppercase" style="width: 5%">No</th>
                                             <th class="text-muted text-small text-uppercase" style="width: 15%">Invoice</th>
-                                            <th class="text-muted text-small text-uppercase" style="width: 15%">Cabang Toko</th>
-                                            <th class="text-muted text-small text-uppercase" style="width: 20%">Pelanggan</th>
-                                            <th class="text-muted text-small text-uppercase" style="width: 15%">No. Telepon</th>
-                                            <th class="text-muted text-small text-uppercase" style="width: 20%">Detail Barang</th>
+                                            <th class="text-muted text-small text-uppercase" style="width: 15%">Cabang Toko
+                                            </th>
+                                            <th class="text-muted text-small text-uppercase" style="width: 20%">Pelanggan
+                                            </th>
+                                            <th class="text-muted text-small text-uppercase" style="width: 15%">No. Telepon
+                                            </th>
+                                            <th class="text-muted text-small text-uppercase" style="width: 20%">Detail
+                                                Barang</th>
                                             <th class="text-muted text-small text-uppercase" style="width: 10%">Aksi</th>
                                         </tr>
                                     </thead>
@@ -95,10 +106,12 @@
             <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; background-color: #fafafa;">
                 <div class="modal-body p-4">
                     <!-- Thermal Receipt Container -->
-                    <div class="bg-white p-4 shadow-sm border border-light" style="border-radius: 12px; font-family: 'Courier New', Courier, monospace; color: #333;">
+                    <div class="bg-white p-4 shadow-sm border border-light"
+                        style="border-radius: 12px; font-family: 'Courier New', Courier, monospace; color: #333;">
                         <!-- Store Header -->
                         <div class="text-center mb-3">
-                            <h4 class="fw-bold mb-1" style="font-family: 'Outfit', sans-serif; letter-spacing: 1px;">HIJABKKU</h4>
+                            <h4 class="fw-bold mb-1" style="font-family: 'Outfit', sans-serif; letter-spacing: 1px;">
+                                HIJABKKU</h4>
                             <p class="small text-muted mb-0" id="pickupTokoTitle" style="font-family: inherit;"></p>
                             <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
                         </div>
@@ -110,7 +123,7 @@
                                 <span class="fw-bold" id="pickupInvoiceTitle"></span>
                             </div>
                             <div class="d-flex justify-content-between">
-                                <span>Tanggal   :</span>
+                                <span>Tanggal :</span>
                                 <span id="pickupDateTitle"></span>
                             </div>
                             <div class="d-flex justify-content-between">
@@ -118,15 +131,15 @@
                                 <span class="fw-bold" id="pickupCustomerTitle"></span>
                             </div>
                             <div class="d-flex justify-content-between">
-                                <span>WhatsApp  :</span>
+                                <span>WhatsApp :</span>
                                 <span id="pickupPhoneTitle"></span>
                             </div>
                             <div class="d-flex justify-content-between">
-                                <span>Email     :</span>
+                                <span>Email :</span>
                                 <span id="pickupEmailTitle"></span>
                             </div>
                             <div class="d-flex justify-content-between mt-1">
-                                <span>Status    :</span>
+                                <span>Status :</span>
                                 <span class="badge" id="pickupStatusBadge"></span>
                             </div>
                             <div style="border-top: 1px dashed #ccc; margin: 10px 0;"></div>
@@ -167,7 +180,8 @@
                     <!-- Action Buttons -->
                     <div class="mt-4 d-flex justify-content-between">
                         <button type="button" class="btn btn-muted closed" style="border-radius: 8px;">Tutup</button>
-                        <button type="button" class="btn btn-success btn-modal-complete shadow-sm" id="btnModalComplete" style="border-radius: 8px; display: none;">
+                        <button type="button" class="btn btn-success btn-modal-complete shadow-sm" id="btnModalComplete"
+                            style="border-radius: 8px; display: none;">
                             <i data-acorn-icon="check" class="me-1"></i> Serahkan Barang
                         </button>
                     </div>
@@ -208,8 +222,7 @@
                         d.status_pengambilan = activeStatus;
                     }
                 },
-                columns: [
-                    {
+                columns: [{
                         data: null,
                         sortable: false,
                         render: function(data, type, row, meta) {
@@ -222,9 +235,13 @@
                             return `<span class="badge bg-outline-primary text-primary font-weight-bold" style="font-size: 0.85rem;">${data}</span>`;
                         }
                     },
-                    { data: 'nama_toko' },
-                    { data: 'customer_name' },
-                    { 
+                    {
+                        data: 'nama_toko'
+                    },
+                    {
+                        data: 'customer_name'
+                    },
+                    {
                         data: 'customer_phone',
                         render: function(data, type, row) {
                             let formattedPhone = data;
@@ -241,7 +258,10 @@
                             </a>`;
                         }
                     },
-                    { data: 'items', sortable: false },
+                    {
+                        data: 'items',
+                        sortable: false
+                    },
                     {
                         data: 'aksi',
                         sortable: false,
@@ -290,34 +310,55 @@
             let currentPickupId = null;
 
             // AJAX Detail Loader
-            $(document).on('click', '.btn-detail', function() {
-                const tr = $(this).closest('tr');
-                const rowData = pickupTable.row(tr).data();
-                const pickupId = rowData.id;
+            $(document).on('click', '.btn-detail', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const btn = $(this).closest('.btn-detail');
+                const pickupId = btn.data('id');
+                const invoice = btn.data('invoice');
                 currentPickupId = pickupId;
-                
+
+                if (!pickupId) {
+                    // Fallback: get from DataTable row
+                    const tr = btn.closest('tr');
+                    const rowData = pickupTable.row(tr).data();
+                    if (rowData && rowData.id) {
+                        currentPickupId = rowData.id;
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Tidak dapat mengambil ID pesanan.'
+                        });
+                        return;
+                    }
+                }
+
                 // Clear old items first
                 $('.pickupDataBarang').remove();
 
                 $.ajax({
                     type: 'GET',
-                    url: `/transaksi/pickup/${pickupId}/items`,
+                    url: `/transaksi/pickup/${currentPickupId}/items`,
                     success: function(res) {
                         $('#pickupInvoiceTitle').text(res.pickup.kode_invoice);
                         $('#pickupCustomerTitle').text(res.pickup.customer_name);
-                        
+
                         let waPhone = res.pickup.customer_phone;
                         if (waPhone.startsWith('0')) {
                             waPhone = '62' + waPhone.substring(1);
                         }
-                        
-                        $('#pickupPhoneTitle').html(`<a href="https://wa.me/${waPhone}" target="_blank" class="text-success fw-bold">${res.pickup.customer_phone}</a>`);
+
+                        $('#pickupPhoneTitle').html(
+                            `<a href="https://wa.me/${waPhone}" target="_blank" class="text-success fw-bold">${res.pickup.customer_phone}</a>`
+                            );
                         $('#pickupEmailTitle').text(res.pickup.customer_email || '-');
-                        
-                        const dateFormatted = res.pickup.created_at ? moment(res.pickup.created_at).locale('id').format('LLLL') : '-';
+
+                        const dateFormatted = res.pickup.created_at ? new Date(res.pickup.created_at).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
                         $('#pickupDateTitle').text(dateFormatted);
                         $('#pickupTokoTitle').text(res.toko);
-                        
+
                         // Set Status Badge
                         const badge = $('#pickupStatusBadge');
                         badge.text(res.pickup.status_pengambilan);
@@ -325,10 +366,11 @@
                             badge.removeClass('bg-success').addClass('bg-warning text-dark');
                             $('#btnModalComplete').show();
                         } else {
-                            badge.removeClass('bg-warning text-dark').addClass('bg-success text-white');
+                            badge.removeClass('bg-warning text-dark').addClass(
+                                'bg-success text-white');
                             $('#btnModalComplete').hide();
                         }
-                        
+
                         $('#pickupTotalBelanjaTitle').text(res.grand_total_rupiah);
 
                         $.each(res.items, function(index, value) {
@@ -399,7 +441,8 @@
                                         timer: 2000,
                                         showConfirmButton: false
                                     });
-                                    pickupTable.ajax.reload(null, false); // Reload table preserving page
+                                    pickupTable.ajax.reload(null,
+                                    false); // Reload table preserving page
                                     if (callback) callback();
                                 } else {
                                     Swal.fire({

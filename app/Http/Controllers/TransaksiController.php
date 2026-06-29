@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DataBarang;
 use App\Models\Pembayaran;
+use App\Models\PendingTransaction;
 use App\Models\SesiKasir;
 use App\Models\StockOpname;
 use App\Models\StockOpnameAudit;
@@ -14,10 +15,12 @@ use App\Models\Toko;
 use App\Models\Transaksi;
 use App\Models\User;
 use App\Services\FirebaseService;
+use App\Services\XenditWebhookService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class TransaksiController extends Controller
@@ -80,6 +83,30 @@ class TransaksiController extends Controller
             }
         }
 
+        // Local/test fallback: process stale PENDING Xendit transactions for this toko
+        $xenditSimulationMode = SystemSetting::getByKey('xendit_simulation_mode', 'false');
+
+        if (in_array(config('app.env'), ['local', 'testing']) && $data_toko && $xenditSimulationMode !== 'true') {
+            $stalePending = PendingTransaction::where('kode_toko', $data_toko->kode)
+                ->where('status', 'PENDING')
+                ->where('created_at', '<', now()->subSeconds(5))
+                ->get();
+
+            if ($stalePending->isNotEmpty()) {
+                $webhookService = app(XenditWebhookService::class);
+                foreach ($stalePending as $pending) {
+                    try {
+                        $webhookService->handleInvoicePaid([
+                            'external_id' => $pending->kode_invoice,
+                            'status' => 'PAID',
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::warning("Local fallback: failed to process {$pending->kode_invoice}: ".$e->getMessage());
+                    }
+                }
+            }
+        }
+
         return view('transaksi.penjualan', [
             'data_toko' => $data_toko,
             'all_tokos' => $all_tokos,
@@ -89,6 +116,7 @@ class TransaksiController extends Controller
             'pending_session' => $pending_session,
             'rejected_session' => $rejected_session,
             'closed_session_today' => $closed_session_today,
+            'xenditSimulationMode' => $xenditSimulationMode,
         ]);
     }
 
@@ -284,6 +312,7 @@ class TransaksiController extends Controller
                     'total_harga' => $total_harga,
                     'pembayaran' => $pembayaran,
                     'kembalian' => $kembali,
+                    'metode_pembayaran' => 'TUNAI',
                     'sesi_kasir_id' => $active_session ? $active_session->id : null,
                 ];
                 Pembayaran::create($data_pembayaran);
@@ -457,6 +486,25 @@ class TransaksiController extends Controller
 
                 return implode(' ', $badges);
             })
+            ->addColumn('metode_pembayaran', function ($row) {
+                $method = $row->metode_pembayaran ?? 'TUNAI';
+                $colorMap = [
+                    'TUNAI' => 'secondary',
+                    'QRIS' => 'info',
+                    'VA' => 'primary',
+                    'EWALLET' => 'warning',
+                ];
+                $color = $colorMap[$method] ?? 'secondary';
+                $label = match ($method) {
+                    'TUNAI' => 'Tunai',
+                    'QRIS' => 'QRIS',
+                    'VA' => 'Virtual Account',
+                    'EWALLET' => 'E-Wallet',
+                    default => $method,
+                };
+
+                return '<span class="badge bg-'.$color.' text-uppercase">'.$label.'</span>';
+            })
             ->addColumn('total_rupiah', function ($row) {
                 return 'Rp. '.number_format($row->total_harga, 0, ',', '.');
             })
@@ -468,7 +516,7 @@ class TransaksiController extends Controller
 
                 return '<button data-invoice="'.$row->kode_invoice.'" type="button" class="detailTransaksi btn btn-sm btn-icon btn-icon-only btn-outline-primary me-1" title="Detail Transaksi">'.$eyeIcon.'</button>';
             })
-            ->rawColumns(['metode', 'aksi'])
+            ->rawColumns(['metode', 'metode_pembayaran', 'aksi'])
             ->make(true);
     }
 
@@ -501,6 +549,7 @@ class TransaksiController extends Controller
             'username' => $data_perinvoice->user_name,
             'tanggal' => $tanggal->format('l, d M Y, a H:i'),
             'metode' => $metode,
+            'metode_pembayaran' => $data_perinvoice->metode_pembayaran ?? 'TUNAI',
             'toko' => $tokoName,
         ]);
     }

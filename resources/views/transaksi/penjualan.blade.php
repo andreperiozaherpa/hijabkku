@@ -369,6 +369,16 @@
                 </div>
             </div>
 
+            <!-- Simulation Mode Banner -->
+            @if($xenditSimulationMode === 'true')
+            <div class="alert alert-warning d-flex align-items-center mb-4" role="alert" style="border-radius: 10px; border-left: 4px solid #ffc107;">
+                <i data-acorn-icon="warning" class="me-2" data-acorn-size="20"></i>
+                <div>
+                    <strong>Mode Simulasi Xendit Aktif</strong> — Pembayaran QRIS/VA/E-Wallet tidak akan mempengaruhi stok. Pembayaran Tunai berjalan normal.
+                </div>
+            </div>
+            @endif
+
             <!-- Top Info Bar -->
             <div class="pos-info-bar mb-4">
                 <div class="row g-4 align-items-center">
@@ -695,6 +705,11 @@
                                         {{ $today_closed && Auth::user()->role !== 'admin' ? 'KIRIM PENGAJUAN BUKA SESI' : 'BUKA SESI KASIR' }}
                                     </button>
                                 </div>
+                                <div class="d-grid mt-2">
+                                    <a href="{{ route('dashboard') }}" class="btn btn-outline-muted btn-lg">
+                                        <i data-acorn-icon="arrow-left" class="me-1"></i> Kembali ke Dashboard
+                                    </a>
+                                </div>
                             </form>
                         @endif
                     </div>
@@ -754,6 +769,11 @@
                                 <button type="submit" class="btn btn-danger btn-lg fw-bold">
                                     TUTUP SESI KASIR
                                 </button>
+                            </div>
+                            <div class="d-grid mt-2">
+                                <a href="{{ route('dashboard') }}" class="btn btn-outline-muted btn-lg">
+                                    <i data-acorn-icon="arrow-left" class="me-1"></i> Kembali ke Dashboard
+                                </a>
                             </div>
                         </form>
                     </div>
@@ -1183,6 +1203,31 @@
                         </div>
                     </div>`);
                 });
+            }
+
+            // Clear cart after successful Xendit payment redirect
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('payment_status') === 'success') {
+                localStorage.removeItem('hijabkku_pos_cart');
+                // Clean the URL without reloading
+                window.history.replaceState({}, document.title, '/transaksi/penjualan');
+            } else if (urlParams.get('payment_status') === 'simulation') {
+                localStorage.removeItem('hijabkku_pos_cart');
+                window.history.replaceState({}, document.title, '/transaksi/penjualan');
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Simulasi Pembayaran',
+                    text: 'Pembayaran berhasil disimulasikan! (Mode simulasi — stok tidak dikurangi)',
+                    confirmButtonColor: '#8B7355'
+                });
+            } else if (urlParams.get('payment_status') === 'failure') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Pembayaran Gagal',
+                    text: 'Pembayaran tidak berhasil. Silakan coba lagi.',
+                    confirmButtonColor: '#8B7355'
+                });
+                window.history.replaceState({}, document.title, '/transaksi/penjualan');
             }
 
             ajaxQuery('get', '/transaksi/penjualan/create', {
