@@ -514,7 +514,7 @@
         });
 
         // Global Page Loader Spinner functionality
-        window.addEventListener('load', function() {
+        window.addEventListener('pageshow', function(event) {
             var loader = document.getElementById('page-loader');
             if (loader) {
                 loader.style.opacity = '0';
