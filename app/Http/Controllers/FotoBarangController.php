@@ -6,6 +6,8 @@ use App\Models\DataBarang;
 use App\Models\FotoBarang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class FotoBarangController extends Controller
 {
@@ -73,14 +75,33 @@ class FotoBarangController extends Controller
     {
         $request->validate([
             'data_barang_id' => 'required|exists:data_barangs,id',
-            'file' => 'required|image|max:5120', // max 5MB
+            'file' => 'required|image|max:10240', // max 10MB raw, compressed server-side
         ]);
 
         $productId = $request->data_barang_id;
         $file = $request->file('file');
 
-        $path = $file->store('uploads/produk', 'public');
-        $fullPath = 'storage/'.$path;
+        // Compress image without reducing visual quality
+        $manager = new ImageManager(new Driver);
+        $image = $manager->read($file);
+
+        // Resize if width > 2000px (preserve aspect ratio)
+        if ($image->width() > 2000) {
+            $image->scaleDown(width: 2000);
+        }
+
+        // Re-encode: JPEG quality 85, PNG optimization level 9
+        $mimeType = $file->getMimeType();
+        if (str_contains($mimeType, 'png')) {
+            $encoded = $image->toPng(quality: 9);
+        } else {
+            $encoded = $image->toJpeg(quality: 85);
+        }
+
+        $fileName = time().'_'.$file->hashName();
+        $relativePath = 'uploads/produk/'.$fileName;
+        Storage::disk('public')->put($relativePath, $encoded);
+        $fullPath = 'storage/'.$relativePath;
 
         $isAdmin = auth()->user() && auth()->user()->role === 'admin';
 

@@ -11,6 +11,47 @@ use Illuminate\Support\Facades\Auth;
 
 class SesiKasirController extends Controller
 {
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Helper: resolve the scoped "active session" for the authenticated user.
+    //  Per-user scope:  sessions owned by THIS user + this toko that are open.
+    //  Legacy scope:    any open session for the toko (admin fallback).
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Return the caller's own active session for a given toko.
+     * Non-admin users are always bound to their own session (per-user scope).
+     * Admins can optionally view any toko's sessions but open/close their own.
+     */
+    private function getUserActiveSession(int $userId, string $kodeToko): ?SesiKasir
+    {
+        return SesiKasir::where('kode_toko', $kodeToko)
+            ->where('dibuka_oleh', $userId)
+            ->where('status', 'buka')
+            ->where('is_user_scoped', true)
+            ->first();
+    }
+
+    /**
+     * Check whether THIS user already closed a session today in this toko.
+     */
+    private function getUserClosedSessionToday(int $userId, string $kodeToko): ?SesiKasir
+    {
+        return SesiKasir::where('kode_toko', $kodeToko)
+            ->where('dibuka_oleh', $userId)
+            ->where('is_user_scoped', true)
+            ->where(function ($q) {
+                $q->where('status', 'tutup')
+                    ->orWhere('status', 'pending_reopen');
+            })
+            ->whereDate('waktu_tutup', today())
+            ->latest()
+            ->first();
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Laporan / index: show all sessions (admin) or own sessions (kasir)
+    // ──────────────────────────────────────────────────────────────────────────
+
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -36,10 +77,15 @@ class SesiKasirController extends Controller
         $query = SesiKasir::with(['dibukaOleh', 'ditutupOleh', 'toko']);
 
         if ($user->role != 'admin') {
-            $query->where('kode_toko', $user->kode_toko);
+            $query->where('kode_toko', $user->kode_toko)
+                ->where('dibuka_oleh', $user->id); // kasir hanya lihat sesinya sendiri
         } else {
             if ($request->filled('toko') && $request->toko !== 'semua') {
                 $query->where('kode_toko', $request->toko);
+            }
+            // Admin can filter by kasir
+            if ($request->filled('kasir') && $request->kasir !== 'semua') {
+                $query->where('dibuka_oleh', $request->kasir);
             }
         }
 
@@ -111,6 +157,11 @@ class SesiKasirController extends Controller
             ->make(true);
     }
 
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Buka: open a new session for the authenticated user
+    //  Rule: each user can only have ONE active session per toko per day.
+    // ──────────────────────────────────────────────────────────────────────────
+
     public function buka(Request $request)
     {
         $user = Auth::user();
@@ -120,32 +171,22 @@ class SesiKasirController extends Controller
             $kode_toko = $request->kode_toko;
         }
 
-        $existing = SesiKasir::where('kode_toko', $kode_toko)
-            ->where('status', 'buka')
-            ->first();
-
-        if ($existing) {
+        // 1. Guard: this user already has an open session in this toko
+        $existingUserSession = $this->getUserActiveSession($user->id, $kode_toko);
+        if ($existingUserSession) {
             return response()->json([
                 'icon' => 'error',
-                'cek_data' => 'Sesi kasir untuk toko ini sudah dibuka!',
+                'cek_data' => 'Anda sudah memiliki sesi kasir yang sedang aktif!',
             ], 400);
         }
 
-        // Check if today is already closed
-        $closedSession = SesiKasir::where('kode_toko', $kode_toko)
-            ->where('status', 'tutup')
-            ->whereDate('waktu_tutup', today())
-            ->latest()
-            ->first();
+        // 2. Guard: this user already closed a session today — needs approval to reopen
+        $userClosedToday = $this->getUserClosedSessionToday($user->id, $kode_toko);
 
-        if ($closedSession) {
+        if ($userClosedToday) {
             if ($user->role !== 'admin') {
-                // Check if there's already a pending request for today
-                $pending = SesiKasir::where('kode_toko', $kode_toko)
-                    ->where('status', 'pending_reopen')
-                    ->first();
-
-                if ($pending) {
+                // Check if already has a pending request
+                if ($userClosedToday->status === 'pending_reopen') {
                     return response()->json([
                         'icon' => 'warning',
                         'require_approval' => true,
@@ -153,8 +194,8 @@ class SesiKasirController extends Controller
                     ]);
                 }
 
-                // Update the closed session status to pending_reopen
-                $closedSession->update([
+                // Set this session to pending_reopen
+                $userClosedToday->update([
                     'status' => 'pending_reopen',
                     'catatan' => 'Pengajuan buka kembali: '.($request->catatan ?: 'Minta buka sesi kembali.'),
                 ]);
@@ -165,7 +206,8 @@ class SesiKasirController extends Controller
                     'cek_data' => 'Pengajuan pembukaan kembali sesi kasir telah dikirim ke Admin. Silakan tunggu persetujuan.',
                 ]);
             } else {
-                $closedSession->update([
+                // Admin reopens their own session directly
+                $userClosedToday->update([
                     'status' => 'buka',
                     'waktu_tutup' => null,
                     'ditutup_oleh' => null,
@@ -173,7 +215,7 @@ class SesiKasirController extends Controller
                     'saldo_akhir_sistem' => null,
                     'saldo_akhir_aktual' => null,
                     'selisih' => null,
-                    'catatan' => 'Dibuka kembali langsung oleh Admin '.$user->name.' pada '.now()->toDateTimeString(),
+                    'catatan' => 'Dibuka kembali oleh Admin '.$user->name.' pada '.now()->toDateTimeString(),
                 ]);
 
                 return response()->json([
@@ -183,6 +225,7 @@ class SesiKasirController extends Controller
             }
         }
 
+        // 3. Create a brand-new per-user session
         $request->validate([
             'saldo_awal' => 'required|numeric|min:0',
         ]);
@@ -193,6 +236,7 @@ class SesiKasirController extends Controller
             'dibuka_oleh' => $user->id,
             'saldo_awal' => $request->saldo_awal,
             'status' => 'buka',
+            'is_user_scoped' => true,
             'catatan' => null,
         ]);
 
@@ -201,6 +245,10 @@ class SesiKasirController extends Controller
             'cek_data' => 'Sesi kasir berhasil dibuka!',
         ]);
     }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Summary: fetch the authenticated user's own active session summary
+    // ──────────────────────────────────────────────────────────────────────────
 
     public function summary(Request $request)
     {
@@ -211,9 +259,8 @@ class SesiKasirController extends Controller
             $kode_toko = $request->kode_toko;
         }
 
-        $session = SesiKasir::where('kode_toko', $kode_toko)
-            ->where('status', 'buka')
-            ->first();
+        // Per-user scope: find this user's own open session
+        $session = $this->getUserActiveSession($user->id, $kode_toko);
 
         if (! $session) {
             return response()->json(['error' => 'Sesi aktif tidak ditemukan.'], 404);
@@ -231,6 +278,10 @@ class SesiKasirController extends Controller
         ]);
     }
 
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Tutup: close the authenticated user's own active session
+    // ──────────────────────────────────────────────────────────────────────────
+
     public function tutup(Request $request)
     {
         $request->validate([
@@ -245,14 +296,13 @@ class SesiKasirController extends Controller
             $kode_toko = $request->kode_toko;
         }
 
-        $session = SesiKasir::where('kode_toko', $kode_toko)
-            ->where('status', 'buka')
-            ->first();
+        // Per-user scope: only close THIS user's own session
+        $session = $this->getUserActiveSession($user->id, $kode_toko);
 
         if (! $session) {
             return response()->json([
                 'icon' => 'error',
-                'cek_data' => 'Tidak ada sesi kasir aktif yang dapat ditutup!',
+                'cek_data' => 'Tidak ada sesi kasir aktif milik Anda yang dapat ditutup!',
             ], 400);
         }
 
@@ -277,6 +327,10 @@ class SesiKasirController extends Controller
             'cek_data' => 'Sesi kasir berhasil ditutup!',
         ]);
     }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Approve / Reject (admin only)
+    // ──────────────────────────────────────────────────────────────────────────
 
     public function approve(Request $request, $id)
     {

@@ -50,18 +50,28 @@ class TransaksiController extends Controller
 
         $closed_session_today = null;
         if ($fitur_sesi_kasir) {
+            // Per-user scope: find the current user's own active session
             $active_session = SesiKasir::where('kode_toko', $data_toko->kode)
+                ->where('dibuka_oleh', $user->id)
                 ->where('status', 'buka')
+                ->where('is_user_scoped', true)
                 ->first();
+
+            // Check if THIS user closed a session today
             $today_closed = SesiKasir::where('kode_toko', $data_toko->kode)
+                ->where('dibuka_oleh', $user->id)
+                ->where('is_user_scoped', true)
                 ->where(function ($query) {
                     $query->where('status', 'tutup')
                         ->orWhere('status', 'pending_reopen');
                 })
                 ->whereDate('waktu_tutup', today())
                 ->exists();
+
             if ($today_closed) {
                 $closed_session_today = SesiKasir::where('kode_toko', $data_toko->kode)
+                    ->where('dibuka_oleh', $user->id)
+                    ->where('is_user_scoped', true)
                     ->where(function ($query) {
                         $query->where('status', 'tutup')
                             ->orWhere('status', 'pending_reopen');
@@ -70,11 +80,16 @@ class TransaksiController extends Controller
                     ->latest()
                     ->first();
             }
+
             if (! $active_session) {
                 $pending_session = SesiKasir::where('kode_toko', $data_toko->kode)
+                    ->where('dibuka_oleh', $user->id)
+                    ->where('is_user_scoped', true)
                     ->where('status', 'pending_reopen')
                     ->first();
                 $rejected_session = SesiKasir::where('kode_toko', $data_toko->kode)
+                    ->where('dibuka_oleh', $user->id)
+                    ->where('is_user_scoped', true)
                     ->where('status', 'tutup')
                     ->whereDate('waktu_tutup', today())
                     ->where('catatan', 'like', '%Ditolak%')
@@ -227,14 +242,17 @@ class TransaksiController extends Controller
         $active_session = null;
 
         if ($fitur_sesi_kasir) {
+            // Per-user scope: the cashier must have opened their OWN session
             $active_session = SesiKasir::where('kode_toko', $kode_toko)
+                ->where('dibuka_oleh', $user->id)
                 ->where('status', 'buka')
+                ->where('is_user_scoped', true)
                 ->first();
 
             if (! $active_session) {
                 return response()->json([
                     'icon' => 'error',
-                    'cek_data' => 'Sesi kasir belum dibuka! Silakan buka sesi kasir terlebih dahulu.',
+                    'cek_data' => 'Anda belum membuka sesi kasir! Silakan buka sesi terlebih dahulu.',
                 ]);
             }
         }

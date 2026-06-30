@@ -27,14 +27,38 @@ class SesiKasirTest extends TestCase
         $toko->save();
     }
 
-    public function test_cannot_access_pos_without_open_session()
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Helper: create a kasir user
+    // ──────────────────────────────────────────────────────────────────────────
+
+    protected function makeKasir(array $overrides = []): User
     {
-        $kasir = User::factory()->create([
+        return User::factory()->create(array_merge([
             'status' => 'on',
             'role' => 'kasir',
             'kode_toko' => 'TK_test',
             'shift' => 0,
+        ], $overrides));
+    }
+
+    protected function makeAdmin(): User
+    {
+        return User::factory()->create([
+            'status' => 'on',
+            'role' => 'admin',
+            'kode_toko' => 'TK_test',
+            'email' => 'admin@test.com',
+            'password' => Hash::make('secret123'),
         ]);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  POS page access
+    // ──────────────────────────────────────────────────────────────────────────
+
+    public function test_cannot_access_pos_without_open_session()
+    {
+        $kasir = $this->makeKasir();
 
         $response = $this->actingAs($kasir)->get('/transaksi/penjualan');
         $response->assertStatus(200);
@@ -42,14 +66,13 @@ class SesiKasirTest extends TestCase
         $response->assertSee('id="modalBukaKasir"', false);
     }
 
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Open session
+    // ──────────────────────────────────────────────────────────────────────────
+
     public function test_can_open_sesi_kasir()
     {
-        $kasir = User::factory()->create([
-            'status' => 'on',
-            'role' => 'kasir',
-            'kode_toko' => 'TK_test',
-            'shift' => 0,
-        ]);
+        $kasir = $this->makeKasir();
 
         $response = $this->actingAs($kasir)->post('/transaksi/penjualan/sesi-kasir/buka', [
             'saldo_awal' => 100000,
@@ -66,17 +89,50 @@ class SesiKasirTest extends TestCase
             'saldo_awal' => 100000,
             'status' => 'buka',
             'dibuka_oleh' => $kasir->id,
+            'is_user_scoped' => true,
         ]);
     }
 
-    public function test_cannot_open_duplicate_active_sesi_kasir()
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Two cashiers can open simultaneous sessions in the same toko
+    // ──────────────────────────────────────────────────────────────────────────
+
+    public function test_two_cashiers_can_have_independent_sessions_in_same_toko()
     {
-        $kasir = User::factory()->create([
-            'status' => 'on',
-            'role' => 'kasir',
-            'kode_toko' => 'TK_test',
-            'shift' => 0,
+        $kasir1 = $this->makeKasir();
+        $kasir2 = $this->makeKasir();
+
+        // Kasir 1 opens their session
+        $this->actingAs($kasir1)->post('/transaksi/penjualan/sesi-kasir/buka', [
+            'saldo_awal' => 100000,
+        ])->assertStatus(200)->assertJson(['icon' => 'success']);
+
+        // Kasir 2 can also open their OWN session simultaneously
+        $this->actingAs($kasir2)->post('/transaksi/penjualan/sesi-kasir/buka', [
+            'saldo_awal' => 150000,
+        ])->assertStatus(200)->assertJson(['icon' => 'success']);
+
+        // Both sessions should exist
+        $this->assertDatabaseHas('sesi_kasirs', [
+            'dibuka_oleh' => $kasir1->id,
+            'saldo_awal' => 100000,
+            'status' => 'buka',
         ]);
+        $this->assertDatabaseHas('sesi_kasirs', [
+            'dibuka_oleh' => $kasir2->id,
+            'saldo_awal' => 150000,
+            'status' => 'buka',
+        ]);
+        $this->assertEquals(2, SesiKasir::count());
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Duplicate session guard: same user cannot open two sessions
+    // ──────────────────────────────────────────────────────────────────────────
+
+    public function test_same_cashier_cannot_open_duplicate_active_session()
+    {
+        $kasir = $this->makeKasir();
 
         SesiKasir::create([
             'kode_toko' => 'TK_test',
@@ -84,6 +140,7 @@ class SesiKasirTest extends TestCase
             'dibuka_oleh' => $kasir->id,
             'saldo_awal' => 100000,
             'status' => 'buka',
+            'is_user_scoped' => true,
         ]);
 
         $response = $this->actingAs($kasir)->post('/transaksi/penjualan/sesi-kasir/buka', [
@@ -93,18 +150,17 @@ class SesiKasirTest extends TestCase
         $response->assertStatus(400);
         $response->assertJson([
             'icon' => 'error',
-            'cek_data' => 'Sesi kasir untuk toko ini sudah dibuka!',
+            'cek_data' => 'Anda sudah memiliki sesi kasir yang sedang aktif!',
         ]);
     }
 
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Summary and close: each cashier closes their own session
+    // ──────────────────────────────────────────────────────────────────────────
+
     public function test_can_get_summary_and_close_sesi_kasir()
     {
-        $kasir = User::factory()->create([
-            'status' => 'on',
-            'role' => 'kasir',
-            'kode_toko' => 'TK_test',
-            'shift' => 0,
-        ]);
+        $kasir = $this->makeKasir();
 
         $session = SesiKasir::create([
             'kode_toko' => 'TK_test',
@@ -112,6 +168,7 @@ class SesiKasirTest extends TestCase
             'dibuka_oleh' => $kasir->id,
             'saldo_awal' => 100000,
             'status' => 'buka',
+            'is_user_scoped' => true,
         ]);
 
         // Add some payments linked to the session
@@ -158,56 +215,64 @@ class SesiKasirTest extends TestCase
         ]);
     }
 
-    public function test_feature_sesi_kasir_can_be_disabled()
-    {
-        // Disable feature
-        SystemSetting::setByKey('fitur_sesi_kasir', 'false');
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Cashier B cannot close Cashier A's session
+    // ──────────────────────────────────────────────────────────────────────────
 
-        $kasir = User::factory()->create([
-            'status' => 'on',
-            'role' => 'kasir',
+    public function test_cashier_cannot_close_another_cashiers_session()
+    {
+        $kasir1 = $this->makeKasir();
+        $kasir2 = $this->makeKasir();
+
+        // Kasir 1 opens a session
+        SesiKasir::create([
             'kode_toko' => 'TK_test',
-            'shift' => 0,
+            'waktu_buka' => now(),
+            'dibuka_oleh' => $kasir1->id,
+            'saldo_awal' => 100000,
+            'status' => 'buka',
+            'is_user_scoped' => true,
         ]);
 
-        // Access POS: should not see active session or open modal
+        // Kasir 2 tries to close — but has no session of their own
+        $response = $this->actingAs($kasir2)->post('/transaksi/penjualan/sesi-kasir/tutup', [
+            'saldo_akhir_aktual' => 100000,
+        ]);
+
+        $response->assertStatus(400);
+        $response->assertJson([
+            'icon' => 'error',
+            'cek_data' => 'Tidak ada sesi kasir aktif milik Anda yang dapat ditutup!',
+        ]);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Feature toggle
+    // ──────────────────────────────────────────────────────────────────────────
+
+    public function test_feature_sesi_kasir_can_be_disabled()
+    {
+        SystemSetting::setByKey('fitur_sesi_kasir', 'false');
+
+        $kasir = $this->makeKasir();
+
         $response = $this->actingAs($kasir)->get('/transaksi/penjualan');
         $response->assertStatus(200);
         $response->assertSee('Nonaktif');
         $response->assertDontSee('id="modalBukaKasir"', false);
 
-        // Can store transaction without active session
-        $transResponse = $this->actingAs($kasir)->post('/transaksi/penjualan/store', [
-            'invoice' => 'TRHJ_test1234',
-            'total_harga' => 100000,
-            'pembayaran' => 100000,
-            'kembali' => 0,
-            'data' => [
-                [
-                    'nomor_paket' => 'BARANG001',
-                    'nama_barang' => 'Test Barang',
-                    'method' => 'Ecer',
-                    'jumlah_barang' => 1,
-                    'harga_item' => 100000,
-                    'harga_jual' => 100000,
-                ],
-            ],
-        ]);
-
-        // Re-enable for subsequent tests
         SystemSetting::setByKey('fitur_sesi_kasir', 'true');
     }
 
-    public function test_cannot_reopen_session_closed_today_without_admin_approval()
-    {
-        $kasir = User::factory()->create([
-            'status' => 'on',
-            'role' => 'kasir',
-            'kode_toko' => 'TK_test',
-            'shift' => 0,
-        ]);
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Per-user: cannot reopen own session closed today without admin approval
+    // ──────────────────────────────────────────────────────────────────────────
 
-        // Close a session today
+    public function test_cannot_reopen_own_session_closed_today_without_admin_approval()
+    {
+        $kasir = $this->makeKasir();
+
+        // This kasir already closed their session today
         $session = SesiKasir::create([
             'kode_toko' => 'TK_test',
             'waktu_buka' => now()->subHours(2),
@@ -216,9 +281,9 @@ class SesiKasirTest extends TestCase
             'ditutup_oleh' => $kasir->id,
             'saldo_awal' => 100000,
             'status' => 'tutup',
+            'is_user_scoped' => true,
         ]);
 
-        // Attempt to open another session (should update the existing session to pending_reopen)
         $response = $this->actingAs($kasir)->post('/transaksi/penjualan/sesi-kasir/buka', [
             'catatan' => 'Minta buka sesi kembali.',
         ]);
@@ -233,32 +298,21 @@ class SesiKasirTest extends TestCase
         $this->assertDatabaseHas('sesi_kasirs', [
             'id' => $session->id,
             'status' => 'pending_reopen',
-            'saldo_awal' => 100000,
             'catatan' => 'Pengajuan buka kembali: Minta buka sesi kembali.',
         ]);
 
-        // Ensure no duplicate session row was created
         $this->assertEquals(1, SesiKasir::count());
     }
 
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Admin approve
+    // ──────────────────────────────────────────────────────────────────────────
+
     public function test_can_reopen_session_closed_today_with_admin_approval()
     {
-        $kasir = User::factory()->create([
-            'status' => 'on',
-            'role' => 'kasir',
-            'kode_toko' => 'TK_test',
-            'shift' => 0,
-        ]);
+        $kasir = $this->makeKasir();
+        $admin = $this->makeAdmin();
 
-        $admin = User::factory()->create([
-            'status' => 'on',
-            'role' => 'admin',
-            'kode_toko' => 'TK_test',
-            'email' => 'admin@test.com',
-            'password' => Hash::make('secret123'),
-        ]);
-
-        // Close a session today
         $session = SesiKasir::create([
             'kode_toko' => 'TK_test',
             'waktu_buka' => now()->subHours(2),
@@ -266,16 +320,11 @@ class SesiKasirTest extends TestCase
             'dibuka_oleh' => $kasir->id,
             'ditutup_oleh' => $kasir->id,
             'saldo_awal' => 100000,
-            'status' => 'tutup',
-        ]);
-
-        // Set status to pending_reopen
-        $session->update([
             'status' => 'pending_reopen',
+            'is_user_scoped' => true,
             'catatan' => 'Minta buka sesi.',
         ]);
 
-        // Admin approves the request
         $response = $this->actingAs($admin)->post("/laporan/sesi-kasir/approve/{$session->id}");
 
         $response->assertStatus(200);
@@ -289,28 +338,19 @@ class SesiKasirTest extends TestCase
             'status' => 'buka',
             'waktu_tutup' => null,
             'ditutup_oleh' => null,
-            'saldo_awal' => 100000, // Keadaan modal awal / uang kembalian masih sama
+            'saldo_awal' => 100000,
         ]);
     }
 
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Admin reject
+    // ──────────────────────────────────────────────────────────────────────────
+
     public function test_can_reject_session_closed_today_by_admin()
     {
-        $kasir = User::factory()->create([
-            'status' => 'on',
-            'role' => 'kasir',
-            'kode_toko' => 'TK_test',
-            'shift' => 0,
-        ]);
+        $kasir = $this->makeKasir();
+        $admin = $this->makeAdmin();
 
-        $admin = User::factory()->create([
-            'status' => 'on',
-            'role' => 'admin',
-            'kode_toko' => 'TK_test',
-            'email' => 'admin@test.com',
-            'password' => Hash::make('secret123'),
-        ]);
-
-        // Close a session today
         $session = SesiKasir::create([
             'kode_toko' => 'TK_test',
             'waktu_buka' => now()->subHours(2),
@@ -318,16 +358,11 @@ class SesiKasirTest extends TestCase
             'dibuka_oleh' => $kasir->id,
             'ditutup_oleh' => $kasir->id,
             'saldo_awal' => 100000,
-            'status' => 'tutup',
-        ]);
-
-        // Set status to pending_reopen
-        $session->update([
             'status' => 'pending_reopen',
+            'is_user_scoped' => true,
             'catatan' => 'Minta buka sesi.',
         ]);
 
-        // Admin rejects the request
         $response = $this->actingAs($admin)->post("/laporan/sesi-kasir/reject/{$session->id}", [
             'alasan' => 'Saldo awal tidak valid.',
         ]);
@@ -340,7 +375,7 @@ class SesiKasirTest extends TestCase
 
         $this->assertDatabaseHas('sesi_kasirs', [
             'id' => $session->id,
-            'status' => 'tutup', // back to tutup status
+            'status' => 'tutup',
         ]);
     }
 }

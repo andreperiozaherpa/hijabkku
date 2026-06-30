@@ -139,7 +139,6 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
                 Route::post('/store', [PackagingBarangController::class, 'store']);
                 Route::post('/destroy', [PackagingBarangController::class, 'destroy']);
             });
-
         });
 
         Route::prefix('/barang/foto')->middleware('permission:kelola_detail_produk')->group(function () {
