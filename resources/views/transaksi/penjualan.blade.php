@@ -814,20 +814,25 @@
                 $(this).val(formatInputRupiah(val));
             });
 
+            let isBukaSubmitting = false;
             $('#formBukaKasir').submit(function(e) {
                 e.preventDefault();
+
+                // Anti double-submit: ignore if already processing
+                if (isBukaSubmitting) return;
+                isBukaSubmitting = true;
+
+                var $btn = $(this).find('button[type="submit"]');
+                var originalText = $btn.html();
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status"></span> Memproses...');
+
                 var saldo_awal = $('#modalAwalInput').val().replaceAll('.', '');
                 var catatan = $('#catatanPengajuanInput').val() || '';
-                
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
-                
+
                 $.ajax({
                     type: 'POST',
                     url: '{{ route("sesi_kasir.buka") }}',
+                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                     data: {
                         saldo_awal: saldo_awal,
                         kode_toko: $('#switchToko').val() || '{{ $data_toko->kode }}',
@@ -850,6 +855,9 @@
                         }
                     },
                     error: function(xhr) {
+                        // Re-enable on error so user can retry
+                        isBukaSubmitting = false;
+                        $btn.prop('disabled', false).html(originalText);
                         var msg = xhr.responseJSON ? xhr.responseJSON.cek_data : 'Terjadi kesalahan.';
                         Swal.fire('Error', msg, 'error');
                     }

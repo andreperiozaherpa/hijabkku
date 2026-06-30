@@ -171,79 +171,84 @@ class SesiKasirController extends Controller
             $kode_toko = $request->kode_toko;
         }
 
-        // 1. Guard: this user already has an open session in this toko
-        $existingUserSession = $this->getUserActiveSession($user->id, $kode_toko);
-        if ($existingUserSession) {
-            return response()->json([
-                'icon' => 'error',
-                'cek_data' => 'Anda sudah memiliki sesi kasir yang sedang aktif!',
-            ], 400);
-        }
+        return \DB::transaction(function () use ($user, $kode_toko, $request) {
+            // Lock the rows for this user+toko to prevent concurrent duplicate inserts
+            $existingUserSession = SesiKasir::where('kode_toko', $kode_toko)
+                ->where('dibuka_oleh', $user->id)
+                ->where('status', 'buka')
+                ->where('is_user_scoped', true)
+                ->lockForUpdate()
+                ->first();
 
-        // 2. Guard: this user already closed a session today — needs approval to reopen
-        $userClosedToday = $this->getUserClosedSessionToday($user->id, $kode_toko);
+            if ($existingUserSession) {
+                return response()->json([
+                    'icon' => 'error',
+                    'cek_data' => 'Anda sudah memiliki sesi kasir yang sedang aktif!',
+                ], 400);
+            }
 
-        if ($userClosedToday) {
-            if ($user->role !== 'admin') {
-                // Check if already has a pending request
-                if ($userClosedToday->status === 'pending_reopen') {
+            // Guard: this user already closed a session today — needs approval to reopen
+            $userClosedToday = $this->getUserClosedSessionToday($user->id, $kode_toko);
+
+            if ($userClosedToday) {
+                if ($user->role !== 'admin') {
+                    if ($userClosedToday->status === 'pending_reopen') {
+                        return response()->json([
+                            'icon' => 'warning',
+                            'require_approval' => true,
+                            'cek_data' => 'Pengajuan pembukaan kembali sesi sebelumnya masih menunggu persetujuan Admin.',
+                        ]);
+                    }
+
+                    $userClosedToday->update([
+                        'status' => 'pending_reopen',
+                        'catatan' => 'Pengajuan buka kembali: '.($request->catatan ?: 'Minta buka sesi kembali.'),
+                    ]);
+
                     return response()->json([
-                        'icon' => 'warning',
+                        'icon' => 'success',
                         'require_approval' => true,
-                        'cek_data' => 'Pengajuan pembukaan kembali sesi sebelumnya masih menunggu persetujuan Admin.',
+                        'cek_data' => 'Pengajuan pembukaan kembali sesi kasir telah dikirim ke Admin. Silakan tunggu persetujuan.',
+                    ]);
+                } else {
+                    $userClosedToday->update([
+                        'status' => 'buka',
+                        'waktu_tutup' => null,
+                        'ditutup_oleh' => null,
+                        'total_penjualan' => null,
+                        'saldo_akhir_sistem' => null,
+                        'saldo_akhir_aktual' => null,
+                        'selisih' => null,
+                        'catatan' => 'Dibuka kembali oleh Admin '.$user->name.' pada '.now()->toDateTimeString(),
+                    ]);
+
+                    return response()->json([
+                        'icon' => 'success',
+                        'cek_data' => 'Sesi kasir berhasil dibuka kembali!',
                     ]);
                 }
-
-                // Set this session to pending_reopen
-                $userClosedToday->update([
-                    'status' => 'pending_reopen',
-                    'catatan' => 'Pengajuan buka kembali: '.($request->catatan ?: 'Minta buka sesi kembali.'),
-                ]);
-
-                return response()->json([
-                    'icon' => 'success',
-                    'require_approval' => true,
-                    'cek_data' => 'Pengajuan pembukaan kembali sesi kasir telah dikirim ke Admin. Silakan tunggu persetujuan.',
-                ]);
-            } else {
-                // Admin reopens their own session directly
-                $userClosedToday->update([
-                    'status' => 'buka',
-                    'waktu_tutup' => null,
-                    'ditutup_oleh' => null,
-                    'total_penjualan' => null,
-                    'saldo_akhir_sistem' => null,
-                    'saldo_akhir_aktual' => null,
-                    'selisih' => null,
-                    'catatan' => 'Dibuka kembali oleh Admin '.$user->name.' pada '.now()->toDateTimeString(),
-                ]);
-
-                return response()->json([
-                    'icon' => 'success',
-                    'cek_data' => 'Sesi kasir berhasil dibuka kembali!',
-                ]);
             }
-        }
 
-        // 3. Create a brand-new per-user session
-        $request->validate([
-            'saldo_awal' => 'required|numeric|min:0',
-        ]);
+            // Create a brand-new per-user session
+            $request->validate([
+                'saldo_awal' => 'required|numeric|min:0',
+            ]);
 
-        SesiKasir::create([
-            'kode_toko' => $kode_toko,
-            'waktu_buka' => now(),
-            'dibuka_oleh' => $user->id,
-            'saldo_awal' => $request->saldo_awal,
-            'status' => 'buka',
-            'is_user_scoped' => true,
-            'catatan' => null,
-        ]);
+            SesiKasir::create([
+                'kode_toko' => $kode_toko,
+                'waktu_buka' => now(),
+                'dibuka_oleh' => $user->id,
+                'saldo_awal' => $request->saldo_awal,
+                'status' => 'buka',
+                'is_user_scoped' => true,
+                'catatan' => null,
+            ]);
 
-        return response()->json([
-            'icon' => 'success',
-            'cek_data' => 'Sesi kasir berhasil dibuka!',
-        ]);
+            return response()->json([
+                'icon' => 'success',
+                'cek_data' => 'Sesi kasir berhasil dibuka!',
+            ]);
+        });
     }
 
     // ──────────────────────────────────────────────────────────────────────────
