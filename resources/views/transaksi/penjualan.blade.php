@@ -370,13 +370,15 @@
             </div>
 
             <!-- Simulation Mode Banner -->
-            @if($xenditSimulationMode === 'true')
-            <div class="alert alert-warning d-flex align-items-center mb-4" role="alert" style="border-radius: 10px; border-left: 4px solid #ffc107;">
-                <i data-acorn-icon="warning" class="me-2" data-acorn-size="20"></i>
-                <div>
-                    <strong>Mode Simulasi Xendit Aktif</strong> — Pembayaran QRIS/VA/E-Wallet tidak akan mempengaruhi stok. Pembayaran Tunai berjalan normal.
+            @if ($xenditSimulationMode === 'true')
+                <div class="alert alert-warning d-flex align-items-center mb-4" role="alert"
+                    style="border-radius: 10px; border-left: 4px solid #ffc107;">
+                    <i data-acorn-icon="warning" class="me-2" data-acorn-size="20"></i>
+                    <div>
+                        <strong>Mode Simulasi Xendit Aktif</strong> — Pembayaran QRIS/VA/E-Wallet tidak akan mempengaruhi
+                        stok. Pembayaran Tunai berjalan normal.
+                    </div>
                 </div>
-            </div>
             @endif
 
             <!-- Top Info Bar -->
@@ -387,10 +389,12 @@
                             <div class="pos-info-icon"><i data-acorn-icon="shop" data-acorn-size="18"></i></div>
                             <div>
                                 <div class="pos-info-label">Toko / Cabang</div>
-                                @if(Auth::user()->role === 'admin')
-                                    <select class="form-select form-select-sm mt-1" id="switchToko" style="min-width: 150px; font-weight: 700; color: var(--body);">
-                                        @foreach($all_tokos as $t)
-                                            <option value="{{ $t->kode }}" {{ $data_toko->kode == $t->kode ? 'selected' : '' }}>
+                                @if (Auth::user()->role === 'admin')
+                                    <select class="form-select form-select-sm mt-1" id="switchToko"
+                                        style="min-width: 150px; font-weight: 700; color: var(--body);">
+                                        @foreach ($all_tokos as $t)
+                                            <option value="{{ $t->kode }}"
+                                                {{ $data_toko->kode == $t->kode ? 'selected' : '' }}>
                                                 {{ $t->nama_toko }}
                                             </option>
                                         @endforeach
@@ -417,25 +421,21 @@
                             </div>
                             <div>
                                 <div class="pos-info-label">Sesi Kasir</div>
-                                @if($fitur_sesi_kasir)
-                                    @if($active_session)
+                                @if ($fitur_sesi_kasir)
+                                    @if ($active_session)
                                         <div class="d-flex flex-column gap-1">
                                             <div class="pos-info-val text-success d-flex align-items-center gap-1">
                                                 <i data-acorn-icon="check-circle" data-acorn-size="13" class="me-1"></i>
                                                 <span>Sesi Aktif
-                                                    @if(Auth::user()->role === 'admin')
+                                                    @if (Auth::user()->role === 'admin')
                                                         — Rp {{ number_format($active_session->saldo_awal, 0, ',', '.') }}
                                                     @endif
                                                 </span>
                                             </div>
-                                            <button
-                                                type="button"
-                                                id="btnTutupKasir"
+                                            <button type="button" id="btnTutupKasir"
                                                 class="btn btn-danger btn-sm fw-semibold d-inline-flex align-items-center gap-1"
                                                 style="font-size: 0.78rem; padding: 0.3rem 0.75rem; border-radius: 50px;"
-                                                title="Tutup sesi kasir sekarang"
-                                                aria-label="Tutup Sesi Kasir"
-                                            >
+                                                title="Tutup sesi kasir sekarang" aria-label="Tutup Sesi Kasir">
                                                 <i data-acorn-icon="power" data-acorn-size="13"></i>
                                                 Tutup Kasir
                                             </button>
@@ -446,15 +446,11 @@
                                                 <i data-acorn-icon="close-circle" data-acorn-size="13" class="me-1"></i>
                                                 <span>Belum Buka</span>
                                             </div>
-                                            <button
-                                                type="button"
+                                            <button type="button"
                                                 class="btn btn-success btn-sm fw-semibold d-inline-flex align-items-center gap-1"
                                                 style="font-size: 0.78rem; padding: 0.3rem 0.75rem; border-radius: 50px;"
-                                                title="Buka sesi kasir"
-                                                aria-label="Buka Sesi Kasir"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#modalBukaKasir"
-                                            >
+                                                title="Buka sesi kasir" aria-label="Buka Sesi Kasir" data-bs-toggle="modal"
+                                                data-bs-target="#modalBukaKasir">
                                                 <i data-acorn-icon="play" data-acorn-size="13"></i>
                                                 Buka Kasir
                                             </button>
@@ -620,89 +616,180 @@
                 </div>
             </div>
         </div>
-        @if($fitur_sesi_kasir)
-        <!-- Modal Buka Kasir -->
-        <div class="modal fade" id="modalBukaKasir" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalBukaKasirLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title fw-bold text-white" id="modalBukaKasirLabel">
-                            <i data-acorn-icon="wallet" class="me-2 text-white"></i> Mulaikan Sesi Penjualan (Buka Kasir)
-                        </h5>
-                    </div>
-                    <div class="modal-body py-4">
-                        @if($pending_session)
-                            <div class="text-center py-3">
-                                <div class="spinner-border text-warning mb-3" role="status" style="width: 3rem; height: 3rem;">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                <h5 class="fw-bold text-warning mb-2">Menunggu Persetujuan Admin</h5>
-                                <p class="text-muted small px-3">
-                                    Pengajuan pembukaan kembali sesi kasir dengan modal awal <strong>Rp. {{ number_format($pending_session->saldo_awal, 0, ',', '.') }}</strong> sedang menunggu persetujuan Admin.
-                                </p>
-                                <div class="alert alert-light border-0 small mb-4 text-start">
-                                    <strong>Keterangan Kasir:</strong><br>
-                                    {{ $pending_session->catatan }}
-                                </div>
-                                <div class="d-grid gap-2 px-3">
-                                    <button type="button" class="btn btn-primary fw-bold" onclick="location.reload()">
-                                        <i data-acorn-icon="refresh" class="me-1"></i> PERIKSA STATUS PERSATUJUAN
-                                    </button>
-                                </div>
-                            </div>
-                        @else
-                            <form id="formBukaKasir" data-no-spinner>
-                                @if($today_closed)
-                                    <div class="alert alert-warning border-0 mb-3 small d-flex align-items-center">
-                                        <i data-acorn-icon="warning" class="me-2 text-warning"></i>
-                                        <div>
-                                            <strong>Peringatan!</strong> Sesi kasir hari ini sudah ditutup.
-                                            @if(Auth::user()->role !== 'admin')
-                                                Pengajuan pembukaan sesi baru memerlukan persetujuan dari Admin.
-                                            @else
-                                                Anda masuk sebagai Admin, sesi baru dapat langsung dibuka dengan mencatat keterangan approval di catatan.
-                                            @endif
-                                        </div>
+        @if ($fitur_sesi_kasir)
+            <!-- Modal Buka Kasir -->
+            <div class="modal fade" id="modalBukaKasir" data-bs-backdrop="static" data-bs-keyboard="false"
+                tabindex="-1" aria-labelledby="modalBukaKasirLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title fw-bold text-white" id="modalBukaKasirLabel">
+                                <i data-acorn-icon="wallet" class="me-2 text-white"></i> Mulaikan Sesi Penjualan (Buka
+                                Kasir)
+                            </h5>
+                        </div>
+                        <div class="modal-body py-4">
+                            @if ($pending_session)
+                                <div class="text-center py-3">
+                                    <div class="spinner-border text-warning mb-3" role="status"
+                                        style="width: 3rem; height: 3rem;">
+                                        <span class="visually-hidden">Loading...</span>
                                     </div>
-                                @endif
-
-                                @if($rejected_session)
-                                    <div class="alert alert-danger border-0 mb-3 small d-flex align-items-center">
-                                        <i data-acorn-icon="close" class="me-2 text-danger"></i>
-                                        <div>
-                                            <strong>Pengajuan Sebelumnya Ditolak!</strong><br>
-                                            {{ $rejected_session->catatan }}
-                                        </div>
+                                    <h5 class="fw-bold text-warning mb-2">Menunggu Persetujuan Admin</h5>
+                                    <p class="text-muted small px-3">
+                                        Pengajuan pembukaan kembali sesi kasir dengan modal awal <strong>Rp.
+                                            {{ number_format($pending_session->saldo_awal, 0, ',', '.') }}</strong> sedang
+                                        menunggu persetujuan Admin.
+                                    </p>
+                                    <div class="alert alert-light border-0 small mb-4 text-start">
+                                        <strong>Keterangan Kasir:</strong><br>
+                                        {{ $pending_session->catatan }}
                                     </div>
-                                @endif
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold text-alternate">Toko / Cabang</label>
-                                    <input type="text" class="form-control bg-light" value="{{ $data_toko->nama_toko }}" readonly>
+                                    <div class="d-grid gap-2 px-3">
+                                        <button type="button" class="btn btn-primary fw-bold"
+                                            onclick="location.reload()">
+                                            <i data-acorn-icon="refresh" class="me-1"></i> PERIKSA STATUS PERSATUJUAN
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold text-alternate">Petugas</label>
-                                    <input type="text" class="form-control bg-light" value="{{ Auth::user()->name }}" readonly>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="modalAwalInput" class="form-label fw-bold text-alternate">Modal Awal / Uang Kembalian (Rp)</label>
-                                    @if($today_closed && Auth::user()->role !== 'admin' && $closed_session_today)
-                                        <input type="text" class="form-control form-control-lg fw-bold text-primary bg-light" id="modalAwalInput" value="{{ number_format($closed_session_today->saldo_awal, 0, ',', '.') }}" readonly required>
-                                    @else
-                                        <input type="text" class="form-control form-control-lg fw-bold text-primary" id="modalAwalInput" placeholder="Masukkan nominal modal awal" required>
+                            @else
+                                <form id="formBukaKasir" data-no-spinner>
+                                    @if ($today_closed)
+                                        <div class="alert alert-warning border-0 mb-3 small d-flex align-items-center">
+                                            <i data-acorn-icon="warning" class="me-2 text-warning"></i>
+                                            <div>
+                                                <strong>Peringatan!</strong> Sesi kasir hari ini sudah ditutup.
+                                                @if (Auth::user()->role !== 'admin')
+                                                    Pengajuan pembukaan sesi baru memerlukan persetujuan dari Admin.
+                                                @else
+                                                    Anda masuk sebagai Admin, sesi baru dapat langsung dibuka dengan
+                                                    mencatat keterangan approval di catatan.
+                                                @endif
+                                            </div>
+                                        </div>
                                     @endif
-                                </div>
-                                
-                                @if($today_closed && Auth::user()->role !== 'admin')
-                                    <div class="mb-3">
-                                        <label for="catatanPengajuanInput" class="form-label fw-bold text-alternate">Alasan Pengajuan Kembali (Wajib)</label>
-                                        <textarea class="form-control" id="catatanPengajuanInput" rows="2" placeholder="Contoh: Pergantian shift tambahan..." required></textarea>
-                                    </div>
-                                @endif
 
+                                    @if ($rejected_session)
+                                        <div class="alert alert-danger border-0 mb-3 small d-flex align-items-center">
+                                            <i data-acorn-icon="close" class="me-2 text-danger"></i>
+                                            <div>
+                                                <strong>Pengajuan Sebelumnya Ditolak!</strong><br>
+                                                {{ $rejected_session->catatan }}
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-alternate">Toko / Cabang</label>
+                                        <input type="text" class="form-control bg-light"
+                                            value="{{ $data_toko->nama_toko }}" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-alternate">Petugas</label>
+                                        <input type="text" class="form-control bg-light"
+                                            value="{{ Auth::user()->name }}" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="modalAwalInput" class="form-label fw-bold text-alternate">Modal Awal /
+                                            Uang Kembalian (Rp)</label>
+                                        @if ($today_closed && Auth::user()->role !== 'admin' && $closed_session_today)
+                                            <input type="text"
+                                                class="form-control form-control-lg fw-bold text-primary bg-light"
+                                                id="modalAwalInput"
+                                                value="{{ number_format($closed_session_today->saldo_awal, 0, ',', '.') }}"
+                                                readonly required>
+                                        @else
+                                            <input type="text"
+                                                class="form-control form-control-lg fw-bold text-primary"
+                                                id="modalAwalInput" placeholder="Masukkan nominal modal awal" required>
+                                        @endif
+                                    </div>
+
+                                    @if ($today_closed && Auth::user()->role !== 'admin')
+                                        <div class="mb-3">
+                                            <label for="catatanPengajuanInput"
+                                                class="form-label fw-bold text-alternate">Alasan Pengajuan Kembali
+                                                (Wajib)</label>
+                                            <textarea class="form-control" id="catatanPengajuanInput" rows="2"
+                                                placeholder="Contoh: Pergantian shift tambahan..." required></textarea>
+                                        </div>
+                                    @endif
+
+                                    <div class="d-grid mt-4">
+                                        <button type="submit" class="btn btn-primary btn-lg fw-bold">
+                                            {{ $today_closed && Auth::user()->role !== 'admin' ? 'KIRIM PENGAJUAN BUKA SESI' : 'BUKA SESI KASIR' }}
+                                        </button>
+                                    </div>
+                                    <div class="d-grid mt-2">
+                                        <a href="{{ route('dashboard') }}" class="btn btn-outline-muted btn-lg">
+                                            <i data-acorn-icon="arrow-left" class="me-1"></i> Kembali ke Dashboard
+                                        </a>
+                                    </div>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Tutup Kasir -->
+            <div class="modal fade" id="modalTutupKasir" tabindex="-1" aria-labelledby="modalTutupKasirLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title fw-bold text-white" id="modalTutupKasirLabel">
+                                <i data-acorn-icon="lock-off" class="me-2 text-white"></i> Tutup Sesi Penjualan (Tutup
+                                Kasir)
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body py-4">
+                            <form id="formTutupKasir" data-no-spinner>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label small text-muted">Dibuka Oleh</label>
+                                        <div class="fw-bold" id="tutupDibukaOleh">-</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small text-muted">Waktu Buka</label>
+                                        <div class="fw-bold" id="tutupWaktuBuka">-</div>
+                                    </div>
+                                </div>
+                                <hr class="my-3">
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span class="text-alternate">Modal Awal:</span>
+                                    <span class="fw-bold" id="tutupSaldoAwal">Rp 0</span>
+                                </div>
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span class="text-alternate">Total Penjualan Tunai:</span>
+                                    <span class="fw-bold text-success" id="tutupTotalPenjualan">Rp 0</span>
+                                </div>
+                                <div class="mb-3 d-flex justify-content-between p-2 bg-light rounded">
+                                    <span class="text-alternate fw-bold">Saldo Akhir (Sistem):</span>
+                                    <span class="fw-bold text-primary" id="tutupSaldoSistem">Rp 0</span>
+                                </div>
+                                <hr class="my-3">
+                                <div class="mb-3">
+                                    <label for="saldoAktualInput" class="form-label fw-bold text-alternate">Uang Fisik di
+                                        Laci (Rp)</label>
+                                    <input type="text" class="form-control form-control-lg fw-bold text-primary"
+                                        id="saldoAktualInput" placeholder="Hitung dan masukkan total uang laci" required>
+                                </div>
+                                <div class="mb-3 d-flex justify-content-between p-2 rounded" id="selisihContainer"
+                                    style="background-color: var(--background);">
+                                    <span class="fw-bold text-alternate">Selisih:</span>
+                                    <span class="fw-bold" id="tutupSelisih">Rp 0</span>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="tutupCatatan" class="form-label fw-bold text-alternate">Catatan /
+                                        Keterangan</label>
+                                    <textarea class="form-control" id="tutupCatatan" rows="2" placeholder="Contoh: Selisih minus karena..."></textarea>
+                                </div>
                                 <div class="d-grid mt-4">
-                                    <button type="submit" class="btn btn-primary btn-lg fw-bold">
-                                        {{ $today_closed && Auth::user()->role !== 'admin' ? 'KIRIM PENGAJUAN BUKA SESI' : 'BUKA SESI KASIR' }}
+                                    <button type="submit" class="btn btn-danger btn-lg fw-bold">
+                                        TUTUP SESI KASIR
                                     </button>
                                 </div>
                                 <div class="d-grid mt-2">
@@ -711,75 +798,10 @@
                                     </a>
                                 </div>
                             </form>
-                        @endif
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Modal Tutup Kasir -->
-        <div class="modal fade" id="modalTutupKasir" tabindex="-1" aria-labelledby="modalTutupKasirLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title fw-bold text-white" id="modalTutupKasirLabel">
-                            <i data-acorn-icon="lock-off" class="me-2 text-white"></i> Tutup Sesi Penjualan (Tutup Kasir)
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body py-4">
-                        <form id="formTutupKasir" data-no-spinner>
-                            <div class="row g-3 mb-3">
-                                <div class="col-6">
-                                    <label class="form-label small text-muted">Dibuka Oleh</label>
-                                    <div class="fw-bold" id="tutupDibukaOleh">-</div>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label small text-muted">Waktu Buka</label>
-                                    <div class="fw-bold" id="tutupWaktuBuka">-</div>
-                                </div>
-                            </div>
-                            <hr class="my-3">
-                            <div class="mb-3 d-flex justify-content-between">
-                                <span class="text-alternate">Modal Awal:</span>
-                                <span class="fw-bold" id="tutupSaldoAwal">Rp 0</span>
-                            </div>
-                            <div class="mb-3 d-flex justify-content-between">
-                                <span class="text-alternate">Total Penjualan Tunai:</span>
-                                <span class="fw-bold text-success" id="tutupTotalPenjualan">Rp 0</span>
-                            </div>
-                            <div class="mb-3 d-flex justify-content-between p-2 bg-light rounded">
-                                <span class="text-alternate fw-bold">Saldo Akhir (Sistem):</span>
-                                <span class="fw-bold text-primary" id="tutupSaldoSistem">Rp 0</span>
-                            </div>
-                            <hr class="my-3">
-                            <div class="mb-3">
-                                <label for="saldoAktualInput" class="form-label fw-bold text-alternate">Uang Fisik di Laci (Rp)</label>
-                                <input type="text" class="form-control form-control-lg fw-bold text-primary" id="saldoAktualInput" placeholder="Hitung dan masukkan total uang laci" required>
-                            </div>
-                            <div class="mb-3 d-flex justify-content-between p-2 rounded" id="selisihContainer" style="background-color: var(--background);">
-                                <span class="fw-bold text-alternate">Selisih:</span>
-                                <span class="fw-bold" id="tutupSelisih">Rp 0</span>
-                            </div>
-                            <div class="mb-3">
-                                <label for="tutupCatatan" class="form-label fw-bold text-alternate">Catatan / Keterangan</label>
-                                <textarea class="form-control" id="tutupCatatan" rows="2" placeholder="Contoh: Selisih minus karena..."></textarea>
-                            </div>
-                            <div class="d-grid mt-4">
-                                <button type="submit" class="btn btn-danger btn-lg fw-bold">
-                                    TUTUP SESI KASIR
-                                </button>
-                            </div>
-                            <div class="d-grid mt-2">
-                                <a href="{{ route('dashboard') }}" class="btn btn-outline-muted btn-lg">
-                                    <i data-acorn-icon="arrow-left" class="me-1"></i> Kembali ke Dashboard
-                                </a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
         @endif
     </main>
 @endsection
@@ -804,7 +826,7 @@
             setInterval(updateClock, 1000);
             updateClock();
 
-            @if($fitur_sesi_kasir && !$active_session)
+            @if ($fitur_sesi_kasir && !$active_session)
                 var myModal = new bootstrap.Modal(document.getElementById('modalBukaKasir'), {});
                 myModal.show();
             @endif
@@ -824,15 +846,19 @@
 
                 var $btn = $(this).find('button[type="submit"]');
                 var originalText = $btn.html();
-                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status"></span> Memproses...');
+                $btn.prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Memproses...'
+                );
 
                 var saldo_awal = $('#modalAwalInput').val().replaceAll('.', '');
                 var catatan = $('#catatanPengajuanInput').val() || '';
 
                 $.ajax({
                     type: 'POST',
-                    url: '{{ route("sesi_kasir.buka") }}',
-                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                    url: '{{ route('sesi_kasir.buka') }}',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
                     data: {
                         saldo_awal: saldo_awal,
                         kode_toko: $('#switchToko').val() || '{{ $data_toko->kode }}',
@@ -858,7 +884,8 @@
                         // Re-enable on error so user can retry
                         isBukaSubmitting = false;
                         $btn.prop('disabled', false).html(originalText);
-                        var msg = xhr.responseJSON ? xhr.responseJSON.cek_data : 'Terjadi kesalahan.';
+                        var msg = xhr.responseJSON ? xhr.responseJSON.cek_data :
+                            'Terjadi kesalahan.';
                         Swal.fire('Error', msg, 'error');
                     }
                 });
@@ -867,7 +894,7 @@
             $('#btnTutupKasir').click(function() {
                 $.ajax({
                     type: 'GET',
-                    url: '{{ route("sesi_kasir.summary") }}',
+                    url: '{{ route('sesi_kasir.summary') }}',
                     data: {
                         kode_toko: $('#switchToko').val() || '{{ $data_toko->kode }}'
                     },
@@ -877,13 +904,14 @@
                         $('#tutupSaldoAwal').text('Rp ' + rupiah(res.saldo_awal));
                         $('#tutupTotalPenjualan').text('Rp ' + rupiah(res.total_penjualan));
                         $('#tutupSaldoSistem').text('Rp ' + rupiah(res.saldo_akhir_sistem));
-                        
+
                         $('#saldoAktualInput').data('sistem', res.saldo_akhir_sistem).val('');
                         $('#tutupSelisih').text('Rp 0').removeClass('text-success text-danger');
                         $('#selisihContainer').css('background-color', 'var(--background)');
                         $('#tutupCatatan').val('');
-                        
-                        var closingModal = new bootstrap.Modal(document.getElementById('modalTutupKasir'), {});
+
+                        var closingModal = new bootstrap.Modal(document.getElementById(
+                            'modalTutupKasir'), {});
                         closingModal.show();
                     },
                     error: function() {
@@ -899,13 +927,15 @@
                 var inputVal = parseInt(formattedVal.replaceAll('.', '')) || 0;
                 var sistemVal = parseInt($(this).data('sistem')) || 0;
                 var selisih = inputVal - sistemVal;
-                
+
                 var formatted = rupiah(Math.abs(selisih));
                 if (selisih > 0) {
-                    $('#tutupSelisih').text('+ Rp ' + formatted).addClass('text-success').removeClass('text-danger');
+                    $('#tutupSelisih').text('+ Rp ' + formatted).addClass('text-success').removeClass(
+                        'text-danger');
                     $('#selisihContainer').css('background-color', 'rgba(40, 167, 69, 0.15)');
                 } else if (selisih < 0) {
-                    $('#tutupSelisih').text('- Rp ' + formatted).addClass('text-danger').removeClass('text-success');
+                    $('#tutupSelisih').text('- Rp ' + formatted).addClass('text-danger').removeClass(
+                        'text-success');
                     $('#selisihContainer').css('background-color', 'rgba(220, 53, 69, 0.15)');
                 } else {
                     $('#tutupSelisih').text('Rp 0').removeClass('text-success text-danger');
@@ -917,16 +947,16 @@
                 e.preventDefault();
                 var saldo_akhir_aktual = $('#saldoAktualInput').val().replaceAll('.', '');
                 var catatan = $('#tutupCatatan').val();
-                
+
                 $.ajaxSetup({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     }
                 });
-                
+
                 $.ajax({
                     type: 'POST',
-                    url: '{{ route("sesi_kasir.tutup") }}',
+                    url: '{{ route('sesi_kasir.tutup') }}',
                     data: {
                         saldo_akhir_aktual: saldo_akhir_aktual,
                         catatan: catatan,
@@ -941,7 +971,8 @@
                         }).then(() => location.reload());
                     },
                     error: function(xhr) {
-                        var msg = xhr.responseJSON ? xhr.responseJSON.cek_data : 'Terjadi kesalahan.';
+                        var msg = xhr.responseJSON ? xhr.responseJSON.cek_data :
+                            'Terjadi kesalahan.';
                         Swal.fire('Error', msg, 'error');
                     }
                 });
@@ -1044,8 +1075,10 @@
                     var total_jual = $(this).find('.totalJual').text().replaceAll('.', '');
 
                     var visualRow = $('#visual_transaksi_' + kode_barang);
-                    var priceRetail = (visualRow.attr('data-harga_jual') || harga_jual).toString().replaceAll('.', '');
-                    var priceGrosir = (visualRow.attr('data-harga_grosir') || harga_jual).toString().replaceAll('.', '');
+                    var priceRetail = (visualRow.attr('data-harga_jual') || harga_jual).toString()
+                        .replaceAll('.', '');
+                    var priceGrosir = (visualRow.attr('data-harga_grosir') || harga_jual).toString()
+                        .replaceAll('.', '');
 
                     cartItems.push({
                         kode_barang: kode_barang,
@@ -1088,8 +1121,10 @@
                     var nama_barang = item.nama_barang;
                     var qty = item.qty;
                     var method = item.method || 'umum';
-                    var harga_jual_retail = parseInt((item.priceRetail || '0').toString().replaceAll('.', '')) || 0;
-                    var harga_grosir = parseInt((item.priceGrosir || '0').toString().replaceAll('.', '')) || 0;
+                    var harga_jual_retail = parseInt((item.priceRetail || '0').toString().replaceAll('.',
+                        '')) || 0;
+                    var harga_grosir = parseInt((item.priceGrosir || '0').toString().replaceAll('.', '')) ||
+                        0;
 
                     var unitPrice = method === 'grosir' ? harga_grosir : harga_jual_retail;
                     var totalJual = unitPrice * qty;
@@ -1216,26 +1251,38 @@
             // Clear cart after successful Xendit payment redirect
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('payment_status') === 'success') {
-                localStorage.removeItem('hijabkku_pos_cart');
-                // Clean the URL without reloading
-                window.history.replaceState({}, document.title, '/transaksi/penjualan');
+                if (window.opener && !window.opener.closed) {
+                    window.close();
+                } else {
+                    localStorage.removeItem('hijabkku_pos_cart');
+                    // Clean the URL without reloading
+                    window.history.replaceState({}, document.title, '/transaksi/penjualan');
+                }
             } else if (urlParams.get('payment_status') === 'simulation') {
-                localStorage.removeItem('hijabkku_pos_cart');
-                window.history.replaceState({}, document.title, '/transaksi/penjualan');
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Simulasi Pembayaran',
-                    text: 'Pembayaran berhasil disimulasikan! (Mode simulasi — stok tidak dikurangi)',
-                    confirmButtonColor: '#8B7355'
-                });
+                if (window.opener && !window.opener.closed) {
+                    window.close();
+                } else {
+                    localStorage.removeItem('hijabkku_pos_cart');
+                    window.history.replaceState({}, document.title, '/transaksi/penjualan');
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Simulasi Pembayaran',
+                        text: 'Pembayaran berhasil disimulasikan! (Mode simulasi — stok tidak dikurangi)',
+                        confirmButtonColor: '#8B7355'
+                    });
+                }
             } else if (urlParams.get('payment_status') === 'failure') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Pembayaran Gagal',
-                    text: 'Pembayaran tidak berhasil. Silakan coba lagi.',
-                    confirmButtonColor: '#8B7355'
-                });
-                window.history.replaceState({}, document.title, '/transaksi/penjualan');
+                if (window.opener && !window.opener.closed) {
+                    window.close();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Pembayaran Gagal',
+                        text: 'Pembayaran tidak berhasil. Silakan coba lagi.',
+                        confirmButtonColor: '#8B7355'
+                    });
+                    window.history.replaceState({}, document.title, '/transaksi/penjualan');
+                }
             }
 
             ajaxQuery('get', '/transaksi/penjualan/create', {
@@ -1316,8 +1363,10 @@
                 var kode_barang = $(this).attr('data-kode_barang');
                 var sisaStock = parseInt($(this).find('.sisaStock').attr('data-jumlah'));
                 var exists = $('.transaksi #transaksi_' + kode_barang).length;
-                var harga_jual_retail = parseInt(($(this).attr('data-harga_jual') || '0').toString().replaceAll('.', '')) || 0;
-                var harga_grosir = parseInt(($(this).attr('data-harga_grosir') || '0').toString().replaceAll('.', '')) || 0;
+                var harga_jual_retail = parseInt(($(this).attr('data-harga_jual') || '0').toString()
+                    .replaceAll('.', '')) || 0;
+                var harga_grosir = parseInt(($(this).attr('data-harga_grosir') || '0').toString()
+                    .replaceAll('.', '')) || 0;
 
                 var metode = 'umum';
                 if (exists >= 1) {
@@ -1423,8 +1472,10 @@
                 var newMethod = $(this).val();
 
                 var visualRow = $('#visual_transaksi_' + kode_barang);
-                var priceRetail = parseInt((visualRow.attr('data-harga_jual') || '0').toString().replaceAll('.', ''));
-                var priceGrosir = parseInt((visualRow.attr('data-harga_grosir') || '0').toString().replaceAll('.', ''));
+                var priceRetail = parseInt((visualRow.attr('data-harga_jual') || '0').toString().replaceAll(
+                    '.', ''));
+                var priceGrosir = parseInt((visualRow.attr('data-harga_grosir') || '0').toString()
+                    .replaceAll('.', ''));
 
                 var newUnitPrice = newMethod === 'grosir' ? priceGrosir : priceRetail;
                 var count = parseInt(visualRow.find('.visual-counter').text());
@@ -1693,23 +1744,35 @@
                         if (result.isConfirmed) {
                             var resp = result.value;
                             if (resp.success) {
-                                // Show Checkout URL Iframe or QR code
+                                // Buka Xendit checkout di tab baru
+                                var checkoutWindow = window.open(resp.checkout_url, '_blank');
+
+                                // Tampilkan SweetAlert Loading/Menunggu
                                 Swal.fire({
-                                    title: 'Selesaikan Pembayaran',
+                                    title: 'Menunggu Pembayaran',
                                     html: `
-                                        <div class="mb-2 text-center text-muted fs-7">Silahkan selesaikan pembayaran. Pop-up ini akan tertutup otomatis jika berhasil dibayar.</div>
-                                        <div style="height: 400px; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
-                                            <iframe src="${resp.checkout_url}" style="width: 100%; height: 100%; border: none;"></iframe>
+                                        <div class="text-center">
+                                            <div class="spinner-border text-primary mb-3" role="status" style="width:2.5rem;height:2.5rem;"></div>
+                                            <p class="text-muted mb-1" style="font-size:0.9rem;">Halaman pembayaran telah dibuka di tab baru.</p>
+                                            <p class="text-muted mb-3" style="font-size:0.85rem;">Pop-up ini akan tertutup otomatis setelah pembayaran berhasil.</p>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.open('${resp.checkout_url}', '_blank')">
+                                                <i class="bi bi-box-arrow-up-right me-1"></i> Buka Ulang Halaman Bayar
+                                            </button>
                                         </div>
                                     `,
                                     showConfirmButton: false,
                                     allowOutsideClick: false,
                                     allowEscapeKey: false,
-                                    width: '450px'
+                                    width: '420px'
                                 });
 
                                 // Start listening to Firebase for Payment Success
                                 window.listenToPaymentSuccess(invoice, function(status, data) {
+                                    // Tutup tab Xendit jika masih terbuka
+                                    if (checkoutWindow && !checkoutWindow.closed) {
+                                        checkoutWindow.close();
+                                    }
+
                                     if (status === 'PAID') {
                                         Swal.fire({
                                             icon: 'success',
