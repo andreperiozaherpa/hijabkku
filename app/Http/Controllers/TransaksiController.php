@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\DataBarang;
 use App\Models\Pembayaran;
-use App\Models\PendingTransaction;
 use App\Models\SesiKasir;
 use App\Models\StockOpname;
 use App\Models\StockOpnameAudit;
@@ -15,12 +14,10 @@ use App\Models\Toko;
 use App\Models\Transaksi;
 use App\Models\User;
 use App\Services\FirebaseService;
-use App\Services\XenditWebhookService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class TransaksiController extends Controller
@@ -98,29 +95,7 @@ class TransaksiController extends Controller
             }
         }
 
-        // Local/test fallback: process stale PENDING Xendit transactions for this toko
         $xenditSimulationMode = SystemSetting::getByKey('xendit_simulation_mode', 'false');
-
-        if (in_array(config('app.env'), ['local', 'testing']) && $data_toko && $xenditSimulationMode !== 'true') {
-            $stalePending = PendingTransaction::where('kode_toko', $data_toko->kode)
-                ->where('status', 'PENDING')
-                ->where('created_at', '<', now()->subSeconds(5))
-                ->get();
-
-            if ($stalePending->isNotEmpty()) {
-                $webhookService = app(XenditWebhookService::class);
-                foreach ($stalePending as $pending) {
-                    try {
-                        $webhookService->handleInvoicePaid([
-                            'external_id' => $pending->kode_invoice,
-                            'status' => 'PAID',
-                        ]);
-                    } catch (\Exception $e) {
-                        Log::warning("Local fallback: failed to process {$pending->kode_invoice}: ".$e->getMessage());
-                    }
-                }
-            }
-        }
 
         return view('transaksi.penjualan', [
             'data_toko' => $data_toko,
