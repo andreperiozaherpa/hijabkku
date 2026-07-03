@@ -22,7 +22,7 @@
             </div>
             <!-- Title and Top Buttons End -->
 
-            @if(Auth::user()->role === 'admin' && $pending_approvals->count() > 0)
+            @if (Auth::user()->role === 'admin' && $pending_approvals->count() > 0)
                 <!-- Pending Approvals Start -->
                 <div class="row mb-4">
                     <div class="col-12">
@@ -47,18 +47,23 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($pending_approvals as $pending)
+                                            @foreach ($pending_approvals as $pending)
                                                 <tr class="border-bottom">
                                                     <td class="fw-bold">{{ $pending->toko->nama_toko ?? '-' }}</td>
                                                     <td>{{ $pending->dibukaOleh->name ?? '-' }}</td>
-                                                    <td class="fw-bold text-primary">Rp. {{ number_format($pending->saldo_awal, 0, ',', '.') }}</td>
+                                                    <td class="fw-bold text-primary">Rp.
+                                                        {{ number_format($pending->saldo_awal, 0, ',', '.') }}</td>
                                                     <td>{{ $pending->catatan }}</td>
                                                     <td>{{ $pending->waktu_buka->format('d M Y H:i') }}</td>
                                                     <td class="text-end py-2">
-                                                        <button type="button" class="btn btn-sm btn-outline-success btn-approve me-1" data-id="{{ $pending->id }}">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-outline-success btn-approve me-1"
+                                                            data-id="{{ $pending->id }}">
                                                             Setujui
                                                         </button>
-                                                        <button type="button" class="btn btn-sm btn-outline-danger btn-reject" data-id="{{ $pending->id }}">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-outline-danger btn-reject"
+                                                            data-id="{{ $pending->id }}">
                                                             Tolak
                                                         </button>
                                                     </td>
@@ -157,36 +162,62 @@
                 destroy: true,
                 paging: true,
                 pageLength: 20,
-                order: [[2, "asc"]],
+                order: [
+                    [2, "desc"]
+                ],
                 responsive: true,
                 ajax: {
-                    url: '{{ route("laporan.sesi_kasir.show") }}',
+                    url: '{{ route('laporan.sesi_kasir.show') }}',
                     data: function(d) {
                         d.toko = $('#filterToko').val();
                         d.status = $('#filterStatus').val();
                         d.date = $('#filterDate').val();
                     }
                 },
-                columns: [
-                    {
+                columns: [{
                         data: null,
                         sortable: false,
                         render: function(data, type, row, meta) {
                             return meta.row + meta.settings._iDisplayStart + 1;
                         }
                     },
-                    { data: 'nama_toko' },
-                    { data: 'tgl_buka' },
-                    { data: 'tgl_tutup' },
-                    { data: 'kasir_buka' },
-                    { data: 'kasir_tutup' },
-                    { data: 'formatted_saldo_awal' },
-                    { data: 'formatted_total_penjualan' },
-                    { data: 'formatted_saldo_akhir_sistem' },
-                    { data: 'formatted_saldo_akhir_aktual' },
-                    { data: 'formatted_selisih' },
-                    { data: 'status_badge', className: 'text-center' },
-                    { data: 'catatan' }
+                    {
+                        data: 'nama_toko'
+                    },
+                    {
+                        data: 'tgl_buka'
+                    },
+                    {
+                        data: 'tgl_tutup'
+                    },
+                    {
+                        data: 'kasir_buka'
+                    },
+                    {
+                        data: 'kasir_tutup'
+                    },
+                    {
+                        data: 'formatted_saldo_awal'
+                    },
+                    {
+                        data: 'formatted_total_penjualan'
+                    },
+                    {
+                        data: 'formatted_saldo_akhir_sistem'
+                    },
+                    {
+                        data: 'formatted_saldo_akhir_aktual'
+                    },
+                    {
+                        data: 'formatted_selisih'
+                    },
+                    {
+                        data: 'status_badge',
+                        className: 'text-center'
+                    },
+                    {
+                        data: 'catatan'
+                    }
                 ],
                 sDom: '<"row"<"col-sm-12"<"table-container"t>r>><"row"<"col-12"p>>',
                 language: {
@@ -227,10 +258,12 @@
                                 _token: '{{ csrf_token() }}'
                             },
                             success: function(res) {
-                                Swal.fire('Berhasil', res.cek_data, 'success').then(() => location.reload());
+                                Swal.fire('Berhasil', res.cek_data, 'success').then(
+                                    () => location.reload());
                             },
                             error: function(xhr) {
-                                var msg = xhr.responseJSON ? xhr.responseJSON.cek_data : 'Terjadi kesalahan.';
+                                var msg = xhr.responseJSON ? xhr.responseJSON.cek_data :
+                                    'Terjadi kesalahan.';
                                 Swal.fire('Error', msg, 'error');
                             }
                         });
@@ -267,10 +300,12 @@
                                 alasan: result.value
                             },
                             success: function(res) {
-                                Swal.fire('Berhasil', res.cek_data, 'success').then(() => location.reload());
+                                Swal.fire('Berhasil', res.cek_data, 'success').then(
+                                    () => location.reload());
                             },
                             error: function(xhr) {
-                                var msg = xhr.responseJSON ? xhr.responseJSON.cek_data : 'Terjadi kesalahan.';
+                                var msg = xhr.responseJSON ? xhr.responseJSON.cek_data :
+                                    'Terjadi kesalahan.';
                                 Swal.fire('Error', msg, 'error');
                             }
                         });
