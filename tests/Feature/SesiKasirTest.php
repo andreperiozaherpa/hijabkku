@@ -378,4 +378,34 @@ class SesiKasirTest extends TestCase
             'status' => 'tutup',
         ]);
     }
+
+    public function test_waktu_tutup_adjusted_when_closed_on_different_day()
+    {
+        $kasir = $this->makeKasir();
+
+        // Opened 2 days ago at 08:30:15
+        $waktuBuka = now()->subDays(2)->setTime(8, 30, 15);
+
+        $session = SesiKasir::create([
+            'kode_toko' => 'TK_test',
+            'waktu_buka' => $waktuBuka,
+            'dibuka_oleh' => $kasir->id,
+            'saldo_awal' => 100000,
+            'status' => 'buka',
+            'is_user_scoped' => true,
+        ]);
+
+        $response = $this->actingAs($kasir)->post('/transaksi/penjualan/sesi-kasir/tutup', [
+            'saldo_akhir_aktual' => 100000,
+            'catatan' => 'Lupa tutup sesi',
+        ]);
+
+        $response->assertStatus(200);
+
+        $session->refresh();
+
+        $this->assertEquals($waktuBuka->format('Y-m-d'), $session->waktu_tutup->format('Y-m-d'));
+        $this->assertEquals(now()->hour, $session->waktu_tutup->hour);
+        $this->assertEquals(now()->minute, $session->waktu_tutup->minute);
+    }
 }

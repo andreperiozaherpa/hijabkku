@@ -316,8 +316,20 @@ class SesiKasirController extends Controller
         $saldo_akhir_aktual = $request->saldo_akhir_aktual;
         $selisih = $saldo_akhir_aktual - $saldo_akhir_sistem;
 
+        $now = now();
+        $waktu_tutup = $now;
+
+        // Adjust closing date to match opening date if closed on a different day
+        if ($session->waktu_buka->format('Y-m-d') !== $now->format('Y-m-d')) {
+            $waktu_tutup = $session->waktu_buka->copy()->setTime(
+                $now->hour,
+                $now->minute,
+                $now->second
+            );
+        }
+
         $session->update([
-            'waktu_tutup' => now(),
+            'waktu_tutup' => $waktu_tutup,
             'ditutup_oleh' => $user->id,
             'total_penjualan' => $total_penjualan,
             'saldo_akhir_sistem' => $saldo_akhir_sistem,
