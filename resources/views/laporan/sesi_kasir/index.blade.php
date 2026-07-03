@@ -157,7 +157,7 @@
                 destroy: true,
                 paging: true,
                 pageLength: 20,
-                order: [[2, "desc"]],
+                order: [[2, "asc"]],
                 responsive: true,
                 ajax: {
                     url: '{{ route("laporan.sesi_kasir.show") }}',
