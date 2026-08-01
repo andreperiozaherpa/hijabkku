@@ -173,7 +173,7 @@
                         <div class="card-body p-4">
                             <div class="row g-3 align-items-end">
                                 <!-- Tanggal Filter -->
-                                <div class="col-12 col-md-4">
+                                <div class="col-12 col-md-3">
                                     <label class="form-label fw-bold text-muted mb-2">
                                         <i data-acorn-icon="calendar" class="me-1 text-primary"></i> Pilih Tanggal
                                     </label>
@@ -189,7 +189,7 @@
                                 </div>
 
                                 <!-- Toko Filter -->
-                                <div class="col-12 col-md-4">
+                                <div class="col-12 col-md-3">
                                     <label class="form-label fw-bold text-muted mb-2">
                                         <i data-acorn-icon="shop" class="me-1 text-primary"></i> Pilih Toko
                                     </label>
@@ -212,7 +212,7 @@
                                 </div>
 
                                 <!-- Karyawan Filter -->
-                                <div class="col-12 col-md-4">
+                                <div class="col-12 col-md-3">
                                     <label class="form-label fw-bold text-muted mb-2">
                                         <i data-acorn-icon="user" class="me-1 text-primary"></i> Pilih Karyawan
                                     </label>
@@ -223,6 +223,22 @@
                                                 <option value="{{ Auth::user()->id }}" selected>{{ Auth::user()->name }}
                                                 </option>
                                             @endif
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Metode Pembayaran Filter (Cash vs Non-Cash) -->
+                                <div class="col-12 col-md-3">
+                                    <label class="form-label fw-bold text-muted mb-2">
+                                        <i data-acorn-icon="money" class="me-1 text-primary"></i> Metode Pembayaran
+                                    </label>
+                                    <div class="select2-lg shadow-sm" style="border-radius: 12px;">
+                                        <select class="form-select select2Class border-0" id="selectMetodePembayaran"
+                                            data-placeholder="Pilih Metode">
+                                            <option label="&nbsp;"></option>
+                                            <option value="semua" selected>Semua Metode</option>
+                                            <option value="cash">Cash (Tunai)</option>
+                                            <option value="non-cash">Non-Cash (QRIS / VA / Lainnya)</option>
                                         </select>
                                     </div>
                                 </div>
@@ -313,7 +329,7 @@
                                         </div>
                                     </div>
                                     <h3 class="mb-1 fw-bold text-dark text-purple" id="kpiTotalGabungan">Rp 0</h3>
-                                    <p class="mb-0 text-muted small">Semua Pembayaran</p>
+                                    <p class="mb-0 text-muted small" id="kpiPaymentMethodLabel">Semua Pembayaran</p>
                                 </div>
                             </div>
                         </div>
@@ -526,6 +542,7 @@
                         d.toko = toko;
                         d.karyawan = karyawan;
                         d.metode = metode;
+                        d.metode_pembayaran = $('#selectMetodePembayaran').val();
                     }
                 },
                 columns: [{
@@ -544,7 +561,14 @@
                         data: 'nama_barang'
                     },
                     {
-                        data: 'metode'
+                        data: 'metode_pembayaran',
+                        render: function(data) {
+                            const method = (data || 'TUNAI').toString().toUpperCase();
+                            if (method === 'TUNAI') {
+                                return '<span class="badge bg-success text-white">Cash (Tunai)</span>';
+                            }
+                            return '<span class="badge bg-info text-white">' + method + '</span>';
+                        }
                     },
                     {
                         data: 'jumlah'
@@ -824,6 +848,15 @@
 
             $('#kpiTotalGabungan').html(formatRupiah(totalGabungan));
 
+            const metodePembayaran = $('#selectMetodePembayaran').val();
+            if (metodePembayaran === 'cash') {
+                $('#kpiPaymentMethodLabel').text('Cash (Tunai)');
+            } else if (metodePembayaran === 'non-cash') {
+                $('#kpiPaymentMethodLabel').text('Non-Cash (QRIS / VA / Lainnya)');
+            } else {
+                $('#kpiPaymentMethodLabel').text('Semua Pembayaran');
+            }
+
             if (isAdmin) {
                 $('#kpiTotalLaba').html(formatRupiah(totalKeuntungan));
             } else {
@@ -960,6 +993,7 @@
                     param: 'hari',
                     toko: selectToko,
                     karyawan: selectKaryawan,
+                    metode_pembayaran: $('#selectMetodePembayaran').val(),
                 }, 'hari', chartBars);
             });
 
@@ -980,6 +1014,7 @@
                     param: 'bulan',
                     toko: selectToko,
                     karyawan: selectKaryawan,
+                    metode_pembayaran: $('#selectMetodePembayaran').val(),
                 }, 'bulan', chartBars);
             });
 
@@ -1000,6 +1035,7 @@
                     param: 'tahun',
                     toko: selectToko,
                     karyawan: selectKaryawan,
+                    metode_pembayaran: $('#selectMetodePembayaran').val(),
                 }, 'tahun', chartBars);
             });
 
@@ -1011,6 +1047,12 @@
                     parameters: 'karyawan'
                 };
                 ajaxData('get', '/laporan/penjualan/create', data, 'change');
+            });
+
+            $('#selectMetodePembayaran').change(function(e) {
+                e.preventDefault();
+                var activePeriod = $('.filter-period-btn.active').attr('id') || 'hari';
+                $('#' + activePeriod).trigger('click');
             });
 
             $('#hitungTotal').click(function() {

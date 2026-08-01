@@ -331,7 +331,7 @@
 
                 $('.transaksi thead').prepend(
                     '<tr class="codeTransaksi"><td colspan="4" class="text-center"><strong>' +
-                    'TRHJ_' +
+                    'TRHI_' +
                     generateString(4) +
                     new Date()
                     .getFullYear() +

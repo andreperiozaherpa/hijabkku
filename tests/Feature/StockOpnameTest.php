@@ -1152,4 +1152,102 @@ class StockOpnameTest extends TestCase
         $item->refresh();
         $this->assertEquals(null, $item->round_1_qty);
     }
+
+    public function test_detail_page_separates_plus_and_minus_variance_value()
+    {
+        $so = StockOpname::create([
+            'nomor_so' => 'SO-PLUS-MINUS-TEST',
+            'kode_toko' => 'TK_001',
+            'status' => 'Review',
+            'petugas_id' => $this->admin->id,
+            'supervisor_id' => $this->admin->id,
+        ]);
+
+        // Item with surplus (plus) difference_value
+        StockOpnameItem::create([
+            'stock_opname_id' => $so->id,
+            'kode_barang' => '88888888',
+            'snapshot_qty' => 10,
+            'round_1_qty' => 12,
+            'final_qty' => 12,
+            'difference' => 2,
+            'difference_value' => 100000,
+            'difference_value_jual' => 150000,
+        ]);
+
+        // Item with shortage (minus) difference_value
+        StockOpnameItem::create([
+            'stock_opname_id' => $so->id,
+            'kode_barang' => '99999999',
+            'snapshot_qty' => 5,
+            'round_1_qty' => 3,
+            'final_qty' => 3,
+            'difference' => -2,
+            'difference_value' => -80000,
+            'difference_value_jual' => -120000,
+        ]);
+
+        $response = $this->actingAs($this->admin)->get('/laporan/opname/detail/'.$so->id);
+
+        $response->assertStatus(200);
+        $response->assertViewHas('variance_plus', 100000);
+        $response->assertViewHas('variance_minus', -80000);
+        $response->assertViewHas('variance_value', 20000);
+        $response->assertViewHas('variance_plus_jual', 150000);
+        $response->assertViewHas('variance_minus_jual', -120000);
+        $response->assertViewHas('variance_value_jual', 30000);
+        $response->assertSee('Nilai Plus Beli (Lebih)');
+        $response->assertSee('Nilai Minus Beli (Kurang)');
+        $response->assertSee('Nilai Plus Ecer (Lebih)');
+        $response->assertSee('Nilai Minus Ecer (Kurang)');
+        $response->assertSee('+Rp. 150.000');
+        $response->assertSee('-Rp. 120.000');
+        $response->assertSee('+Rp. 100.000');
+        $response->assertSee('-Rp. 80.000');
+    }
+
+    public function test_non_admin_sees_only_ecer_value_cards()
+    {
+        $so = StockOpname::create([
+            'nomor_so' => 'SO-ECER-ONLY-TEST',
+            'kode_toko' => 'TK_001',
+            'status' => 'Review',
+            'petugas_id' => $this->admin->id,
+            'supervisor_id' => $this->admin->id,
+        ]);
+
+        StockOpnameItem::create([
+            'stock_opname_id' => $so->id,
+            'kode_barang' => '88888888',
+            'snapshot_qty' => 10,
+            'round_1_qty' => 12,
+            'final_qty' => 12,
+            'difference' => 2,
+            'difference_value' => 100000,
+            'difference_value_jual' => 150000,
+        ]);
+
+        $kasir = User::factory()->create([
+            'status' => 'on',
+            'role' => 'kasir',
+            'kode_toko' => 'TK_001',
+            'shift' => 0,
+        ]);
+
+        $permission = \DB::table('permissions')->where('name', 'kelola_stock_opname')->first();
+        \DB::table('role_permissions')->insert([
+            'role' => 'kasir',
+            'permission_id' => $permission->id,
+        ]);
+
+        $response = $this->actingAs($kasir)->get('/laporan/opname/detail/'.$so->id);
+
+        $response->assertStatus(200);
+        $response->assertSee('Nilai Plus Ecer (Lebih)');
+        $response->assertSee('Nilai Minus Ecer (Kurang)');
+        $response->assertDontSee('Nilai Plus Beli (Lebih)');
+        $response->assertDontSee('Nilai Minus Beli (Kurang)');
+        $response->assertSee('+Rp. 150.000');
+        $response->assertDontSee('+Rp. 100.000');
+    }
 }

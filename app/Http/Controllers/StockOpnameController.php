@@ -171,7 +171,12 @@ class StockOpnameController extends Controller
                 COUNT(*) as total_sku,
                 COUNT(CASE WHEN COALESCE(round_1_qty, round_2_qty, round_3_qty, final_qty) IS NOT NULL THEN 1 END) as counted,
                 COUNT(CASE WHEN COALESCE(round_1_qty, round_2_qty, round_3_qty, final_qty) IS NOT NULL AND difference != 0 THEN 1 END) as variance_items,
-                SUM(CASE WHEN COALESCE(round_1_qty, round_2_qty, round_3_qty, final_qty) IS NOT NULL THEN difference_value ELSE 0 END) as variance_value
+                SUM(CASE WHEN COALESCE(round_1_qty, round_2_qty, round_3_qty, final_qty) IS NOT NULL THEN difference_value ELSE 0 END) as variance_value,
+                SUM(CASE WHEN COALESCE(round_1_qty, round_2_qty, round_3_qty, final_qty) IS NOT NULL AND difference_value > 0 THEN difference_value ELSE 0 END) as variance_plus,
+                SUM(CASE WHEN COALESCE(round_1_qty, round_2_qty, round_3_qty, final_qty) IS NOT NULL AND difference_value < 0 THEN difference_value ELSE 0 END) as variance_minus,
+                SUM(CASE WHEN COALESCE(round_1_qty, round_2_qty, round_3_qty, final_qty) IS NOT NULL THEN difference_value_jual ELSE 0 END) as variance_value_jual,
+                SUM(CASE WHEN COALESCE(round_1_qty, round_2_qty, round_3_qty, final_qty) IS NOT NULL AND difference_value_jual > 0 THEN difference_value_jual ELSE 0 END) as variance_plus_jual,
+                SUM(CASE WHEN COALESCE(round_1_qty, round_2_qty, round_3_qty, final_qty) IS NOT NULL AND difference_value_jual < 0 THEN difference_value_jual ELSE 0 END) as variance_minus_jual
             ')
             ->first();
 
@@ -180,6 +185,11 @@ class StockOpnameController extends Controller
         $remaining = $total_sku - $counted;
         $variance_items = $summary->variance_items ?? 0;
         $variance_value = $summary->variance_value ?? 0;
+        $variance_plus = $summary->variance_plus ?? 0;
+        $variance_minus = $summary->variance_minus ?? 0;
+        $variance_value_jual = $summary->variance_value_jual ?? 0;
+        $variance_plus_jual = $summary->variance_plus_jual ?? 0;
+        $variance_minus_jual = $summary->variance_minus_jual ?? 0;
 
         // Extract categories and racks from snapshot items for partial filtering dropdowns
         $categories = DataBarang::select('jenis_barang')->distinct()->pluck('jenis_barang');
@@ -200,7 +210,7 @@ class StockOpnameController extends Controller
             $active_round = 'final';
         }
 
-        return view('laporan.opname.detail', compact('session', 'total_sku', 'counted', 'remaining', 'variance_items', 'variance_value', 'categories', 'racks', 'active_round'));
+        return view('laporan.opname.detail', compact('session', 'total_sku', 'counted', 'remaining', 'variance_items', 'variance_value', 'variance_plus', 'variance_minus', 'variance_value_jual', 'variance_plus_jual', 'variance_minus_jual', 'categories', 'racks', 'active_round'));
     }
 
     public function itemsData(Request $request, $id)
@@ -342,6 +352,7 @@ class StockOpnameController extends Controller
 
                     $barang = $barangsMap->get($stock->kode_barang);
                     $harga_beli = $barang ? floatval(str_replace('.', '', $barang->harga_beli)) : 0;
+                    $harga_jual = $barang ? floatval(str_replace('.', '', $barang->harga_jual)) : 0;
 
                     $insertData[] = [
                         'stock_opname_id' => $session->id,
@@ -352,6 +363,7 @@ class StockOpnameController extends Controller
                         'final_qty' => 0,
                         'difference' => -$expectedPhysical,
                         'difference_value' => -$expectedPhysical * $harga_beli,
+                        'difference_value_jual' => -$expectedPhysical * $harga_jual,
                         'status' => 'Match',
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -423,6 +435,7 @@ class StockOpnameController extends Controller
                             'final_qty' => 0,
                             'difference' => 0,
                             'difference_value' => 0,
+                            'difference_value_jual' => 0,
                             'status' => 'Match',
                         ]);
                     } catch (QueryException $e) {
@@ -466,6 +479,7 @@ class StockOpnameController extends Controller
                 $item->final_qty = $qtyAfter;
                 $item->difference = $item->final_qty - $adjustedSnapshot;
                 $item->difference_value = $item->difference * floatval(str_replace('.', '', $barang->harga_beli));
+                $item->difference_value_jual = $item->difference * floatval(str_replace('.', '', $barang->harga_jual));
                 $item->save();
 
                 // Record audit trail log
@@ -521,9 +535,10 @@ class StockOpnameController extends Controller
 
         $barang = DataBarang::where('kode', $item->kode_barang)->first();
         $harga_beli = $barang ? floatval(str_replace('.', '', $barang->harga_beli)) : 0;
+        $harga_jual = $barang ? floatval(str_replace('.', '', $barang->harga_jual)) : 0;
 
         try {
-            DB::transaction(function () use ($item, $roundParam, $qty, $harga_beli, $session, $user) {
+            DB::transaction(function () use ($item, $roundParam, $qty, $harga_beli, $harga_jual, $session, $user) {
                 // Pessimistic lock on session & item to serialize concurrent manual updates on same item
                 $lockedSession = StockOpname::lockForUpdate()->findOrFail($session->id);
                 $lockedItem = StockOpnameItem::lockForUpdate()->findOrFail($item->id);
@@ -565,6 +580,7 @@ class StockOpnameController extends Controller
                 $lockedItem->final_qty = $qty;
                 $lockedItem->difference = $lockedItem->final_qty - $adjustedSnapshot;
                 $lockedItem->difference_value = $lockedItem->difference * $harga_beli;
+                $lockedItem->difference_value_jual = $lockedItem->difference * $harga_jual;
 
                 $lockedItem->save();
 
@@ -641,6 +657,11 @@ class StockOpnameController extends Controller
                     ->pluck('harga_beli', 'kode')
                     ->toArray();
 
+                // Bulk prefetch retail prices (harga_jual) from master products
+                $pricesJual = DataBarang::whereIn('kode', $itemCodes)
+                    ->pluck('harga_jual', 'kode')
+                    ->toArray();
+
                 // If the session status is Counting, we are transitioning Round 1 -> Round 2
                 if ($lockedSession->status === 'Counting') {
                     $lockedSession->status = 'Recount';
@@ -656,7 +677,10 @@ class StockOpnameController extends Controller
                         $item->difference = ($item->round_1_qty ?? 0) - $adjustedSnapshot;
                         $rawPrice = $prices[$item->kode_barang] ?? '0';
                         $harga_beli = floatval(str_replace('.', '', $rawPrice));
+                        $rawPriceJual = $pricesJual[$item->kode_barang] ?? '0';
+                        $harga_jual = floatval(str_replace('.', '', $rawPriceJual));
                         $item->difference_value = $item->difference * $harga_beli;
+                        $item->difference_value_jual = $item->difference * $harga_jual;
 
                         if ($adjustedSnapshot == ($item->round_1_qty ?? 0)) {
                             $item->status = 'Match';
@@ -692,7 +716,12 @@ class StockOpnameController extends Controller
 
                         // Process recount items
                         $item->difference = ($item->round_2_qty ?? 0) - $adjustedSnapshot;
+                        $rawPrice = $prices[$item->kode_barang] ?? '0';
+                        $harga_beli = floatval(str_replace('.', '', $rawPrice));
+                        $rawPriceJual = $pricesJual[$item->kode_barang] ?? '0';
+                        $harga_jual = floatval(str_replace('.', '', $rawPriceJual));
                         $item->difference_value = $item->difference * $harga_beli;
+                        $item->difference_value_jual = $item->difference * $harga_jual;
 
                         if ($adjustedSnapshot == ($item->round_2_qty ?? 0)) {
                             $item->status = 'Match';
@@ -784,9 +813,16 @@ class StockOpnameController extends Controller
                     ->pluck('harga_beli', 'kode')
                     ->toArray();
 
+                // Bulk prefetch retail prices (harga_jual) from master products
+                $pricesJual = DataBarang::whereIn('kode', $itemCodes)
+                    ->pluck('harga_jual', 'kode')
+                    ->toArray();
+
                 foreach ($items as $item) {
                     $rawPrice = $prices[$item->kode_barang] ?? '0';
                     $harga_beli = floatval(str_replace('.', '', $rawPrice));
+                    $rawPriceJual = $pricesJual[$item->kode_barang] ?? '0';
+                    $harga_jual = floatval(str_replace('.', '', $rawPriceJual));
 
                     // Sync latest counted quantity across rounds
                     if ($item->round_3_qty !== null) {
@@ -804,6 +840,7 @@ class StockOpnameController extends Controller
 
                     $item->difference = $item->final_qty - $adjustedSnapshot;
                     $item->difference_value = $item->difference * $harga_beli;
+                    $item->difference_value_jual = $item->difference * $harga_jual;
                     $item->status = 'Finalized';
                     $item->save();
                 }
@@ -917,7 +954,7 @@ class StockOpnameController extends Controller
             fputcsv($file, []); // blank spacer
 
             // Table headers
-            fputcsv($file, ['Barcode/SKU', 'Nama Barang', 'Kategori', 'Snapshot Qty', 'Round 1 Qty', 'Round 2 Qty', 'Round 3 Qty', 'Final Qty', 'Selisih', 'Nilai Selisih', 'Status']);
+            fputcsv($file, ['Barcode/SKU', 'Nama Barang', 'Kategori', 'Snapshot Qty', 'Round 1 Qty', 'Round 2 Qty', 'Round 3 Qty', 'Final Qty', 'Selisih', 'Nilai Selisih Ecer', 'Nilai Selisih Beli', 'Status']);
 
             foreach ($items as $item) {
                 fputcsv($file, [
@@ -930,6 +967,7 @@ class StockOpnameController extends Controller
                     $item->round_3_qty ?? '-',
                     $item->final_qty,
                     $item->difference,
+                    number_format($item->difference_value_jual, 0, ',', '.'),
                     number_format($item->difference_value, 0, ',', '.'),
                     $item->status,
                 ]);
@@ -1058,6 +1096,7 @@ class StockOpnameController extends Controller
                 }
 
                 $harga_beli = floatval(str_replace('.', '', $barang->harga_beli));
+                $harga_jual = floatval(str_replace('.', '', $barang->harga_jual));
 
                 try {
                     StockOpnameItem::create([
@@ -1068,6 +1107,7 @@ class StockOpnameController extends Controller
                         'final_qty' => 0,
                         'difference' => -$snapshotQty,
                         'difference_value' => -$snapshotQty * $harga_beli,
+                        'difference_value_jual' => -$snapshotQty * $harga_jual,
                         'status' => 'Match',
                     ]);
                 } catch (QueryException $e) {

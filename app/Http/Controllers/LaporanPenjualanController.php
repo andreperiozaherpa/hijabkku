@@ -149,7 +149,9 @@ class LaporanPenjualanController extends Controller
         // 1. DataTables Server-Side Pagination
         if ($request->has('draw')) {
             $metode = $request->input('metode', 'umum');
+            $metodePembayaran = $request->input('metode_pembayaran', 'semua');
             $needsUserFilter = ($karyawan !== 'semua' && ! empty($karyawan)) || Auth::user()->role != 'admin';
+            $needsPembayaranJoin = $needsUserFilter || ($metodePembayaran !== 'semua');
 
             // Get excluded store codes once
             $excludedTokoCodes = DB::table('tokos')
@@ -171,13 +173,20 @@ class LaporanPenjualanController extends Controller
                 $countQuery->whereNotIn('transaksis.kode_toko', $excludedTokoCodes);
             }
 
-            if ($needsUserFilter) {
+            if ($needsPembayaranJoin) {
                 $countQuery->join('pembayarans', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice');
-                if ($karyawan !== 'semua' && ! empty($karyawan)) {
-                    $countQuery->where('pembayarans.user_id', $karyawan);
+                if ($needsUserFilter) {
+                    if ($karyawan !== 'semua' && ! empty($karyawan)) {
+                        $countQuery->where('pembayarans.user_id', $karyawan);
+                    }
+                    if (Auth::user()->role != 'admin') {
+                        $countQuery->where('pembayarans.user_id', Auth::id());
+                    }
                 }
-                if (Auth::user()->role != 'admin') {
-                    $countQuery->where('pembayarans.user_id', Auth::id());
+                if ($metodePembayaran === 'cash') {
+                    $countQuery->where('pembayarans.metode_pembayaran', 'TUNAI');
+                } elseif ($metodePembayaran === 'non-cash') {
+                    $countQuery->where('pembayarans.metode_pembayaran', '!=', 'TUNAI');
                 }
             }
 
@@ -205,12 +214,19 @@ class LaporanPenjualanController extends Controller
                 $query->where('pembayarans.user_id', Auth::id());
             }
 
+            if ($metodePembayaran === 'cash') {
+                $query->where('pembayarans.metode_pembayaran', 'TUNAI');
+            } elseif ($metodePembayaran === 'non-cash') {
+                $query->where('pembayarans.metode_pembayaran', '!=', 'TUNAI');
+            }
+
             $searchValue = $request->input('search.value');
             if (! empty($searchValue)) {
                 $query->where(function ($q) use ($searchValue) {
                     $q->where('transaksis.kode_invoice', 'like', '%'.$searchValue.'%')
                         ->orWhere('pembayarans.user_name', 'like', '%'.$searchValue.'%')
-                        ->orWhere('transaksis.nama_barang', 'like', '%'.$searchValue.'%');
+                        ->orWhere('transaksis.nama_barang', 'like', '%'.$searchValue.'%')
+                        ->orWhere('pembayarans.metode_pembayaran', 'like', '%'.$searchValue.'%');
                 });
                 $totalFiltered = $query->count();
             } else {
@@ -220,7 +236,7 @@ class LaporanPenjualanController extends Controller
             // Ordering
             $orderColumnIdx = $request->input('order.0.column', 0);
             $orderDir = $request->input('order.0.dir', 'desc');
-            $columns = ['transaksis.created_at', 'transaksis.kode_invoice', 'pembayarans.user_name', 'transaksis.nama_barang', 'transaksis.metode', 'transaksis.jumlah', 'transaksis.harga', 'transaksis.harga_total'];
+            $columns = ['transaksis.created_at', 'transaksis.kode_invoice', 'pembayarans.user_name', 'transaksis.nama_barang', 'pembayarans.metode_pembayaran', 'transaksis.jumlah', 'transaksis.harga', 'transaksis.harga_total'];
             $orderColumn = isset($columns[$orderColumnIdx]) ? $columns[$orderColumnIdx] : 'transaksis.created_at';
 
             $query->orderBy($orderColumn, $orderDir);
@@ -239,6 +255,7 @@ class LaporanPenjualanController extends Controller
                 'pembayarans.user_name as user_name',
                 'transaksis.nama_barang',
                 'transaksis.metode',
+                'pembayarans.metode_pembayaran as metode_pembayaran',
                 'transaksis.jumlah',
                 'transaksis.harga',
                 'transaksis.harga_total'
@@ -251,6 +268,7 @@ class LaporanPenjualanController extends Controller
                     'user_name' => $item->user_name,
                     'nama_barang' => $item->nama_barang,
                     'metode' => $item->metode,
+                    'metode_pembayaran' => $item->metode_pembayaran,
                     'jumlah' => $item->jumlah,
                     'harga' => $item->harga,
                     'total' => (float) $item->harga_total,
@@ -268,11 +286,13 @@ class LaporanPenjualanController extends Controller
         // 2. Summary Request (KPI & Chart) - Highly Optimized using aggregates!
         if (in_array($param, ['hari', 'bulan', 'tahun'])) {
             $needsUserFilter = ($karyawan !== 'semua' && ! empty($karyawan)) || Auth::user()->role != 'admin';
+            $metodePembayaran = $request->input('metode_pembayaran', 'semua');
+            $needsPembayaranJoin = $needsUserFilter || ($metodePembayaran !== 'semua');
 
             // Build base totals query (avoid JOIN to pembayarans if not filtering on user_id)
             $totalsQuery = DB::table('transaksis');
 
-            if ($needsUserFilter) {
+            if ($needsPembayaranJoin) {
                 $totalsQuery->join('pembayarans', 'transaksis.kode_invoice', '=', 'pembayarans.kode_invoice');
             }
 
@@ -302,6 +322,13 @@ class LaporanPenjualanController extends Controller
                 if (Auth::user()->role != 'admin') {
                     $totalsQuery->where('pembayarans.user_id', Auth::id());
                 }
+            }
+
+            // Apply payment method filter (cash vs non-cash)
+            if ($metodePembayaran === 'cash') {
+                $totalsQuery->where('pembayarans.metode_pembayaran', 'TUNAI');
+            } elseif ($metodePembayaran === 'non-cash') {
+                $totalsQuery->where('pembayarans.metode_pembayaran', '!=', 'TUNAI');
             }
 
             // Aggregate totals directly in DB!

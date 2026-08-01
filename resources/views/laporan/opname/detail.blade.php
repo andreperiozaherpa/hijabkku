@@ -17,15 +17,15 @@
 
         .sticky-action-bar {
             position: sticky;
-            bottom: 20px;
+            bottom: 12px;
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 15px 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+            border-radius: 10px;
+            padding: 10px 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
             z-index: 1000;
             border: 1px solid rgba(0, 0, 0, 0.05);
-            margin: 20px 0;
+            margin: 0 0 16px;
             transition: all 0.3s ease;
         }
 
@@ -69,6 +69,44 @@
         .card-stat:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04) !important;
+        }
+
+        /* Ecer (retail) value cards — cyan theme */
+        .bg-ecer {
+            background-color: rgba(13, 202, 240, 0.10) !important;
+            border-left: 4px solid #0dcaf0 !important;
+        }
+
+        .bg-ecer.border-success {
+            border-left: 4px solid #28a745 !important;
+        }
+
+        .bg-ecer.border-danger {
+            border-left: 4px solid #dc3545 !important;
+        }
+
+        .badge-ecer {
+            background-color: #0dcaf0 !important;
+            color: #ffffff !important;
+        }
+
+        /* Beli (purchase) value cards — violet theme */
+        .bg-beli {
+            background-color: rgba(111, 66, 193, 0.10) !important;
+            border-left: 4px solid #6f42c1 !important;
+        }
+
+        .bg-beli.border-success {
+            border-left: 4px solid #28a745 !important;
+        }
+
+        .bg-beli.border-danger {
+            border-left: 4px solid #dc3545 !important;
+        }
+
+        .badge-beli {
+            background-color: #6f42c1 !important;
+            color: #ffffff !important;
         }
 
         .scanner-glow {
@@ -170,7 +208,7 @@
 
             <!-- Summary Cards Dashboard -->
             <div class="row g-3 mb-4">
-                <div class="col-6 @if (Auth::user()->role == 'admin') col-lg-2 @else col-lg-3 @endif">
+                <div class="col-6 col-lg-3">
                     <div class="card h-100 border-0 shadow-sm card-stat bg-light">
                         <div class="card-body py-3">
                             <div class="text-muted small text-uppercase font-weight-bold">Total SKU</div>
@@ -178,7 +216,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-6 @if (Auth::user()->role == 'admin') col-lg-2 @else col-lg-3 @endif">
+                <div class="col-6 col-lg-3">
                     <div class="card h-100 border-0 shadow-sm card-stat">
                         <div class="card-body py-3">
                             <div class="text-muted small text-uppercase font-weight-bold">Sudah Dihitung</div>
@@ -186,7 +224,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-6 @if (Auth::user()->role == 'admin') col-lg-2 @else col-lg-3 @endif">
+                <div class="col-6 col-lg-3">
                     <div class="card h-100 border-0 shadow-sm card-stat">
                         <div class="card-body py-3">
                             <div class="text-muted small text-uppercase font-weight-bold">Belum Dihitung</div>
@@ -194,7 +232,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-6 @if (Auth::user()->role == 'admin') col-lg-2 @else col-lg-3 @endif">
+                <div class="col-6 col-lg-3">
                     <div class="card h-100 border-0 shadow-sm card-stat">
                         <div class="card-body py-3">
                             <div class="text-muted small text-uppercase font-weight-bold">SKU Selisih</div>
@@ -203,22 +241,149 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-12 col-lg-4">
+                    @php
+                        $plusJualClass = 'bg-ecer';
+                        $plusJualText = 'text-muted';
+                        if ($variance_plus_jual > 0) {
+                            $plusJualClass = 'bg-ecer border border-success';
+                            $plusJualText = 'text-success';
+                        }
+                    @endphp
+                    <div class="card h-100 border-0 shadow-sm card-stat {{ $plusJualClass }}">
+                        <div class="card-body py-3">
+                            <div class="text-muted small text-uppercase font-weight-bold">Nilai Plus Ecer (Lebih)
+                                <span class="badge badge-ecer ms-1">ECER</span>
+                            </div>
+                            <div class="fs-3 font-weight-bold {{ $plusJualText }}" id="cardVariancePlusJual">
+                                @if ($variance_plus_jual > 0)
+                                    +Rp. {{ number_format($variance_plus_jual, 0, ',', '.') }}
+                                @else
+                                    Rp. 0
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-4">
+                    @php
+                        $minusJualClass = 'bg-ecer';
+                        $minusJualText = 'text-muted';
+                        if ($variance_minus_jual < 0) {
+                            $minusJualClass = 'bg-ecer border border-danger';
+                            $minusJualText = 'text-danger';
+                        }
+                    @endphp
+                    <div class="card h-100 border-0 shadow-sm card-stat {{ $minusJualClass }}">
+                        <div class="card-body py-3">
+                            <div class="text-muted small text-uppercase font-weight-bold">Nilai Minus Ecer (Kurang)
+                                <span class="badge badge-ecer ms-1">ECER</span>
+                            </div>
+                            <div class="fs-3 font-weight-bold {{ $minusJualText }}" id="cardVarianceMinusJual">
+                                @if ($variance_minus_jual < 0)
+                                    -Rp. {{ number_format(abs($variance_minus_jual), 0, ',', '.') }}
+                                @else
+                                    Rp. 0
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-4">
+                    @php
+                        $jualClass = 'bg-ecer';
+                        $jualText = 'text-muted';
+                        if ($variance_value_jual > 0) {
+                            $jualClass = 'bg-ecer border border-success';
+                            $jualText = 'text-success';
+                        } elseif ($variance_value_jual < 0) {
+                            $jualClass = 'bg-ecer border border-danger';
+                            $jualText = 'text-danger';
+                        }
+                    @endphp
+                    <div class="card h-100 border-0 shadow-sm card-stat {{ $jualClass }}">
+                        <div class="card-body py-3">
+                            <div class="text-muted small text-uppercase font-weight-bold">Nilai Selisih Estimasi (Ecer)
+                                <span class="badge badge-ecer ms-1">ECER</span>
+                            </div>
+                            <div class="fs-3 font-weight-bold {{ $jualText }}" id="cardVarianceValueJual">
+                                @if ($variance_value_jual > 0)
+                                    +Rp. {{ number_format($variance_value_jual, 0, ',', '.') }}
+                                @elseif ($variance_value_jual < 0)
+                                    -Rp. {{ number_format(abs($variance_value_jual), 0, ',', '.') }}
+                                @else
+                                    Rp. 0
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 @if (Auth::user()->role == 'admin')
                     <div class="col-12 col-lg-4">
                         @php
-                            $cardClass = 'bg-light';
+                            $plusClass = 'bg-beli';
+                            $plusText = 'text-muted';
+                            if ($variance_plus > 0) {
+                                $plusClass = 'bg-beli border border-success';
+                                $plusText = 'text-success';
+                            }
+                        @endphp
+                        <div class="card h-100 border-0 shadow-sm card-stat {{ $plusClass }}">
+                            <div class="card-body py-3">
+                                <div class="text-muted small text-uppercase font-weight-bold">Nilai Plus Beli (Lebih)
+                                    <span class="badge badge-beli ms-1">BELI</span>
+                                </div>
+                                <div class="fs-3 font-weight-bold {{ $plusText }}" id="cardVariancePlus">
+                                    @if ($variance_plus > 0)
+                                        +Rp. {{ number_format($variance_plus, 0, ',', '.') }}
+                                    @else
+                                        Rp. 0
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        @php
+                            $minusClass = 'bg-beli';
+                            $minusText = 'text-muted';
+                            if ($variance_minus < 0) {
+                                $minusClass = 'bg-beli border border-danger';
+                                $minusText = 'text-danger';
+                            }
+                        @endphp
+                        <div class="card h-100 border-0 shadow-sm card-stat {{ $minusClass }}">
+                            <div class="card-body py-3">
+                                <div class="text-muted small text-uppercase font-weight-bold">Nilai Minus Beli (Kurang)
+                                    <span class="badge badge-beli ms-1">BELI</span>
+                                </div>
+                                <div class="fs-3 font-weight-bold {{ $minusText }}" id="cardVarianceMinus">
+                                    @if ($variance_minus < 0)
+                                        -Rp. {{ number_format(abs($variance_minus), 0, ',', '.') }}
+                                    @else
+                                        Rp. 0
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        @php
+                            $cardClass = 'bg-beli';
                             $textClass = 'text-muted';
                             if ($variance_value > 0) {
-                                $cardClass = 'bg-outline-success border border-success';
+                                $cardClass = 'bg-beli border border-success';
                                 $textClass = 'text-success';
                             } elseif ($variance_value < 0) {
-                                $cardClass = 'bg-outline-danger border border-danger';
+                                $cardClass = 'bg-beli border border-danger';
                                 $textClass = 'text-danger';
                             }
                         @endphp
                         <div class="card h-100 border-0 shadow-sm card-stat {{ $cardClass }}" id="cardVarianceValueContainer">
                             <div class="card-body py-3">
-                                <div class="text-muted small text-uppercase font-weight-bold">Nilai Selisih Estimasi</div>
+                                <div class="text-muted small text-uppercase font-weight-bold">Nilai Selisih Estimasi (Beli)
+                                    <span class="badge badge-beli ms-1">BELI</span>
+                                </div>
                                 <div class="fs-3 font-weight-bold {{ $textClass }}" id="cardVarianceValue">
                                     @if ($variance_value > 0)
                                         +Rp. {{ number_format($variance_value, 0, ',', '.') }}
@@ -398,8 +563,9 @@
                                             @if (Auth::user()->role == 'admin')
                                                 <th class="border-0 text-end">Selisih Fisik</th>
                                             @endif
+                                            <th class="border-0 text-end">Nilai Selisih Ecer</th>
                                             @if (Auth::user()->role == 'admin')
-                                                <th class="border-0 text-end">Nilai Selisih</th>
+                                                <th class="border-0 text-end">Nilai Selisih Beli</th>
                                             @endif
                                             <th class="border-0 text-center">Status</th>
                                         </tr>
@@ -414,15 +580,15 @@
 
         <!-- Sticky Floating Footer Action Bar (Sleek Modern Glassmorphism Design) -->
         <div class="sticky-action-bar">
-            <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <div class="d-flex flex-wrap gap-1 align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-outline-info text-info p-2"><i data-acorn-icon="info"
-                            style="width: 14px; height: 14px;"></i></span>
+                    <span class="badge bg-outline-info text-info p-1"><i data-acorn-icon="info"
+                            style="width: 12px; height: 12px;"></i></span>
                     <span class="text-muted small font-weight-bold">Pengendali Sesi Stock Opname</span>
                 </div>
-                <div class="d-flex flex-wrap gap-2">
+                <div class="d-flex flex-wrap gap-1">
                     <!-- Trigger button for beautiful Offcanvas drawer -->
-                    <button type="button" class="btn btn-outline-info font-weight-bold d-flex align-items-center"
+                    <button type="button" class="btn btn-sm btn-outline-info font-weight-bold d-flex align-items-center"
                         data-bs-toggle="offcanvas" data-bs-target="#auditTrailOffcanvas">
                         <i data-acorn-icon="history" class="me-2" style="width:16px; height:16px;"></i> Audit History
                         Logs
@@ -430,7 +596,7 @@
                     </button>
                     @if (in_array($session->status, ['Counting', 'Recount']) &&
                             (Auth::user()->role === 'admin' || Auth::user()->id === $session->supervisor_id))
-                        <button type="button" class="btn btn-outline-primary font-weight-bold d-flex align-items-center"
+                        <button type="button" class="btn btn-sm btn-outline-primary font-weight-bold d-flex align-items-center"
                             data-bs-toggle="modal" data-bs-target="#addManualItemModal">
                             <i data-acorn-icon="plus" class="me-2" style="width:16px; height:16px;"></i> Tambah Barang
                             Manual
@@ -438,21 +604,20 @@
                     @endif
 
                     @if ($session->status == 'Draft')
-                        <button type="button" class="btn btn-info text-white font-weight-bold" id="btnStartCounting">
+                        <button type="button" class="btn btn-sm btn-info text-white font-weight-bold"
+                            id="btnStartCounting">
                             <i data-acorn-icon="play" class="me-1"></i> Mulai Hitung Fisik
                         </button>
                     @endif
 
-
-
                     @if (in_array($session->status, ['Counting', 'Recount']))
                         @if (Auth::user()->role == 'admin')
-                            <button type="button" class="btn btn-success text-white font-weight-bold"
+                            <button type="button" class="btn btn-sm btn-success text-white font-weight-bold"
                                 id="btnApproveFinal">
                                 <i data-acorn-icon="check" class="me-1"></i> Selesaikan Perhitungan (Review)
                             </button>
                         @else
-                            <button type="button" class="btn btn-success text-white font-weight-bold" disabled
+                            <button type="button" class="btn btn-sm btn-success text-white font-weight-bold" disabled
                                 data-bs-toggle="tooltip" title="Hanya Admin yang dapat memfinalkan">
                                 <i data-acorn-icon="lock" class="me-1"></i> Selesaikan Perhitungan (Admin Only)
                             </button>
@@ -461,12 +626,12 @@
 
                     @if ($session->status == 'Review')
                         @if (Auth::user()->role == 'admin')
-                            <button type="button" class="btn btn-dark text-white font-weight-bold"
+                            <button type="button" class="btn btn-sm btn-dark text-white font-weight-bold"
                                 id="btnPostAdjustment">
                                 <i data-acorn-icon="database" class="me-1"></i> Post Koreksi Stok Ke Sistem
                             </button>
                         @else
-                            <button type="button" class="btn btn-dark text-white font-weight-bold" disabled
+                            <button type="button" class="btn btn-sm btn-dark text-white font-weight-bold" disabled
                                 data-bs-toggle="tooltip" title="Hanya Admin yang dapat memposting koreksi stok">
                                 <i data-acorn-icon="lock" class="me-1"></i> Post Koreksi Stok (Admin Only)
                             </button>
@@ -475,7 +640,7 @@
 
                     @if (Auth::user()->role == 'admin')
                         <a href="/laporan/opname/export/{{ $session->id }}"
-                            class="btn btn-outline-secondary font-weight-bold">
+                            class="btn btn-sm btn-outline-secondary font-weight-bold">
                             <i data-acorn-icon="download" class="me-1"></i> Export Data CSV
                         </a>
                     @endif
@@ -664,7 +829,20 @@
                                 return `<span class="text-muted">0</span>`;
                             }
                         },
-                    @endif
+                    @endif {
+                        data: 'difference_value_jual',
+                        className: 'text-end font-weight-bold',
+                        render: function(data, type, row) {
+                            let val = parseInt(data);
+                            let formatted = 'Rp. ' + Math.abs(val).toString().replace(
+                                /\B(?=(\d{3})+(?!\d))/g, ".");
+                            if (val > 0)
+                                return `<span class="text-success font-weight-bold">+${formatted}</span>`;
+                            if (val < 0)
+                                return `<span class="text-danger font-weight-bold">-${formatted}</span>`;
+                            return `<span class="text-muted font-weight-bold">Rp. 0</span>`;
+                        }
+                    },
                     @if (Auth::user()->role == 'admin')
                         {
                             data: 'difference_value',

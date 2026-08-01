@@ -36,6 +36,11 @@
         align-items: center;
         justify-content: center;
         transition: opacity 0.25s ease, visibility 0.25s ease;
+        pointer-events: none;
+    }
+
+    #page-loader.is-active {
+        pointer-events: auto;
     }
 
     body.spinner:after {
@@ -44,7 +49,7 @@
 </style>
 
 <body>
-    <div id="page-loader">
+    <div id="page-loader" class="is-active">
         <div class="text-center">
             <div class="spinner-border text-primary" role="status" style="width: 3.5rem; height: 3.5rem;">
                 <span class="visually-hidden">Loading...</span>
@@ -517,6 +522,7 @@
         window.addEventListener('pageshow', function(event) {
             var loader = document.getElementById('page-loader');
             if (loader) {
+                loader.classList.remove('is-active');
                 loader.style.opacity = '0';
                 setTimeout(function() {
                     loader.style.display = 'none';
@@ -527,6 +533,7 @@
         window.addEventListener('beforeunload', function(e) {
             var loader = document.getElementById('page-loader');
             if (loader) {
+                loader.classList.add('is-active');
                 loader.style.display = 'flex';
                 loader.style.opacity = '1';
             }
@@ -539,6 +546,7 @@
             }
             var loader = document.getElementById('page-loader');
             if (loader) {
+                loader.classList.add('is-active');
                 loader.style.display = 'flex';
                 loader.style.opacity = '1';
             }

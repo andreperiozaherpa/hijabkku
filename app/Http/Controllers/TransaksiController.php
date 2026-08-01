@@ -355,6 +355,7 @@ class TransaksiController extends Controller
                                 // Fetch product purchase price to recalculate difference_value
                                 $barang = DataBarang::where('kode', $soItem->kode_barang)->first();
                                 $harga_beli = $barang ? floatval(str_replace('.', '', $barang->harga_beli)) : 0;
+                                $harga_jual = $barang ? floatval(str_replace('.', '', $barang->harga_jual)) : 0;
 
                                 // Recalculate difference and difference_value
                                 $sales = DB::table('transaksis')
@@ -366,6 +367,7 @@ class TransaksiController extends Controller
                                 $adjustedSnapshot = max(0, $soItem->snapshot_qty - $sales);
                                 $soItem->difference = $soItem->final_qty - $adjustedSnapshot;
                                 $soItem->difference_value = $soItem->difference * $harga_beli;
+                                $soItem->difference_value_jual = $soItem->difference * $harga_jual;
 
                                 $soItem->save();
 

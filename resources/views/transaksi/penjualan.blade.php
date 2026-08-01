@@ -987,7 +987,7 @@
                     length: len
                 }, () => chars[Math.floor(Math.random() * chars.length)]).join('').toLowerCase();
             }
-            const currentInvoice = 'TRHJ_' + genStr(4) + new Date().getFullYear();
+            const currentInvoice = 'TRHI_' + genStr(4) + new Date().getFullYear();
             $('#invoiceLabel').text(currentInvoice);
 
             function ajaxQuery(method, url, data) {
