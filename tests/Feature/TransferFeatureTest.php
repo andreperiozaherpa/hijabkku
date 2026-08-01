@@ -4,7 +4,6 @@ use App\Models\RekeningClient;
 use App\Models\Transfer;
 use App\Models\User;
 use Database\Seeders\RBACSeeder;
-use Database\Seeders\TransferPermissionSeeder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +19,6 @@ beforeEach(function () {
     Config::set('services.xendit.webhook_token', 'webhook_test_mock');
 
     $this->seed(RBACSeeder::class);
-    $this->seed(TransferPermissionSeeder::class);
 });
 
 it('menampilkan halaman index transfer untuk admin', function () {

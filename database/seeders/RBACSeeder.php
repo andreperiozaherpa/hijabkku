@@ -110,6 +110,12 @@ class RBACSeeder extends Seeder
                 'description' => 'Mengizinkan pengguna mengelola foto dan deskripsi barang.',
                 'module' => 'Manajemen',
             ],
+            [
+                'name' => 'kelola_transfer',
+                'display_name' => 'Kelola Transfer Dana',
+                'description' => 'Mengizinkan pengguna melakukan transfer dana ke rekening client menggunakan saldo Xendit.',
+                'module' => 'Keuangan',
+            ],
         ];
 
         // Insert or update permissions
@@ -148,6 +154,7 @@ class RBACSeeder extends Seeder
                 'revisi_penjualan',
                 'kelola_sesi_kasir',
                 'kelola_detail_produk',
+                'kelola_transfer',
             ],
             'kasir' => [
                 'lihat_dashboard',
