@@ -123,6 +123,9 @@ class UserController extends Controller
                 <path d="M8 5a1 1 0 0 1 1 1v1H7V6a1 1 0 0 1 1-1zm2 2.076V6a2 2 0 1 0-4 0v1.076c-.54.166-1 .597-1 1.224v2.4c0 .816.781 1.3 1.5 1.3h3c.719 0 1.5-.484 1.5-1.3V8.3c0-.627-.46-1.058-1-1.224z"/>
                 <path d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z"/>
               </svg></button>';
+                $group .= '<button data-kode="'.$data->id.'" data-email="'.e($data->email).'" type="button" class="pin btn btn-info"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-key" viewBox="0 0 16 16">
+                <path d="M0 8a4 4 0 0 1 7.465-2H14a.5.5 0 0 1 .354.146l1.5 1.5a.5.5 0 0 1 0 .708l-1 1a.5.5 0 0 1-.708 0L13 7.707l-1 1a.5.5 0 0 1-.708 0L9.354 6.854A4 4 0 0 1 0 8zm4 0a1 1 0 1 0 2 0 1 1 0 0 0-2 0z"/>
+                </svg></button>';
                 $group .= '<button data-kode="'.$data->id.'" type="button" class="destroy btn btn-danger"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
                 <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z"/>
               </svg></button>';
@@ -244,6 +247,32 @@ class UserController extends Controller
             'title' => 'Status Diperbarui',
             'text' => "Akun {$user->name} sekarang {$label}.",
             'status' => $user->status,
+        ]);
+    }
+
+    /**
+     * Set atau ubah PIN validasi transfer dana milik user.
+     */
+    public function setPin(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|exists:users,email',
+            'transfer_pin' => 'required|string|digits:6',
+            'confirm_transfer_pin' => 'required|same:transfer_pin',
+        ], [
+            'transfer_pin.required' => 'PIN wajib diisi.',
+            'transfer_pin.digits' => 'PIN harus terdiri dari 6 digit angka.',
+            'confirm_transfer_pin.same' => 'Konfirmasi PIN tidak sama.',
+        ]);
+
+        User::where('email', $validated['email'])->update([
+            'transfer_pin' => Hash::make($validated['transfer_pin']),
+        ]);
+
+        return response()->json([
+            'icon' => 'success',
+            'title' => 'Sukses',
+            'text' => 'PIN Transfer Berhasil Disimpan',
         ]);
     }
 

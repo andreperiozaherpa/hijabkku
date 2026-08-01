@@ -218,6 +218,41 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Set/Update PIN Transfer -->
+    <div class="modal fade" id="userPinModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-alternate"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formPin" class="tooltip-label-end" novalidate data-no-spinner>
+                        <div class="mb-3 filled position-relative form-group">
+                            <i data-acorn-icon="email"></i>
+                            <input type="email" class="form-control" placeholder="Email" id="pinEmail" name="email" readonly required>
+                        </div>
+
+                        <div class="mb-3 filled position-relative form-group">
+                            <i data-acorn-icon="lock-on"></i>
+                            <input type="password" class="form-control" placeholder="PIN Transfer (6 Digit)" id="transfer_pin" name="transfer_pin" maxlength="6" required>
+                        </div>
+
+                        <div class="mb-3 filled position-relative form-group">
+                            <i data-acorn-icon="lock-on"></i>
+                            <input type="password" class="form-control" placeholder="Konfirmasi PIN Transfer" id="confirm_transfer_pin" name="confirm_transfer_pin" maxlength="6" required>
+                        </div>
+
+                        <div class="mt-4 pt-2 border-top text-end">
+                            <button type="button" class="btn btn-outline-muted btn-sm me-1" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="simpan btn btn-primary btn-sm"></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @push('script')
     <script>
@@ -360,6 +395,20 @@
 
             $("#formValid").validate();
             $("#formValids").validate();
+            $("#formPin").validate({
+                rules: {
+                    transfer_pin: {
+                        required: true,
+                        digits: true,
+                        minlength: 6,
+                        maxlength: 6,
+                    },
+                    confirm_transfer_pin: {
+                        required: true,
+                        equalTo: '#transfer_pin',
+                    },
+                },
+            });
 
             // Tambah Data Action
             $(document).on('click', '.datatable-add', function() {
@@ -387,6 +436,15 @@
                 $('.simpan').html('Ubah');
                 var kode = $(this).attr('data-kode');
                 ajaxData('get', '/user/edit', { kode: kode });
+            });
+
+            // Set/Update PIN Transfer Action
+            $(document).on('click', '.pin', function() {
+                $('#formPin')[0].reset();
+                $('#pinEmail').val($(this).attr('data-email'));
+                $('#userPinModal').modal('show');
+                $('.modal-title').html('Set PIN Transfer');
+                $('.simpan').html('Simpan');
             });
 
             // Edit Data Action
@@ -452,6 +510,46 @@
                         changeConfirmPassword: changeConfirmPassword,
                     };
                     ajaxData('post', '/user/update', datas);
+                }
+            });
+
+            $('#formPin').on('submit', function(e) {
+                e.preventDefault();
+                if ($(this).valid()) {
+                    var data = {
+                        email: $('#pinEmail').val(),
+                        transfer_pin: $('#transfer_pin').val(),
+                        confirm_transfer_pin: $('#confirm_transfer_pin').val(),
+                    };
+                    $.ajax({
+                        type: 'post',
+                        url: '/user/pin',
+                        data: data,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            Swal.fire({
+                                icon: response.icon,
+                                title: response.title,
+                                text: response.text,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            if (response.icon == 'success') {
+                                $('#userPinModal').modal('hide');
+                                $('#formPin')[0].reset();
+                            }
+                        },
+                        error: function(xhr) {
+                            var response = xhr.responseJSON;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: response && response.message ? response.message : 'Terjadi kesalahan.',
+                            });
+                        }
+                    });
                 }
             });
 

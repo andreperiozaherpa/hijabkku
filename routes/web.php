@@ -15,6 +15,7 @@ use App\Http\Controllers\MerekBarangController;
 use App\Http\Controllers\ModelBarangController;
 use App\Http\Controllers\PackagingBarangController;
 use App\Http\Controllers\PesananPickupController;
+use App\Http\Controllers\RekeningClientController;
 use App\Http\Controllers\RevisiPenjualanController;
 use App\Http\Controllers\SesiKasirController;
 use App\Http\Controllers\StockInOutController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\TokoController;
 use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\TransferController;
 use App\Http\Controllers\UkuranBarangController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VariasiBarangController;
@@ -247,6 +249,22 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
         });
     });
 
+    Route::prefix('/transfer')->middleware('permission:kelola_transfer')->group(function () {
+        Route::get('/transaksi', [TransferController::class, 'index'])->name('transfer.index');
+        Route::get('/show', [TransferController::class, 'show']);
+        Route::post('/store', [TransferController::class, 'store'])->middleware('throttle:10,1');
+        Route::get('/saldo', [TransferController::class, 'saldo'])->name('transfer.saldo');
+    });
+
+    Route::prefix('/transfer/rekening')->middleware('permission:kelola_transfer')->group(function () {
+        Route::get('/', [RekeningClientController::class, 'index'])->name('transfer.rekening');
+        Route::get('/show', [RekeningClientController::class, 'show']);
+        Route::post('/store', [RekeningClientController::class, 'store']);
+        Route::get('/edit', [RekeningClientController::class, 'edit']);
+        Route::post('/update', [RekeningClientController::class, 'update']);
+        Route::post('/destroy', [RekeningClientController::class, 'destroy']);
+    });
+
     Route::prefix('/user')->middleware('permission:kelola_pengguna')->group(function () {
         Route::get('/index', [UserController::class, 'index']);
         Route::get('/show', [UserController::class, 'show']);
@@ -255,6 +273,7 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
         Route::post('/update', [UserController::class, 'update']);
         Route::post('/destroy', [UserController::class, 'destroy']);
         Route::post('/toggle-status', [UserController::class, 'toggleStatus']);
+        Route::post('/pin', [UserController::class, 'setPin'])->middleware('throttle:10,1');
         Route::get('/rbac', [UserController::class, 'rbacIndex'])->name('user.rbac');
         Route::post('/rbac/update', [UserController::class, 'rbacUpdate'])->name('user.rbac.update');
         Route::post('/rbac/role', [UserController::class, 'rbacRoleStore'])->name('user.rbac.role.store');

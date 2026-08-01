@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\LandingCheckoutController;
+use App\Http\Controllers\Api\XenditWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -18,5 +20,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/xendit/webhook', [\App\Http\Controllers\Api\XenditWebhookController::class, 'handleInvoicePayment']);
-Route::post('/landing/checkout', [\App\Http\Controllers\Api\LandingCheckoutController::class, 'createInvoice']);
+Route::post('/xendit/webhook', [XenditWebhookController::class, 'handleInvoicePayment']);
+Route::post('/xendit/payout-webhook', [XenditWebhookController::class, 'handlePayout']);
+Route::post('/landing/checkout', [LandingCheckoutController::class, 'createInvoice']);

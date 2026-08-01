@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -31,6 +32,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'transfer_pin',
     ];
 
     /**
@@ -54,13 +56,10 @@ class User extends Authenticatable
 
     /**
      * Check if the user has a specific permission.
-     *
-     * @param string $permissionName
-     * @return bool
      */
     public function hasPermission(string $permissionName): bool
     {
-        return \Illuminate\Support\Facades\DB::table('role_permissions')
+        return DB::table('role_permissions')
             ->join('permissions', 'role_permissions.permission_id', '=', 'permissions.id')
             ->where('role_permissions.role', $this->role)
             ->where('permissions.name', $permissionName)

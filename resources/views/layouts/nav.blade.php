@@ -315,6 +315,27 @@
                     </li>
                 @endif
 
+                @if (Auth::user()->role == 'admin' || Auth::user()->hasPermission('kelola_transfer'))
+                    <li>
+                        <a href="#transfer">
+                            <i data-acorn-icon="money" class="icon" data-acorn-size="18"></i>
+                            <span class="label">Transfer Dana</span>
+                        </a>
+                        <ul id="transfer">
+                            <li>
+                                <a href="/transfer/transaksi">
+                                    <span class="label">Transaksi Transfer</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/transfer/rekening">
+                                    <span class="label">Rekening Client</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                @endif
+
                 @if (Auth::user()->role == 'admin')
                     <li>
                         <a href="#user">
