@@ -197,6 +197,40 @@ class TransferController extends Controller
         }
     }
 
+    public function verifyPin(Request $request)
+    {
+        $validated = $request->validate([
+            'pin' => 'required|string|digits:6',
+        ], [
+            'pin.required' => 'PIN wajib diisi.',
+            'pin.digits' => 'PIN harus terdiri dari 6 digit angka.',
+        ]);
+
+        $user = $request->user();
+
+        if (empty($user->transfer_pin)) {
+            return response()->json([
+                'icon' => 'error',
+                'title' => 'PIN Belum Diatur',
+                'text' => 'PIN validasi belum diatur untuk akun Anda. Hubungi admin untuk mengatur PIN.',
+            ], 422);
+        }
+
+        if (! Hash::check($validated['pin'], $user->transfer_pin)) {
+            return response()->json([
+                'icon' => 'error',
+                'title' => 'PIN Salah',
+                'text' => 'PIN yang Anda masukkan tidak sesuai.',
+            ], 422);
+        }
+
+        return response()->json([
+            'icon' => 'success',
+            'title' => 'Berhasil',
+            'text' => 'PIN valid.',
+        ]);
+    }
+
     public function saldo()
     {
         $saldo = $this->payoutService->getBalance();

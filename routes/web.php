@@ -253,6 +253,7 @@ Route::middleware('auth', 'role:gudang|kasir|admin', 'aktifasi:on')->group(funct
         Route::get('/transaksi', [TransferController::class, 'index'])->name('transfer.index');
         Route::get('/show', [TransferController::class, 'show']);
         Route::post('/store', [TransferController::class, 'store'])->middleware('throttle:10,1');
+        Route::post('/verify-pin', [TransferController::class, 'verifyPin'])->middleware('throttle:10,1');
         Route::get('/saldo', [TransferController::class, 'saldo'])->name('transfer.saldo');
     });
 

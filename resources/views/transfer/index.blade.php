@@ -131,6 +131,30 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="pinModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Konfirmasi PIN Admin</h5>
+                    <button type="button" class="closed-pin btn-close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formPin" class="tooltip-label-end" novalidate data-no-spinner>
+                        <p class="text-muted small mb-3">Masukkan PIN validasi admin untuk menampilkan saldo Xendit.</p>
+                        <div class="mb-3 filled position-relative form-group">
+                            <i data-acorn-icon="lock-on"></i>
+                            <input type="password" class="form-control" placeholder="PIN Admin (6 Digit)" id="pin_admin"
+                                name="pin" maxlength="6" inputmode="numeric" autocomplete="off" required>
+                        </div>
+                        <div class="mt-3 float-end">
+                            <button type="button" class="closed-pin btn btn-muted">Batal</button>
+                            <button type="button" class="verify-pin btn btn-primary">Verifikasi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @push('script')
     <script>
@@ -336,15 +360,80 @@
             $(document).on('click', '#toggleSaldo', function(e) {
                 e.preventDefault();
                 var $el = $('#saldoTersedia');
-                var saldoValue = $el.data('saldo');
 
                 if ($el.hasClass('saldo-hidden')) {
-                    $el.html(saldoValue).removeClass('saldo-hidden');
-                    renderSaldoIcon('eye');
+                    $('#pinModal').modal('show');
+                    $('#pin_admin').val('');
+                    setTimeout(function() {
+                        $('#pin_admin').focus();
+                    }, 300);
                 } else {
                     $el.addClass('saldo-hidden').html('Rp ••••••••••');
                     renderSaldoIcon('eye-off');
                 }
+            });
+
+            $(document).on('click', '.closed-pin', function() {
+                $('#pinModal').modal('hide');
+                $('#pin_admin').val('');
+            });
+
+            $('#pinModal').on('hidden.bs.modal', function() {
+                $('#pin_admin').val('');
+            });
+
+            $('#pin_admin').on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    $('.verify-pin').click();
+                }
+            });
+
+            $(document).on('click', '.verify-pin', function() {
+                var pin = $('#pin_admin').val();
+
+                if (!/^\d{6}$/.test(pin)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'PIN Tidak Valid',
+                        text: 'PIN harus terdiri dari 6 digit angka.',
+                    });
+                    $('#pin_admin').focus();
+                    return;
+                }
+
+                var $btn = $(this);
+                $btn.prop('disabled', true).html('Memverifikasi...');
+
+                $.ajax({
+                    type: 'post',
+                    url: '/transfer/verify-pin',
+                    data: { pin: pin },
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Accept': 'application/json'
+                    },
+                    success: function(response) {
+                        $btn.prop('disabled', false).html('Verifikasi');
+                        $('#pinModal').modal('hide');
+                        var $el = $('#saldoTersedia');
+                        $el.html($el.data('saldo')).removeClass('saldo-hidden');
+                        renderSaldoIcon('eye');
+                    },
+                    error: function(xhr) {
+                        $btn.prop('disabled', false).html('Verifikasi');
+                        var response = xhr.responseJSON;
+                        var title = (response && response.title) ? response.title : 'Gagal';
+                        var text = (response && response.text) ? response.text : 'PIN tidak valid.';
+                        Swal.fire({
+                            icon: 'error',
+                            title: title,
+                            text: text,
+                        });
+                        $('#pin_admin').val('');
+                        $('#pin_admin').focus();
+                    }
+                });
             });
 
             $(document).on('click', '#refreshSaldo', function(e) {

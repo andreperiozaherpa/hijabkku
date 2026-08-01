@@ -98,6 +98,41 @@ it('menolak PIN transfer yang tidak 6 digit', function () {
     $this->assertNull($target->fresh()->transfer_pin);
 });
 
+it('memverifikasi PIN admin untuk menampilkan saldo', function () {
+    $admin = User::factory()->create(['role' => 'admin', 'status' => 'on', 'transfer_pin' => Hash::make('123456')]);
+
+    actingAs($admin)
+        ->post('/transfer/verify-pin', ['pin' => '123456'])
+        ->assertStatus(200)
+        ->assertJsonPath('icon', 'success');
+});
+
+it('menolak PIN admin yang salah saat membuka saldo', function () {
+    $admin = User::factory()->create(['role' => 'admin', 'status' => 'on', 'transfer_pin' => Hash::make('123456')]);
+
+    actingAs($admin)
+        ->post('/transfer/verify-pin', ['pin' => '000000'])
+        ->assertStatus(422)
+        ->assertJsonPath('icon', 'error');
+});
+
+it('menolak verifikasi PIN jika akun belum memiliki PIN', function () {
+    $admin = User::factory()->create(['role' => 'admin', 'status' => 'on']);
+
+    actingAs($admin)
+        ->post('/transfer/verify-pin', ['pin' => '123456'])
+        ->assertStatus(422)
+        ->assertJsonPath('icon', 'error');
+});
+
+it('menolak verifikasi PIN yang bukan 6 digit', function () {
+    $admin = User::factory()->create(['role' => 'admin', 'status' => 'on', 'transfer_pin' => Hash::make('123456')]);
+
+    actingAs($admin)
+        ->post('/transfer/verify-pin', ['pin' => '123'], ['Accept' => 'application/json'])
+        ->assertStatus(422);
+});
+
 it('membuat transfer dan mengirim payout ke xendit', function () {
     $admin = User::factory()->create(['role' => 'admin', 'status' => 'on', 'transfer_pin' => Hash::make('123456')]);
     $rekening = RekeningClient::factory()->create();
